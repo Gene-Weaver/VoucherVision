@@ -1,3 +1,67 @@
+# Files
+PRIVATE_DATA.yaml
+LeafMachine2_TRAINING_ONLY.yaml
+LeafMachine2_TEMPLATE.yaml
+LeafMachine2_WW.yaml
+yolov8x-pose.pt
+yolov8n.pt
+*PRIVATE_DATA*
+
+
+# Dirs
+data/
+demo/demo_output/*
+demo/demo_configs/*
+wandb/
+venv_LM2_linux/
+venv_LM2_l/
+venv_LM2_310/
+venv_LM2_38/
+venv_LM2/
+venv_VV/
+tests/
+.vscode/
+runs/
+KP_Test/
+
+# VV Specific
+.streamlit*/
+demo/demo_output/*
+/bin/*
+!/bin/version.yml
+release*
+
+
+leafmachine2/*/.gitignore
+
+/bin/*
+!/bin/version.yml
+
+vouchervision/release_manager/
+
+vouchervision/component_detector/datasets/
+vouchervision/component_detector/wandb/
+vouchervision/component_detector/runs/
+vouchervision/component_detector/architecture/
+vouchervision/component_detector/yolov5x6.pt
+
+vouchervision/instructor-xl/
+vouchervision/instructor-embedding/
+
+vouchervision/SLTP_*
+
+vouchervision/gradio_ocr.py
+vouchervision/build_dataset.py
+vouchervision/evaluate_LLM_predictions.py
+vouchervision/QLoRa__x__GPT-NeoX-20B.py
+vouchervision/QLoRa_GPT_NeoX_20B.py
+vouchervision/run_VoucherVision_gradio.py
+vouchervision/stratify_groundtruth_transcriptions.py
+
+leafmachine2/component_detector/runs/
+leafmachine2/component_detector/architecture/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -20,6 +84,7 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -49,7 +114,6 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-cover/
 
 # Translations
 *.mo
@@ -72,7 +136,6 @@ instance/
 docs/_build/
 
 # PyBuilder
-.pybuilder/
 target/
 
 # Jupyter Notebook
@@ -83,9 +146,7 @@ profile_default/
 ipython_config.py
 
 # pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+.python-version
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
@@ -94,22 +155,7 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
 
 # Celery stuff
@@ -124,6 +170,8 @@ celerybeat.pid
 .venv
 env/
 venv/
+venv_LM2/
+venv_LM2_linux/
 ENV/
 env.bak/
 venv.bak/
@@ -145,16 +193,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
