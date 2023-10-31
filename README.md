@@ -178,10 +178,10 @@ If your institution has an enterprise instance of OpenAI's services, [like at th
 
 ## User Interface Images:
 
-![Validation 1](./VoucherVision/demo/img/validation_1.PNG)
-![Validation GPT](./VoucherVision/demo/img/validation_gpt.PNG)
-![Validation GPU](./VoucherVision/demo/img/validation_gpu.PNG)
-![Validation PaLM](./VoucherVision/demo/img/validation_palm.PNG)
+![Validation 1](https://LeafMachine.org/img//img/validation_1.PNG)
+![Validation GPT](https://LeafMachine.org/img//img/validation_gpt.PNG)
+![Validation GPU](https://LeafMachine.org/img//img/validation_gpu.PNG)
+![Validation PaLM](https://LeafMachine.org/img//img/validation_palm.PNG)
 
 
 
