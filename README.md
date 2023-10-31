@@ -61,7 +61,7 @@ For more information about virtual environments, please see [Creation of virtual
     <pre><code class="language-python">python --version</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 2. Then create the virtual environment (venv_VV is the name of our new virtual environment)  
-    <pre><code class="language-python">python3 -m venv venv_VV --copies</code></pre>
+    <pre><code class="language-python">python3 -m venv venv_VV</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 3. Activate the virtual environment  
     <pre><code class="language-python">.\venv_VV\Scripts\activate</code></pre>
@@ -114,18 +114,9 @@ LeafMachine2 is designed to use GPUs. We have not tested LeafMachine2 on systems
 ---
 
 
+# Setting up API key
+VoucherVision requires access to Google Vision OCR and at least one of the following LLMs: OpenAI API, Google PaLM 2, a private instance of OpenAI through Microsoft Azure. On first startup, you will see a page with instructions on how to get these API keys. ***Nothing will work until*** you get at least the Google Vision OCR API key and one LLM API key. 
 
 
 
 
-
-
-
-pip install streamlit pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil cpuinfo py-cpuinfo azureml-sdk azure-identity && pip install numpy -U && pip install -U scikit-learn && pip install --upgrade streamlit
-
-2. Install PyTorch
-# CUDA 11.7 https://pytorch.org/get-started/previous-versions/
-pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
-
-
-pip install streamlit pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113 } ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade streamlit }

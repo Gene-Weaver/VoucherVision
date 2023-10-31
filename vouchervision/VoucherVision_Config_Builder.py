@@ -380,14 +380,28 @@ def run_demo_tests_Palm(progress_report):
 
     return test_results, JSON_results
 
-
-def check_API_key(dir_home, api_version):
-    def has_API_key(val):
+def has_API_key(val):
         if val != '':
             return True
         else:
             return False
         
+def check_if_usable():
+    dir_home = os.path.dirname(os.path.dirname(__file__))
+    path_cfg_private = os.path.join(dir_home, 'PRIVATE_DATA.yaml')
+    cfg_private = get_cfg_from_full_path(path_cfg_private)
+
+    has_key_azure_openai = has_API_key(cfg_private['openai']['API_VERSION'])
+    has_key_openai = has_API_key(cfg_private['openai']['openai_api_key'])
+    has_key_palm2 = has_API_key(cfg_private['google_palm']['google_palm_api'])
+    has_key_google_OCR = has_API_key(cfg_private['google_cloud']['path_json_file'])
+
+    if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_palm2):
+        return True
+    else:
+        return False
+
+def check_API_key(dir_home, api_version):
     dir_home = os.path.dirname(os.path.dirname(__file__))
     path_cfg_private = os.path.join(dir_home, 'PRIVATE_DATA.yaml')
     cfg_private = get_cfg_from_full_path(path_cfg_private)

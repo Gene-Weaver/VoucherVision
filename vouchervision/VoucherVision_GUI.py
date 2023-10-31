@@ -3,7 +3,7 @@ import yaml, os, json
 from PIL import Image
 import pandas as pd
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
-from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm
+from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm, check_if_usable
 from vouchervision.vouchervision_main import voucher_vision
 from vouchervision.general_utils import load_config_file_testing, test_GPU, get_cfg_from_full_path
 
@@ -338,7 +338,22 @@ def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version
     st.session_state.private_file = does_private_file_exist()
 
 
-
+def process_batch(progress_report):
+    # First, write the config file.
+    write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
+    
+    # Call the machine function.
+    last_JSON_response = voucher_vision(None, st.session_state.dir_home, None, progress_report)
+    # Format the JSON string for display.
+    if last_JSON_response is None:
+        st.markdown(f"Last JSON object in the batch: NONE")
+    else:
+        try:
+            formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
+        except:
+            formatted_json = json.dumps(last_JSON_response, indent=4)
+        st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
+        st.balloons()
 
 
 def main():
@@ -383,22 +398,11 @@ def main():
 
     with col_run_1:
         st.subheader('Run VoucherVision')
-        if st.button("Start Processing", type='primary'):
-            # First, write the config file.
-            write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
-            
-            # Call the machine function.
-            last_JSON_response = voucher_vision(None, st.session_state.dir_home, None, progress_report)
-            # Format the JSON string for display.
-            if last_JSON_response is None:
-                st.markdown(f"Last JSON object in the batch: NONE")
-            else:
-                try:
-                    formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
-                except:
-                    formatted_json = json.dumps(last_JSON_response, indent=4)
-                st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
-                st.balloons()
+        if check_if_usable():
+            st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report])
+        else:
+            st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report], disabled=True)
+            st.error(":heavy_exclamation_mark: Required API keys not set. Please visit the 'API Keys' tab and set the Google Vision OCR API key and at least one LLM key.")
         st.write("If you use VoucherVision frequently, you can change the default values that are auto-populated in the form below. In a text editor or IDE, edit the first few rows in the file `../VoucherVision/vouchervision/VoucherVision_Config_Builder.py`")
 
     with col_run_2:
