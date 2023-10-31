@@ -22,6 +22,7 @@ Table of Contents
     * [Run Tests](#run-tests)
     * [Starting VoucherVision](#starting-vouchervision)
     * [Azure Instances of OpenAI](#azure-instances-of-openai)
+* [User Interface Images](#user-interface-images)
 
 ---
 
@@ -176,7 +177,7 @@ Once you have provided API keys, you can test all available prompts and LLMs by 
 ## Azure Instances of OpenAI
 If your institution has an enterprise instance of OpenAI's services, [like at the University of Michigan](https://its.umich.edu/computing/ai), you can use Azure instead of the OpenAI servers. Your institution should be able to provide you with the required keys (there are 5 required keys for this service). 
 
-## User Interface Images:
+# User Interface Images
 Validation test when the OpenAI key is not provided, but keys for PaLM 2 and Azure OpenAI are present:
 ![Validation 1](https://LeafMachine.org/img/validation_1.PNG)
 
