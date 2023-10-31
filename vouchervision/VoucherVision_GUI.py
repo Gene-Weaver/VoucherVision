@@ -243,6 +243,8 @@ def create_private_file_0(cfg_private=None):
 
     with col_private:
         st.header("Set API keys")
+        st.info("***Note:*** There is a known bug with tabs in Streamlit. If you update an input field it may take you back to the 'Project Settings' tab. Changes that you made are saved, it's just an annoying glitch. We are aware of this issue and will fix it as soon as we can.")
+        st.warning("To commit changes to API keys you must press the 'Set API Keys' button at the bottom of the page.")
         st.write("Before using VoucherVision you must set your API keys. All keys are stored locally on your computer and are never made public.")
         st.write("API keys are stored in `../VoucherVision/PRIVATE_DATA.yaml`.")
         st.write("Deleting this file will allow you to reset API keys. Alternatively, you can edit the keys in the user interface.")
@@ -313,25 +315,27 @@ def create_private_file_0(cfg_private=None):
                                                  placeholder='e.g. SATgthsykuE64FgrrrrEervr3S4455t_geyDeGq',
                                                  type='password')
 
-        if st.button("Set API Keys",type='primary'):
-            # Update the configuration dictionary with the new values
-            cfg_private['openai']['openai_api_key'] = openai_api_key
+        st.button("Set API Keys",type='primary', on_click=save_changes_to_API_keys, args=[cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
+                                                                    azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm])
+            
 
-            cfg_private['openai']['API_VERSION'] = azure_openai_api_version
-            cfg_private['openai']['OPENAI_API_KEY'] = azure_openai_api_key
-            cfg_private['openai']['openai_api_base'] = azure_openai_api_base
-            cfg_private['openai']['OPENAI_organization'] = azure_openai_organization
-            cfg_private['openai']['openai_api_type'] = azure_openai_api_type
+def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
+                             azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm):
+    # Update the configuration dictionary with the new values
+    cfg_private['openai']['openai_api_key'] = openai_api_key
 
-            cfg_private['google_cloud']['path_json_file'] = google_vision
+    cfg_private['openai']['API_VERSION'] = azure_openai_api_version
+    cfg_private['openai']['OPENAI_API_KEY'] = azure_openai_api_key
+    cfg_private['openai']['openai_api_base'] = azure_openai_api_base
+    cfg_private['openai']['OPENAI_organization'] = azure_openai_organization
+    cfg_private['openai']['openai_api_type'] = azure_openai_api_type
 
-            cfg_private['google_palm']['google_palm_api'] = google_palm
-            # Call the function to write the updated configuration to the YAML file
-            write_config_file(cfg_private, st.session_state.dir_home, filename="PRIVATE_DATA.yaml")
-            st.session_state.private_file = does_private_file_exist()
-            st.rerun()
+    cfg_private['google_cloud']['path_json_file'] = google_vision
 
-
+    cfg_private['google_palm']['google_palm_api'] = google_palm
+    # Call the function to write the updated configuration to the YAML file
+    write_config_file(cfg_private, st.session_state.dir_home, filename="PRIVATE_DATA.yaml")
+    st.session_state.private_file = does_private_file_exist()
 
 
 
@@ -374,6 +378,7 @@ def main():
         batch_progress_bar = st.progress(0)
         text_batch = st.empty()  # Placeholder for current step name
         progress_report = ProgressReport(overall_progress_bar, batch_progress_bar, text_overall, text_batch)
+        st.info("***Note:*** There is a known bug with tabs in Streamlit. If you update an input field it may take you back to the 'Project Settings' tab. Changes that you made are saved, it's just an annoying glitch. We are aware of this issue and will fix it as soon as we can.")
         
 
     with col_run_1:
@@ -394,6 +399,7 @@ def main():
                     formatted_json = json.dumps(last_JSON_response, indent=4)
                 st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
                 st.balloons()
+        st.write("If you use VoucherVision frequently, you can change the default values that are auto-populated in the form below. In a text editor or IDE, edit the first few rows in the file `../VoucherVision/vouchervision/VoucherVision_Config_Builder.py`")
 
     with col_run_2:
         st.subheader('Run Tests', help="")

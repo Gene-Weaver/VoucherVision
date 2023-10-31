@@ -343,26 +343,33 @@ class VoucherVision():
         self.dir_home = os.path.dirname(os.path.dirname(__file__))
         self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
         self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
-        openai.api_key = self.cfg_private['openai']['openai_api_key']
-
-        os.environ["OPENAI_API_KEY"] = self.cfg_private['openai']['openai_api_key']
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.cfg_private['google_cloud']['path_json_file']
-        os.environ['PALM'] = self.cfg_private['google_palm']['google_palm_api']
-        palm.configure(api_key=os.environ['PALM'])
-
-        self.llm = AzureChatOpenAI(
-            deployment_name='gpt-35-turbo',
-            openai_api_version=self.cfg_private['openai']['API_VERSION'],
-            openai_api_key=self.cfg_private['openai']['OPENAI_API_KEY'],
-            openai_api_base=self.cfg_private['openai']['openai_api_base'],
-            openai_organization=self.cfg_private['openai']['OPENAI_organization'],
-            openai_api_type=self.cfg_private['openai']['openai_api_type']
-        )
 
         self.has_key_azure_openai = self.has_API_key(self.cfg_private['openai']['API_VERSION'])
         self.has_key_openai = self.has_API_key(self.cfg_private['openai']['openai_api_key'])
         self.has_key_palm2 = self.has_API_key(self.cfg_private['google_palm']['google_palm_api'])
         self.has_key_google_OCR = self.has_API_key(self.cfg_private['google_cloud']['path_json_file'])
+
+        if self.has_key_openai:
+            openai.api_key = self.cfg_private['openai']['openai_api_key']
+
+        if self.has_key_azure_openai:
+            os.environ["OPENAI_API_KEY"] = self.cfg_private['openai']['openai_api_key']
+            self.llm = AzureChatOpenAI(
+                deployment_name='gpt-35-turbo',
+                openai_api_version=self.cfg_private['openai']['API_VERSION'],
+                openai_api_key=self.cfg_private['openai']['OPENAI_API_KEY'],
+                openai_api_base=self.cfg_private['openai']['openai_api_base'],
+                openai_organization=self.cfg_private['openai']['OPENAI_organization'],
+                openai_api_type=self.cfg_private['openai']['openai_api_type']
+            )
+
+        if self.has_key_google_OCR:
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.cfg_private['google_cloud']['path_json_file']
+
+        if self.has_key_palm2:
+            os.environ['PALM'] = self.cfg_private['google_palm']['google_palm_api']
+            palm.configure(api_key=os.environ['PALM'])
+
         
     def initialize_embeddings(self):
         '''Loading embedding search       __init__(self, db_name, path_domain_knowledge, logger, build_new_db=False, model_name="hkunlp/instructor-xl", device="cuda")'''
