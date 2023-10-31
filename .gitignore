@@ -9,7 +9,6 @@ yolov8n.pt
 
 
 # Dirs
-data/
 demo/demo_output/*
 demo/demo_configs/*
 wandb/
