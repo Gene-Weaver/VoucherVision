@@ -191,32 +191,46 @@ def display_test_results(test_results, JSON_results, llm_version):
 
 
 def rain_emojis(test_results):
+
+    test_results = {
+        'test1': True,   # Test passed
+        'test2': True,   # Test passed
+        'test3': True,   # Test passed
+        'test4': False,  # Test failed
+        'test5': False,  # Test failed
+        'test6': False,  # Test failed
+        'test7': False,  # Test failed
+        'test8': False,  # Test failed
+        'test9': False,  # Test failed
+        'test10': False,  # Test failed
+    }
+    
+
     success_emojis = ["🥇", "🏆", "🍾", "🙌"]
     failure_emojis = ["😢", "💔", "😭"]
 
     success_count = sum(1 for result in test_results.values() if result)
     failure_count = len(test_results) - success_count
 
+    chosen_emoji = random.choice(success_emojis)
+    for _ in range(success_count):
+        rain(
+            emoji=chosen_emoji,
+            font_size=72,
+            falling_speed=4,
+            animation_length=2,
+        )
+        time.sleep(0.2)
 
-
-    if success_count>= failure_count:
-        chosen_emoji = random.choice(success_emojis)
-        for _ in range(success_count):
-            rain(
-                emoji=chosen_emoji,
-                font_size=72,
-                falling_speed=4,
-                animation_length=2,
-            )
-    else:
-        chosen_emoji = random.choice(failure_emojis)
-        for _ in range(failure_count):
-            rain(
-                emoji=chosen_emoji,
-                font_size=72,
-                falling_speed=5,
-                animation_length=1,
-            )
+    chosen_emoji = random.choice(failure_emojis)
+    for _ in range(failure_count):
+        rain(
+            emoji=chosen_emoji,
+            font_size=72,
+            falling_speed=5,
+            animation_length=1,
+        )
+        time.sleep(0.2)
 
 def get_prompt_versions(LLM_version):
     if LLM_version in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]:
@@ -513,7 +527,7 @@ def main():
             st.subheader('LLM Version')
             st.markdown(
                 """
-                Select an LLM.
+                Select an LLM
                 - GPT-4 is 20x more expensive than GPT-3.5  
                 """
                 )
