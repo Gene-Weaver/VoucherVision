@@ -177,11 +177,14 @@ Once you have provided API keys, you can test all available prompts and LLMs by 
 If your institution has an enterprise instance of OpenAI's services, [like at the University of Michigan](https://its.umich.edu/computing/ai), you can use Azure instead of the OpenAI servers. Your institution should be able to provide you with the required keys (there are 5 required keys for this service). 
 
 ## User Interface Images:
-
-![Validation 1](https://LeafMachine.org/img//img/validation_1.PNG)
-![Validation GPT](https://LeafMachine.org/img//img/validation_gpt.PNG)
-![Validation GPU](https://LeafMachine.org/img//img/validation_gpu.PNG)
-![Validation PaLM](https://LeafMachine.org/img//img/validation_palm.PNG)
+Validation test when the OpenAI key is not provided, but keys for PaLM 2 and Azure OpenAI are present:
+![Validation 1](https://LeafMachine.org/img/validation_1.PNG)
+Validation test when all versions of the OpenAI keys are provided:
+![Validation GPT](https://LeafMachine.org/img/validation_gpt.PNG)
+A successful GPU test:
+![Validation GPU](https://LeafMachine.org/img/validation_gpu.PNG)
+Successful PaLM 2 test:
+![Validation PaLM](https://LeafMachine.org/img/validation_palm.PNG)
 
 
 
