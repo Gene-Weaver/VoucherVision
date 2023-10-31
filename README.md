@@ -12,12 +12,16 @@ Table of Contents
    * [Prerequisites](#prerequisites)
    * [Installation - Cloning the VoucherVision Repository](#installation---cloning-the-VoucherVision-repository)
    * [About Python Virtual Environments](#about-python-virtual-environments)
-   * [Installation - Ubuntu 20.04](#installation---ubuntu-2004)
-      * [Virtual Environment](#virtual-environment)
-      * [Installing Packages](#installing-packages)
    * [Installation - Windows 10+](#installation---windows-10)
       * [Virtual Environment](#virtual-environment-1)
       * [Installing Packages](#installing-packages-1)
+   * [Troubleshooting CUDA](#troubleshooting-cuda)
+* [Run VoucherVision](#run-vouchervision)
+    * [Setting up API key](#setting-up-api-key)
+    * [Check GPU](#check-gpu)
+    * [Run Tests](#run-tests)
+    * [Starting VoucherVision](#starting-vouchervision)
+    * [Azure Instances of OpenAI](#azure-instances-of-openai)
 
 ---
 
@@ -38,6 +42,14 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
 The main VoucherVision tool and the VoucherVisionEditor are packaged separately. This separation ensures that lower-performance computers can still install and utilize the editor. While VoucherVision is optimized to function smoothly on virtually any modern system, maximizing its capabilities (like using LeafMachine2 label collages or running Retrieval Augmented Generation (RAG) prompts) mandates a GPU.
 
 > ***NOTE:*** You can absolutely run VoucherVision on non-GPU systems, but RAG will not be possible (luckily the apparent best prompt--Version2--does not use RAG). Additionally, opting to include LeafMachine2 collages without a GPU will significantly extend processing times.
+
+---
+
+# Try our public demo!
+Our public demo, while lacking several quality control and reliability features found in the full VoucherVision module, provides an exciting glimpse into its capabilities. Feel free to upload your herbarium specimen and see what happens! We make frequent updates, so don't forget to revisit!
+[VoucherVision Demo](https://vouchervision.azurewebsites.net/)
+
+---
 
 
 # Installing VoucherVision
@@ -66,7 +78,7 @@ For more information about virtual environments, please see [Creation of virtual
 ---
 
 ## Installation - Windows 10+
-
+Installation should basically be the same for Linux.
 ### Virtual Environment
 
 1. Still inside the VoucherVision directory, show that a venv is currently not active 
@@ -125,17 +137,26 @@ LeafMachine2 is designed to use GPUs. We have not tested LeafMachine2 on systems
 
 ---
 
+# Run VoucherVision
+1. In the terminal, make sure that you `cd` into the `VoucherVision` directory and that your virtual environment is active (you should see venv_VV on the command line). 
+2. Type:
+    <pre><code class="language-python">python run_VoucherVision.py</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    or depending on your Python installation:
+    <pre><code class="language-python">python3 run_VoucherVision.py</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+3. If you ever see an error that says that a "port is not available", open `run_VoucherVision.py` in a plain text editor and change the `--port` value to something different but close, like 8502.
 
-# Setting up API key
+## Setting up API key
 VoucherVision requires access to Google Vision OCR and at least one of the following LLMs: OpenAI API, Google PaLM 2, a private instance of OpenAI through Microsoft Azure. On first startup, you will see a page with instructions on how to get these API keys. ***Nothing will work until*** you get at least the Google Vision OCR API key and one LLM API key. 
 
-# Setting up API key
+## Check GPU
 Press the "Check GPU" button to see if you have a GPU available. If you know that your computer has an Nvidia GPU, but the check fails, then you need to install an different version of PyTorch in the virtual environment. 
 
-# Run Tests
+## Run Tests
 Once you have provided API keys, you can test all available prompts and LLMs by pressing the test buttons. Every combination of LLM, prompt, and LeafMachine2 collage will run on the image in the `../VoucherVision/demo/demo_images` folder. A grid will appear letting you know which combinations are working on your system. 
 
-# Starting VoucherVision
+## Starting VoucherVision
 1. "Run name" - Set a run name for your project. This will be the name of the new folder that contains the output files.
 2. "Output directory" - Paste the full file path of where you would like to save the folder that will be created in step 1.
 3. "Input images directory" - Paste the full file path of where the input images are located. This folder can only have JPG or JPEG images inside of it.
@@ -152,7 +173,7 @@ Once you have provided API keys, you can test all available prompts and LLMs by 
 
 10. ***Finally*** you can press the start processing button.
 
-# Azure Instances of OpenAI
+## Azure Instances of OpenAI
 If your institution has an enterprise instance of OpenAI's services, [like at the University of Michigan](https://its.umich.edu/computing/ai), you can use Azure instead of the OpenAI servers. Your institution should be able to provide you with the required keys (there are 5 required keys for this service). 
 
 
