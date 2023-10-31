@@ -6,7 +6,7 @@ Table of Contents
 =================
 
 * [Table of Contents](#table-of-contents)
-* [VoucherVision](#VoucherVision-user-interface-for-vouchervision)
+* [About](#about)
 * [Try our public demo!](#try-our-public-demo)
 * [Installing VoucherVision](#installing-VoucherVision)
    * [Prerequisites](#prerequisites)
@@ -37,7 +37,7 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
 ### **Package Information:**  
 The main VoucherVision tool and the VoucherVisionEditor are packaged separately. This separation ensures that lower-performance computers can still install and utilize the editor. While VoucherVision is optimized to function smoothly on virtually any modern system, maximizing its capabilities (like using LeafMachine2 label collages or running Retrieval Augmented Generation (RAG) prompts) mandates a GPU.
 
-> ***NOTE:*** You can absolutely run VoucherVision on non-GPU systems, but RAG will not be possible. Additionally, opting to include LeafMachine2 collages without a GPU will significantly extend processing times.
+> ***NOTE:*** You can absolutely run VoucherVision on non-GPU systems, but RAG will not be possible (luckily the apparent best prompt--Version2--does not use RAG). Additionally, opting to include LeafMachine2 collages without a GPU will significantly extend processing times.
 
 
 # Installing VoucherVision
