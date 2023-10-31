@@ -105,7 +105,7 @@ Installation should basically be the same for Linux.
 
 1. Install the required dependencies to use VoucherVision  
     - Option A - If you are using Windows PowerShell:
-    <pre><code class="language-python">pip install streamlit streamlit-extras pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113 } ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade streamlit }</code></pre>
+    <pre><code class="language-python">pip install wheel streamlit streamlit-extras pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity torch; if ($?) { pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113 } ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade streamlit }</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
     - Option B - Install individually:
@@ -116,7 +116,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">pip install --upgrade streamlit</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     Now the rest of the packages
-    <pre><code class="language-python">pip install streamlit streamlit-extras pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity</code></pre>
+    <pre><code class="language-python">pip install wheel streamlit streamlit-extras pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity torch</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 

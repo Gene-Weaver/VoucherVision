@@ -44,7 +44,7 @@ def test_GPU():
         success = True
     else:
         info.append("No GPU found!")
-        info.append("LeafMachine2 image cropping and embedding search will be extremely slow or not possible.")
+        info.append("LeafMachine2 image cropping and embedding search will be slow or not possible.")
 
     return success, info
 

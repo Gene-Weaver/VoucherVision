@@ -451,7 +451,25 @@ def main():
     with col_run_1:
         st.subheader('Run VoucherVision')
         if check_if_usable():
-            st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report])
+            if st.button("Start Processing", type='primary'): #, on_click=process_batch, args=[progress_report]):
+            
+                # First, write the config file.
+                write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
+                
+                # Call the machine function.
+                last_JSON_response = voucher_vision(None, st.session_state.dir_home, None, progress_report)
+                # Format the JSON string for display.
+                if last_JSON_response is None:
+                    st.markdown(f"Last JSON object in the batch: NONE")
+                else:
+                    try:
+                        formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
+                    except:
+                        formatted_json = json.dumps(last_JSON_response, indent=4)
+                    st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
+                    st.balloons()
+
+                # st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report])
         else:
             st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report], disabled=True)
             st.error(":heavy_exclamation_mark: Required API keys not set. Please visit the 'API Keys' tab and set the Google Vision OCR API key and at least one LLM key.")

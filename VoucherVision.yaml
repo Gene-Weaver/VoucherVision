@@ -65,15 +65,16 @@ leafmachine:
     continue_run_from_partial_xlsx: ''
     delete_all_temps: false
     delete_temps_keep_VVE: false
-    dir_images_local: D:\Dropbox\LM2_Env\Image_Datasets\VoucherVision\SLTP_B50_MICH_MI
-    dir_output: D:\Dropbox\LM2_Env\Image_Datasets\VoucherVision\Transcription_Benchmarks
+    dir_images_local: D:/Dropbox/LM2_Env/Image_Datasets/GBIF_BroadSample_3SppPerFamily1
+    dir_output: D:/D_Desktop/LM2
     embeddings_database_name: SLTP_UM_AllAsiaMinimalInRegion
     image_location: local
     num_workers: 1
     path_to_domain_knowledge_xlsx: d:\Dropbox\VoucherVision\domain_knowledge\SLTP_UM_AllAsiaMinimalInRegion.xlsx
     prefix_removal: MICH-V-
     prompt_version: Version 2
-    run_name: SLTP_B50_MICH_MI__GPT4__PV2_LM2
+    run_name: test
     suffix_removal: ''
     use_domain_knowledge: false
-  use_RGB_label_images: true
+  use_RGB_label_images: false
+
