@@ -1,11 +1,14 @@
 import streamlit as st
-import yaml, os, json
+import yaml, os, json, random, time
 from PIL import Image
 import pandas as pd
+from typing import Union
+from streamlit_extras.let_it_rain import rain
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
 from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm, check_if_usable
 from vouchervision.vouchervision_main import voucher_vision
 from vouchervision.general_utils import load_config_file_testing, test_GPU, get_cfg_from_full_path
+# from vouchervision.emoji_rain import proportional_rain
 
 PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE = ["Version 1","Version 1 PaLM 2"]
 
@@ -121,7 +124,6 @@ def display_scrollable_results(JSON_results, test_results, OPT2, OPT3):
         st.markdown(css, unsafe_allow_html=True)
         st.markdown(results_html, unsafe_allow_html=True)
 
-
 def display_test_results(test_results, JSON_results, llm_version):
     if llm_version == 'gpt':
         OPT1, OPT2, OPT3 = TestOptionsGPT.get_options()
@@ -159,6 +161,7 @@ def display_test_results(test_results, JSON_results, llm_version):
     # Close the custom container
     st.write('</div>', unsafe_allow_html=True)
 
+
     for idx, (test_name, result) in enumerate(sorted(test_results.items())):
         _, ind_opt1, ind_opt2, ind_opt3 = test_name.split('__')
         opt2_readable = "Use LeafMachine2" if OPT2[int(ind_opt2.split('-')[1])] else "Don't use LeafMachine2"
@@ -179,6 +182,41 @@ def display_test_results(test_results, JSON_results, llm_version):
             else:
                 st.error(f"Test Failed")
             st.write('---')
+    
+    # success_count = sum(1 for result in test_results.values() if result)
+    # failure_count = len(test_results) - success_count
+    # proportional_rain("🥇", success_count, "💔", failure_count, font_size=72, falling_speed=5, animation_length="infinite")
+    rain_emojis(test_results)
+
+
+
+def rain_emojis(test_results):
+    success_emojis = ["🥇", "🏆", "🍾", "🙌"]
+    failure_emojis = ["😢", "💔", "😭"]
+
+    success_count = sum(1 for result in test_results.values() if result)
+    failure_count = len(test_results) - success_count
+
+
+
+    if success_count>= failure_count:
+        for _ in range(success_count):
+            chosen_emoji = random.choice(success_emojis)
+            rain(
+                emoji=chosen_emoji,
+                font_size=72,
+                falling_speed=4,
+                animation_length=2,
+            )
+    else:
+        for _ in range(failure_count):
+            chosen_emoji = random.choice(failure_emojis)
+            rain(
+                emoji=chosen_emoji,
+                font_size=72,
+                falling_speed=5,
+                animation_length=1,
+            )
 
 def get_prompt_versions(LLM_version):
     if LLM_version in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]:
