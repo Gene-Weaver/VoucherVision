@@ -88,6 +88,9 @@ Installation should basically be the same for Linux.
 2. Then create the virtual environment (venv_VV is the name of our new virtual environment)  
     <pre><code class="language-python">python3 -m venv venv_VV</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+    Or depending on your Python version...
+    <pre><code class="language-python">python -m venv venv_VV</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
 3. Activate the virtual environment  
     <pre><code class="language-python">.\venv_VV\Scripts\activate</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
