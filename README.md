@@ -176,7 +176,12 @@ Once you have provided API keys, you can test all available prompts and LLMs by 
 ## Azure Instances of OpenAI
 If your institution has an enterprise instance of OpenAI's services, [like at the University of Michigan](https://its.umich.edu/computing/ai), you can use Azure instead of the OpenAI servers. Your institution should be able to provide you with the required keys (there are 5 required keys for this service). 
 
+## User Interface Images:
 
+![Validation 1](./VoucherVision/demo/img/validation_1.PNG)
+![Validation GPT](./VoucherVision/demo/img/validation_gpt.PNG)
+![Validation GPU](./VoucherVision/demo/img/validation_gpu.PNG)
+![Validation PaLM](./VoucherVision/demo/img/validation_palm.PNG)
 
 
 
