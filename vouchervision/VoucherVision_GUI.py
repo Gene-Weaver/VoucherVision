@@ -200,8 +200,8 @@ def rain_emojis(test_results):
 
 
     if success_count>= failure_count:
+        chosen_emoji = random.choice(success_emojis)
         for _ in range(success_count):
-            chosen_emoji = random.choice(success_emojis)
             rain(
                 emoji=chosen_emoji,
                 font_size=72,
@@ -209,8 +209,8 @@ def rain_emojis(test_results):
                 animation_length=2,
             )
     else:
+        chosen_emoji = random.choice(failure_emojis)
         for _ in range(failure_count):
-            chosen_emoji = random.choice(failure_emojis)
             rain(
                 emoji=chosen_emoji,
                 font_size=72,
