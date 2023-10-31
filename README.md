@@ -179,10 +179,19 @@ If your institution has an enterprise instance of OpenAI's services, [like at th
 ## User Interface Images:
 Validation test when the OpenAI key is not provided, but keys for PaLM 2 and Azure OpenAI are present:
 ![Validation 1](https://LeafMachine.org/img/validation_1.PNG)
+
+---
+
 Validation test when all versions of the OpenAI keys are provided:
 ![Validation GPT](https://LeafMachine.org/img/validation_gpt.PNG)
+
+---
+
 A successful GPU test:
 ![Validation GPU](https://LeafMachine.org/img/validation_gpu.PNG)
+
+---
+
 Successful PaLM 2 test:
 ![Validation PaLM](https://LeafMachine.org/img/validation_palm.PNG)
 
