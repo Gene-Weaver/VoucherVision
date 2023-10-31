@@ -446,6 +446,7 @@ def main():
         text_batch = st.empty()  # Placeholder for current step name
         progress_report = ProgressReport(overall_progress_bar, batch_progress_bar, text_overall, text_batch)
         st.info("***Note:*** There is a known bug with tabs in Streamlit. If you update an input field it may take you back to the 'Project Settings' tab. Changes that you made are saved, it's just an annoying glitch. We are aware of this issue and will fix it as soon as we can.")
+        st.write("If you use VoucherVision frequently, you can change the default values that are auto-populated in the form below. In a text editor or IDE, edit the first few rows in the file `../VoucherVision/vouchervision/VoucherVision_Config_Builder.py`")
         
 
     with col_run_1:
@@ -473,7 +474,6 @@ def main():
         else:
             st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report], disabled=True)
             st.error(":heavy_exclamation_mark: Required API keys not set. Please visit the 'API Keys' tab and set the Google Vision OCR API key and at least one LLM key.")
-        st.write("If you use VoucherVision frequently, you can change the default values that are auto-populated in the form below. In a text editor or IDE, edit the first few rows in the file `../VoucherVision/vouchervision/VoucherVision_Config_Builder.py`")
 
     with col_run_2:
         st.subheader('Run Tests', help="")

@@ -1,5 +1,5 @@
 leafmachine:
-  LLM_version: Azure GPT 4
+  LLM_version: PaLM 2
   archival_component_detector:
     detector_iteration: PREP_final
     detector_type: Archival_Detector
@@ -72,9 +72,8 @@ leafmachine:
     num_workers: 1
     path_to_domain_knowledge_xlsx: d:\Dropbox\VoucherVision\domain_knowledge\SLTP_UM_AllAsiaMinimalInRegion.xlsx
     prefix_removal: MICH-V-
-    prompt_version: Version 2
+    prompt_version: Version 2 PaLM 2
     run_name: test
     suffix_removal: ''
     use_domain_knowledge: false
-  use_RGB_label_images: false
-
+  use_RGB_label_images: true
