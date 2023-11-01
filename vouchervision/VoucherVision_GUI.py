@@ -699,7 +699,7 @@ def main():
 
 
 
-st.set_page_config(layout="wide", page_icon='img/icon_VV.ico', page_title='VoucherVision')
+st.set_page_config(layout="wide", page_icon='img/icon.ico', page_title='VoucherVision')
 
 # Default YAML file path
 if 'config' not in st.session_state:
