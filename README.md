@@ -149,6 +149,9 @@ Installation should basically be the same for Linux.
 We can create a desktop shortcut to launch VoucherVision. In the `../VoucherVision/` directory is a file called `create_desktop_shortcut.py`. In the terminal, move into the `../VoucherVision/` directory and type:
 <pre><code class="language-python">python create_desktop_shortcut.py</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
+Or...
+<pre><code class="language-python">python3 create_desktop_shortcut.py</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
 Follow the instructions, select where you want the shortcut to be created, then where the virtual environment is located. 
 
 ---
