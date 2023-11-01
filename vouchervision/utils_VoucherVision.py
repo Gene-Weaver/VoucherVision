@@ -673,6 +673,9 @@ class VoucherVision():
         except:
             progress_report.reset_batch(f"Batch Failed")
             self.logger.error("LLM call failed. Ending batch. process_specimen_batch()")
+            for handler in self.logger.handlers[:]:
+                handler.close()
+                self.logger.removeHandler(handler)
             raise
 
 def space_saver(cfg, Dirs, logger):

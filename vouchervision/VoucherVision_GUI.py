@@ -405,9 +405,7 @@ def process_batch(progress_report):
         st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
         st.balloons()
 
-
-def main():
-    # Main App
+def content_header():
     st.title("VoucherVision")
 
     col_run_1, col_run_2, col_run_3 = st.columns([4,2,2])
@@ -424,9 +422,6 @@ def main():
     st.write("")
     st.write("")
     st.header("Configuration Settings")
-
-
-
 
     with col_run_info_1:
         # Progress
@@ -503,201 +498,199 @@ def main():
                 for message in info:
                     st.error(message)
 
+def content_tab_settings():
+    st.header('Project')
+    col_project_1, col_project_2 = st.columns([4,2])
 
+    st.write("---")
+    st.header('Input Images')
+    col_local_1, col_local_2 = st.columns([4,2])              
+
+    # st.write("---")
+    # st.header('Modules')
+    # col_m1, col_m2 = st.columns(2)
+
+    st.write("---")
+    st.header('Cropped Components')    
+    col_cropped_1, col_cropped_2 = st.columns([4,4])        
+
+    os.path.join(st.session_state.dir_home, )
+    ### Project
+    with col_project_1:
+        st.session_state.config['leafmachine']['project']['run_name'] = st.text_input("Run name", st.session_state.config['leafmachine']['project'].get('run_name', ''))
+        st.session_state.config['leafmachine']['project']['dir_output'] = st.text_input("Output directory", st.session_state.config['leafmachine']['project'].get('dir_output', ''))
+    
+    ### Input Images Local
+    with col_local_1:
+        st.session_state.config['leafmachine']['project']['dir_images_local'] = st.text_input("Input images directory", st.session_state.config['leafmachine']['project'].get('dir_images_local', ''))
+        st.session_state.config['leafmachine']['project']['continue_run_from_partial_xlsx'] = st.text_input("Continue run from partially completed project XLSX", st.session_state.config['leafmachine']['project'].get('continue_run_from_partial_xlsx', ''), disabled=True)
+        st.write("---")
+        st.subheader('LLM Version')
+        st.markdown(
+            """
+            Select an LLM
+            - GPT-4 is 20x more expensive than GPT-3.5  
+            """
+            )
+        st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"], index=["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"].index(st.session_state.config['leafmachine'].get('LLM_version', 'Azure GPT 4')))
+
+        st.write("---")
+        st.subheader('Prompt Version')
+        versions, default_version = get_prompt_versions(st.session_state.config['leafmachine']['LLM_version'])
+
+        if versions:
+            selected_version = st.session_state.config['leafmachine']['project'].get('prompt_version', default_version)
+            if selected_version not in versions:
+                selected_version = default_version
+            st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", versions, index=versions.index(selected_version))
+
+        # if st.session_state.config['leafmachine']['LLM_version'] in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5",]:
+        #     st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", ["Version 1", "Version 1 No Domain Knowledge", "Version 2"], index=["Version 1", "Version 1 No Domain Knowledge", "Version 2"].index(st.session_state.config['leafmachine']['project'].get('prompt_version', "Version 2")))
+        # elif st.session_state.config['leafmachine']['LLM_version'] in ["PaLM 2",]:
+        #     st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", ["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"], index=["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"].index(st.session_state.config['leafmachine']['project'].get('prompt_version', "Version 2 PaLM 2")))
+
+    ### Modules
+    # with col_m1:
+    #     st.session_state.config['leafmachine']['modules']['specimen_crop'] = st.checkbox("Specimen Close-up", st.session_state.config['leafmachine']['modules'].get('specimen_crop', True),disabled=True)
+
+    ### cropped_components
+    # with col_cropped_1:
+    #     st.session_state.config['leafmachine']['cropped_components']['do_save_cropped_annotations'] = st.checkbox("Save cropped components as images", st.session_state.config['leafmachine']['cropped_components'].get('do_save_cropped_annotations', True), disabled=True)
+    #     st.session_state.config['leafmachine']['cropped_components']['save_per_image'] = st.checkbox("Save cropped components grouped by specimen", st.session_state.config['leafmachine']['cropped_components'].get('save_per_image', False), disabled=True)
+    #     st.session_state.config['leafmachine']['cropped_components']['save_per_annotation_class'] = st.checkbox("Save cropped components grouped by type", st.session_state.config['leafmachine']['cropped_components'].get('save_per_annotation_class', True), disabled=True)
+    #     st.session_state.config['leafmachine']['cropped_components']['binarize_labels'] = st.checkbox("Binarize labels", st.session_state.config['leafmachine']['cropped_components'].get('binarize_labels', False), disabled=True)
+    #     st.session_state.config['leafmachine']['cropped_components']['binarize_labels_skeletonize'] = st.checkbox("Binarize and skeletonize labels", st.session_state.config['leafmachine']['cropped_components'].get('binarize_labels_skeletonize', False), disabled=True)
+    
+    with col_cropped_1:
+        default_crops = st.session_state.config['leafmachine']['cropped_components'].get('save_cropped_annotations', ['leaf_whole'])
+        st.write("Prior to transcription, use LeafMachine2 to crop all labels from input images to create label collages for each specimen image. (Requires GPU)")
+        st.session_state.config['leafmachine']['use_RGB_label_images'] = st.checkbox("Use LeafMachine2 label collage for transcriptions", st.session_state.config['leafmachine'].get('use_RGB_label_images', False))
+
+        st.session_state.config['leafmachine']['cropped_components']['save_cropped_annotations'] = st.multiselect("Components to crop",  
+                ['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',
+                'leaf_whole', 'leaf_partial', 'leaflet', 'seed_fruit_one', 'seed_fruit_many', 'flower_one', 'flower_many', 'bud','specimen','roots','wood'],default=default_crops)
+    with col_cropped_2:
+        ba = os.path.join(st.session_state.dir_home,'demo', 'ba','ba2.png')
+        image = Image.open(ba)
+        st.image(image, caption='LeafMachine2 Collage', output_format = "PNG")
+
+def content_tab_component():
+    st.header('Archival Components')
+    ACD_version = st.selectbox("Archival Component Detector (ACD) Version", ["Version 2.1", "Version 2.2"])
+    
+    ACD_confidence_default = int(st.session_state.config['leafmachine']['archival_component_detector']['minimum_confidence_threshold'] * 100)
+    ACD_confidence = st.number_input("ACD Confidence Threshold (%)", min_value=0, max_value=100,value=ACD_confidence_default)
+    st.session_state.config['leafmachine']['archival_component_detector']['minimum_confidence_threshold'] = float(ACD_confidence/100)
+
+    st.session_state.config['leafmachine']['archival_component_detector']['do_save_prediction_overlay_images'] = st.checkbox("Save Archival Prediction Overlay Images", st.session_state.config['leafmachine']['archival_component_detector'].get('do_save_prediction_overlay_images', True))
+    
+    st.session_state.config['leafmachine']['archival_component_detector']['ignore_objects_for_overlay'] = st.multiselect("Hide Archival Components in Prediction Overlay Images",  
+                ['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',],
+                default=[])
+
+    # Depending on the selected version, set the configuration
+    if ACD_version == "Version 2.1":
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_type'] = 'Archival_Detector'
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_version'] = 'PREP_final'
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_iteration'] = 'PREP_final'
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_weights'] = 'best.pt'
+    elif ACD_version == "Version 2.2": #TODO update this to version 2.2
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_type'] = 'Archival_Detector'
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_version'] = 'PREP_final'
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_iteration'] = 'PREP_final'
+        st.session_state.config['leafmachine']['archival_component_detector']['detector_weights'] = 'best.pt'
+
+
+def content_tab_processing():
+    st.header('Processing Options')
+    col_processing_1, col_processing_2 = st.columns([2,2,])
+    with col_processing_1:
+        st.subheader('Compute Options')
+        st.session_state.config['leafmachine']['project']['num_workers'] = st.number_input("Number of CPU workers", value=st.session_state.config['leafmachine']['project'].get('num_workers', 1), disabled=True)
+        st.session_state.config['leafmachine']['project']['batch_size'] = st.number_input("Batch size", value=st.session_state.config['leafmachine']['project'].get('batch_size', 500), help='Sets the batch size for the LeafMachine2 cropping. If computer RAM is filled, lower this value to ~100.')
+    with col_processing_2:
+        st.subheader('Misc')
+        st.session_state.config['leafmachine']['project']['prefix_removal'] = st.text_input("Remove prefix from catalog number", st.session_state.config['leafmachine']['project'].get('prefix_removal', ''))
+        st.session_state.config['leafmachine']['project']['suffix_removal'] = st.text_input("Remove suffix from catalog number", st.session_state.config['leafmachine']['project'].get('suffix_removal', ''))
+        st.session_state.config['leafmachine']['project']['catalog_numerical_only'] = st.checkbox("Require 'Catalog Number' to be numerical only", st.session_state.config['leafmachine']['project'].get('catalog_numerical_only', True))
+    
+    ### Logging and Image Validation - col_v1
+    st.header('Logging and Image Validation')    
+    col_v1, col_v2 = st.columns(2)
+    with col_v1:
+        st.session_state.config['leafmachine']['do']['check_for_illegal_filenames'] = st.checkbox("Check for illegal filenames", st.session_state.config['leafmachine']['do'].get('check_for_illegal_filenames', True))
+        st.session_state.config['leafmachine']['do']['check_for_corrupt_images_make_vertical'] = st.checkbox("Check for corrupt images", st.session_state.config['leafmachine']['do'].get('check_for_corrupt_images_make_vertical', True))
         
+        st.session_state.config['leafmachine']['print']['verbose'] = st.checkbox("Print verbose", st.session_state.config['leafmachine']['print'].get('verbose', True))
+        st.session_state.config['leafmachine']['print']['optional_warnings'] = st.checkbox("Show optional warnings", st.session_state.config['leafmachine']['print'].get('optional_warnings', True))
 
+    with col_v2:
+        log_level = st.session_state.config['leafmachine']['logging'].get('log_level', None)
+        log_level_display = log_level if log_level is not None else 'default'
+        selected_log_level = st.selectbox("Logging Level", ['default', 'DEBUG', 'INFO', 'WARNING', 'ERROR'], index=['default', 'DEBUG', 'INFO', 'WARNING', 'ERROR'].index(log_level_display))
+        
+        if selected_log_level == 'default':
+            st.session_state.config['leafmachine']['logging']['log_level'] = None
+        else:
+            st.session_state.config['leafmachine']['logging']['log_level'] = selected_log_level
+
+def content_tab_domain():
+    st.header('Embeddings Database')
+    col_emb_1, col_emb_2 = st.columns([4,2])  
+    with col_emb_1:
+        st.markdown(
+            """
+            VoucherVision includes the option of using domain knowledge inside of the dynamically generated prompts. The OCR text is queried against a database of existing label transcriptions. The most similar existing transcriptions act as an example of what the LLM should emulate and are shown to the LLM as JSON objects. VoucherVision uses cosine similarity search to return the most similar existing transcription.
+            - Note: Using domain knowledge may increase the chance that foreign text is included in the final transcription  
+            - Disabling this feature will show the LLM multiple examples of an empty JSON skeleton structure instead
+            - Enabling this option requires a GPU with at least 8GB of VRAM
+            - The domain knowledge files can be located in the directory "../VoucherVision/domain_knowledge". On first run the embeddings database must be created, which takes time. If the database creation runs each time you use VoucherVision, then something is wrong.
+            """
+            )
+            
+        st.write(f"Domain Knowledge is only available for the following prompts:")
+        for available_prompts in PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE:
+            st.markdown(f"- {available_prompts}")
+        
+        if st.session_state.config['leafmachine']['project']['prompt_version'] in PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE:
+            st.session_state.config['leafmachine']['project']['use_domain_knowledge'] = st.checkbox("Use domain knowledge", True, disabled=True)
+        else:
+            st.session_state.config['leafmachine']['project']['use_domain_knowledge'] = st.checkbox("Use domain knowledge", False, disabled=True)
+
+        st.write("")
+        if st.session_state.config['leafmachine']['project']['use_domain_knowledge']:
+            st.session_state.config['leafmachine']['project']['embeddings_database_name'] = st.text_input("Embeddings database name (only use underscores)", st.session_state.config['leafmachine']['project'].get('embeddings_database_name', ''))
+            st.session_state.config['leafmachine']['project']['build_new_embeddings_database'] = st.checkbox("Build *new* embeddings database", st.session_state.config['leafmachine']['project'].get('build_new_embeddings_database', False))
+            st.session_state.config['leafmachine']['project']['path_to_domain_knowledge_xlsx'] = st.text_input("Path to domain knowledge CSV file (will be used to create new embeddings database)", st.session_state.config['leafmachine']['project'].get('path_to_domain_knowledge_xlsx', ''))
+        else:
+            st.session_state.config['leafmachine']['project']['embeddings_database_name'] = st.text_input("Embeddings database name (only use underscores)", st.session_state.config['leafmachine']['project'].get('embeddings_database_name', ''), disabled=True)
+            st.session_state.config['leafmachine']['project']['build_new_embeddings_database'] = st.checkbox("Build *new* embeddings database", st.session_state.config['leafmachine']['project'].get('build_new_embeddings_database', False), disabled=True)
+            st.session_state.config['leafmachine']['project']['path_to_domain_knowledge_xlsx'] = st.text_input("Path to domain knowledge CSV file (will be used to create new embeddings database)", st.session_state.config['leafmachine']['project'].get('path_to_domain_knowledge_xlsx', ''), disabled=True)
+            
+        
+def main():
+    # Main App
+    content_header()
 
     tab_settings, tab_domain, tab_component, tab_processing, tab_private, tab_delete = st.tabs(["Project Settings", "Domain Knowledge","Component Detector", "Processing Options", "API Keys", "Space-Saver"])
 
-
-
-
-    # Tab 1: General Settings
     with tab_settings:
-        st.header('Project')
-        col_project_1, col_project_2 = st.columns([4,2])
-
-        st.write("---")
-        st.header('Input Images')
-        col_local_1, col_local_2 = st.columns([4,2])              
-
-        # st.write("---")
-        # st.header('Modules')
-        # col_m1, col_m2 = st.columns(2)
-
-        st.write("---")
-        st.header('Cropped Components')    
-        col_cropped_1, col_cropped_2 = st.columns([4,4])        
-
-        os.path.join(st.session_state.dir_home, )
-        ### Project
-        with col_project_1:
-            st.session_state.config['leafmachine']['project']['run_name'] = st.text_input("Run name", st.session_state.config['leafmachine']['project'].get('run_name', ''))
-            st.session_state.config['leafmachine']['project']['dir_output'] = st.text_input("Output directory", st.session_state.config['leafmachine']['project'].get('dir_output', ''))
+        content_tab_settings()
         
-        ### Input Images Local
-        with col_local_1:
-            st.session_state.config['leafmachine']['project']['dir_images_local'] = st.text_input("Input images directory", st.session_state.config['leafmachine']['project'].get('dir_images_local', ''))
-            st.session_state.config['leafmachine']['project']['continue_run_from_partial_xlsx'] = st.text_input("Continue run from partially completed project XLSX", st.session_state.config['leafmachine']['project'].get('continue_run_from_partial_xlsx', ''), disabled=True)
-            st.write("---")
-            st.subheader('LLM Version')
-            st.markdown(
-                """
-                Select an LLM
-                - GPT-4 is 20x more expensive than GPT-3.5  
-                """
-                )
-            st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"], index=["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"].index(st.session_state.config['leafmachine'].get('LLM_version', 'Azure GPT 4')))
-
-            st.write("---")
-            st.subheader('Prompt Version')
-            versions, default_version = get_prompt_versions(st.session_state.config['leafmachine']['LLM_version'])
-
-            if versions:
-                selected_version = st.session_state.config['leafmachine']['project'].get('prompt_version', default_version)
-                if selected_version not in versions:
-                    selected_version = default_version
-                st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", versions, index=versions.index(selected_version))
-
-            # if st.session_state.config['leafmachine']['LLM_version'] in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5",]:
-            #     st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", ["Version 1", "Version 1 No Domain Knowledge", "Version 2"], index=["Version 1", "Version 1 No Domain Knowledge", "Version 2"].index(st.session_state.config['leafmachine']['project'].get('prompt_version', "Version 2")))
-            # elif st.session_state.config['leafmachine']['LLM_version'] in ["PaLM 2",]:
-            #     st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", ["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"], index=["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"].index(st.session_state.config['leafmachine']['project'].get('prompt_version', "Version 2 PaLM 2")))
-
-        ### Modules
-        # with col_m1:
-        #     st.session_state.config['leafmachine']['modules']['specimen_crop'] = st.checkbox("Specimen Close-up", st.session_state.config['leafmachine']['modules'].get('specimen_crop', True),disabled=True)
-
-        ### cropped_components
-        # with col_cropped_1:
-        #     st.session_state.config['leafmachine']['cropped_components']['do_save_cropped_annotations'] = st.checkbox("Save cropped components as images", st.session_state.config['leafmachine']['cropped_components'].get('do_save_cropped_annotations', True), disabled=True)
-        #     st.session_state.config['leafmachine']['cropped_components']['save_per_image'] = st.checkbox("Save cropped components grouped by specimen", st.session_state.config['leafmachine']['cropped_components'].get('save_per_image', False), disabled=True)
-        #     st.session_state.config['leafmachine']['cropped_components']['save_per_annotation_class'] = st.checkbox("Save cropped components grouped by type", st.session_state.config['leafmachine']['cropped_components'].get('save_per_annotation_class', True), disabled=True)
-        #     st.session_state.config['leafmachine']['cropped_components']['binarize_labels'] = st.checkbox("Binarize labels", st.session_state.config['leafmachine']['cropped_components'].get('binarize_labels', False), disabled=True)
-        #     st.session_state.config['leafmachine']['cropped_components']['binarize_labels_skeletonize'] = st.checkbox("Binarize and skeletonize labels", st.session_state.config['leafmachine']['cropped_components'].get('binarize_labels_skeletonize', False), disabled=True)
-        
-        with col_cropped_1:
-            default_crops = st.session_state.config['leafmachine']['cropped_components'].get('save_cropped_annotations', ['leaf_whole'])
-            st.write("Prior to transcription, use LeafMachine2 to crop all labels from input images to create label collages for each specimen image. (Requires GPU)")
-            st.session_state.config['leafmachine']['use_RGB_label_images'] = st.checkbox("Use LeafMachine2 label collage for transcriptions", st.session_state.config['leafmachine'].get('use_RGB_label_images', False))
-
-            st.session_state.config['leafmachine']['cropped_components']['save_cropped_annotations'] = st.multiselect("Components to crop",  
-                    ['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',
-                    'leaf_whole', 'leaf_partial', 'leaflet', 'seed_fruit_one', 'seed_fruit_many', 'flower_one', 'flower_many', 'bud','specimen','roots','wood'],default=default_crops)
-        with col_cropped_2:
-            ba = os.path.join(st.session_state.dir_home,'demo', 'ba','ba2.png')
-            image = Image.open(ba)
-            st.image(image, caption='LeafMachine2 Collage', output_format = "PNG")
-        
-
-
-
     with tab_component:
-        st.header('Archival Components')
-        ACD_version = st.selectbox("Archival Component Detector (ACD) Version", ["Version 2.1", "Version 2.2"])
-        
-        ACD_confidence_default = int(st.session_state.config['leafmachine']['archival_component_detector']['minimum_confidence_threshold'] * 100)
-        ACD_confidence = st.number_input("ACD Confidence Threshold (%)", min_value=0, max_value=100,value=ACD_confidence_default)
-        st.session_state.config['leafmachine']['archival_component_detector']['minimum_confidence_threshold'] = float(ACD_confidence/100)
-
-        st.session_state.config['leafmachine']['archival_component_detector']['do_save_prediction_overlay_images'] = st.checkbox("Save Archival Prediction Overlay Images", st.session_state.config['leafmachine']['archival_component_detector'].get('do_save_prediction_overlay_images', True))
-        
-        st.session_state.config['leafmachine']['archival_component_detector']['ignore_objects_for_overlay'] = st.multiselect("Hide Archival Components in Prediction Overlay Images",  
-                    ['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',],
-                    default=[])
-
-        # Depending on the selected version, set the configuration
-        if ACD_version == "Version 2.1":
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_type'] = 'Archival_Detector'
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_version'] = 'PREP_final'
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_iteration'] = 'PREP_final'
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_weights'] = 'best.pt'
-        elif ACD_version == "Version 2.2": #TODO update this to version 2.2
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_type'] = 'Archival_Detector'
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_version'] = 'PREP_final'
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_iteration'] = 'PREP_final'
-            st.session_state.config['leafmachine']['archival_component_detector']['detector_weights'] = 'best.pt'
-
-
+        content_tab_component()
 
     with tab_domain:
-        st.header('Embeddings Database')
-        col_emb_1, col_emb_2 = st.columns([4,2])  
-        with col_emb_1:
-            st.markdown(
-                """
-                VoucherVision includes the option of using domain knowledge inside of the dynamically generated prompts. The OCR text is queried against a database of existing label transcriptions. The most similar existing transcriptions act as an example of what the LLM should emulate and are shown to the LLM as JSON objects. VoucherVision uses cosine similarity search to return the most similar existing transcription.
-                - Note: Using domain knowledge may increase the chance that foreign text is included in the final transcription  
-                - Disabling this feature will show the LLM multiple examples of an empty JSON skeleton structure instead
-                - Enabling this option requires a GPU with at least 8GB of VRAM
-                - The domain knowledge files can be located in the directory "../VoucherVision/domain_knowledge". On first run the embeddings database must be created, which takes time. If the database creation runs each time you use VoucherVision, then something is wrong.
-                """
-                )
-                
-            st.write(f"Domain Knowledge is only available for the following prompts:")
-            for available_prompts in PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE:
-                st.markdown(f"- {available_prompts}")
-            
-            if st.session_state.config['leafmachine']['project']['prompt_version'] in PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE:
-                st.session_state.config['leafmachine']['project']['use_domain_knowledge'] = st.checkbox("Use domain knowledge", True, disabled=True)
-            else:
-                st.session_state.config['leafmachine']['project']['use_domain_knowledge'] = st.checkbox("Use domain knowledge", False, disabled=True)
+        content_tab_domain()
 
-            st.write("")
-            if st.session_state.config['leafmachine']['project']['use_domain_knowledge']:
-                st.session_state.config['leafmachine']['project']['embeddings_database_name'] = st.text_input("Embeddings database name (only use underscores)", st.session_state.config['leafmachine']['project'].get('embeddings_database_name', ''))
-                st.session_state.config['leafmachine']['project']['build_new_embeddings_database'] = st.checkbox("Build *new* embeddings database", st.session_state.config['leafmachine']['project'].get('build_new_embeddings_database', False))
-                st.session_state.config['leafmachine']['project']['path_to_domain_knowledge_xlsx'] = st.text_input("Path to domain knowledge CSV file (will be used to create new embeddings database)", st.session_state.config['leafmachine']['project'].get('path_to_domain_knowledge_xlsx', ''))
-            else:
-                st.session_state.config['leafmachine']['project']['embeddings_database_name'] = st.text_input("Embeddings database name (only use underscores)", st.session_state.config['leafmachine']['project'].get('embeddings_database_name', ''), disabled=True)
-                st.session_state.config['leafmachine']['project']['build_new_embeddings_database'] = st.checkbox("Build *new* embeddings database", st.session_state.config['leafmachine']['project'].get('build_new_embeddings_database', False), disabled=True)
-                st.session_state.config['leafmachine']['project']['path_to_domain_knowledge_xlsx'] = st.text_input("Path to domain knowledge CSV file (will be used to create new embeddings database)", st.session_state.config['leafmachine']['project'].get('path_to_domain_knowledge_xlsx', ''), disabled=True)
-            
-        
-
-
-    ### Processing Options
     with tab_processing:
-        st.header('Processing Options')
-        col_processing_1, col_processing_2 = st.columns([2,2,])
-        with col_processing_1:
-            st.subheader('Compute Options')
-            st.session_state.config['leafmachine']['project']['num_workers'] = st.number_input("Number of CPU workers", value=st.session_state.config['leafmachine']['project'].get('num_workers', 1), disabled=True)
-            st.session_state.config['leafmachine']['project']['batch_size'] = st.number_input("Batch size", value=st.session_state.config['leafmachine']['project'].get('batch_size', 500), help='Sets the batch size for the LeafMachine2 cropping. If computer RAM is filled, lower this value to ~100.')
-        with col_processing_2:
-            st.subheader('Misc')
-            st.session_state.config['leafmachine']['project']['prefix_removal'] = st.text_input("Remove prefix from catalog number", st.session_state.config['leafmachine']['project'].get('prefix_removal', ''))
-            st.session_state.config['leafmachine']['project']['suffix_removal'] = st.text_input("Remove suffix from catalog number", st.session_state.config['leafmachine']['project'].get('suffix_removal', ''))
-            st.session_state.config['leafmachine']['project']['catalog_numerical_only'] = st.checkbox("Require 'Catalog Number' to be numerical only", st.session_state.config['leafmachine']['project'].get('catalog_numerical_only', True))
-        
-        ### Logging and Image Validation - col_v1
-        st.header('Logging and Image Validation')    
-        col_v1, col_v2 = st.columns(2)
-        with col_v1:
-            st.session_state.config['leafmachine']['do']['check_for_illegal_filenames'] = st.checkbox("Check for illegal filenames", st.session_state.config['leafmachine']['do'].get('check_for_illegal_filenames', True))
-            st.session_state.config['leafmachine']['do']['check_for_corrupt_images_make_vertical'] = st.checkbox("Check for corrupt images", st.session_state.config['leafmachine']['do'].get('check_for_corrupt_images_make_vertical', True))
-            
-            st.session_state.config['leafmachine']['print']['verbose'] = st.checkbox("Print verbose", st.session_state.config['leafmachine']['print'].get('verbose', True))
-            st.session_state.config['leafmachine']['print']['optional_warnings'] = st.checkbox("Show optional warnings", st.session_state.config['leafmachine']['print'].get('optional_warnings', True))
-
-        with col_v2:
-            log_level = st.session_state.config['leafmachine']['logging'].get('log_level', None)
-            log_level_display = log_level if log_level is not None else 'default'
-            selected_log_level = st.selectbox("Logging Level", ['default', 'DEBUG', 'INFO', 'WARNING', 'ERROR'], index=['default', 'DEBUG', 'INFO', 'WARNING', 'ERROR'].index(log_level_display))
-            
-            if selected_log_level == 'default':
-                st.session_state.config['leafmachine']['logging']['log_level'] = None
-            else:
-                st.session_state.config['leafmachine']['logging']['log_level'] = selected_log_level
-
+        content_tab_processing()
 
     with tab_private:
         create_private_file()
 
     with tab_delete:
         create_space_saver()
-
-
 
 st.set_page_config(layout="wide", page_icon='img/icon.ico', page_title='VoucherVision')
 

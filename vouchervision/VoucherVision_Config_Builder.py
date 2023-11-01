@@ -17,19 +17,20 @@ def build_VV_config():
 
     dir_home = os.path.dirname(os.path.dirname(__file__))
     run_name = 'test'
-    dir_images_local = 'D:/Dropbox/LM2_Env/Image_Datasets/GBIF_BroadSample_3SppPerFamily1'
+    # dir_images_local = 'D:/Dropbox/LM2_Env/Image_Datasets/GBIF_BroadSample_3SppPerFamily1'
+    dir_images_local = os.path.join(dir_home,'demo','demo_images')
     
     # The default output location is the computer's "Downloads" folder
     #    You can set dir_output directly by typing the folder path,
     # OR you can uncomment the line "dir_output = default_output_folder" 
     #    to have VoucherVision save to the Downloads folder by default
     default_output_folder = get_default_download_folder()
-    # dir_output = default_output_folder
-    dir_output = 'D:/D_Desktop/LM2'
+    dir_output = default_output_folder
+    # dir_output = 'D:/D_Desktop/LM2'
 
-    prefix_removal = 'MICH-V-'
+    prefix_removal = '' #'MICH-V-'
     suffix_removal = ''
-    catalog_numerical_only = True
+    catalog_numerical_only = False
 
     LLM_version_user = 'Azure GPT 4'
     prompt_version = 'Version 2' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]

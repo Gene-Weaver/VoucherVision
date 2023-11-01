@@ -25,7 +25,7 @@ if __name__ == "__main__":
         "run",
         resolve_path(os.path.join(dir_home,"vouchervision", "VoucherVision_GUI.py")),
         "--global.developmentMode=false",
-        "--server.port=8524",
+        "--server.port=8526",
 
     ]
     sys.exit(stcli.main())
