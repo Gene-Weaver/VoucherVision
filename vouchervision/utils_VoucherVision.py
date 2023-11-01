@@ -673,6 +673,7 @@ class VoucherVision():
         except:
             progress_report.reset_batch(f"Batch Failed")
             self.logger.error("LLM call failed. Ending batch. process_specimen_batch()")
+            raise
 
 def space_saver(cfg, Dirs, logger):
     dir_out = cfg['leafmachine']['project']['dir_output']
