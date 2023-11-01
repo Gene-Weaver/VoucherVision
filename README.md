@@ -16,6 +16,7 @@ Table of Contents
       * [Virtual Environment](#virtual-environment-1)
       * [Installing Packages](#installing-packages-1)
    * [Troubleshooting CUDA](#troubleshooting-cuda)
+* [Create a Desktop Shortcut to Launch VoucherVision GUI](#create-a-desktop-shortcut-to-launch-vouchervision-gui)
 * [Run VoucherVision](#run-vouchervision)
     * [Setting up API key](#setting-up-api-key)
     * [Check GPU](#check-gpu)
@@ -141,6 +142,14 @@ Installation should basically be the same for Linux.
 - The simplest solution is to install pytorch with CPU only, avoiding the CUDA problem entirely.
 - Alternatively, you can install the [latest pytorch release](https://pytorch.org/get-started/locally/) for your specific system, either using the cpu only version `pip3 install torch`, `pip3 install torchvision`, `pip3 install torchaudio` or by matching the pythorch version to your CUDA version.
 - We have not validated CUDA 11.6 or CUDA 11.7, but our code is likely to work with them too. If you have success with other versions of CUDA/pytorch, let us know and we will update our instructions. 
+
+---
+
+# Create a Desktop Shortcut to Launch VoucherVision GUI
+We can create a desktop shortcut to launch VoucherVision. In the `../VoucherVision/` directory is a file called `create_desktop_shortcut.py`. In the terminal, move into the `../VoucherVision/` directory and type:
+<pre><code class="language-python">python create_desktop_shortcut.py</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+Follow the instructions, select where you want the shortcut to be created, then where the virtual environment is located. 
 
 ---
 
