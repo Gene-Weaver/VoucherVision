@@ -68,14 +68,7 @@ def voucher_vision(cfg_file_path, dir_home, cfg_test, progress_report, test_ind 
     # Save cropped detections
     crop_detections_from_images_VV(cfg, logger, dir_home, Project, Dirs)
 
-    # Binarize labels
-    # run_binarize(cfg, logger, Dirs)
-    
-    # Custom Overlay
-    # build_custom_overlay_parallel(cfg, logger, dir_home, Project, 0, Dirs)
-
     # Process labels
-    # run_voucher_vision(cfg, logger, dir_home, Project, Dirs)
     Voucher_Vision = VoucherVision(cfg, logger, dir_home, Project, Dirs)
     last_JSON_response = Voucher_Vision.process_specimen_batch(progress_report)
 
@@ -87,7 +80,7 @@ def voucher_vision(cfg_file_path, dir_home, cfg_test, progress_report, test_ind 
     for handler in logger.handlers[:]:
         handler.close()
         logger.removeHandler(handler)
-        
+
     return last_JSON_response
 
 if __name__ == '__main__':    

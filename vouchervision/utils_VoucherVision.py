@@ -660,15 +660,19 @@ class VoucherVision():
         return response
     
     def process_specimen_batch(self, progress_report):
-        if self.has_key:
-            if self.model_name:
-                response = self.use_chatGPT(self.is_azure, progress_report, self.model_name)
+        try:
+            if self.has_key:
+                if self.model_name:
+                    response = self.use_chatGPT(self.is_azure, progress_report, self.model_name)
+                else:
+                    response = self.use_PaLM(progress_report)
+                return response
             else:
-                response = self.use_PaLM(progress_report)
-            return response
-        else:
-            self.logger.info(f'No API key found for {self.version_name}')
-            raise Exception(f"No API key found for {self.version_name}")
+                self.logger.info(f'No API key found for {self.version_name}')
+                raise Exception(f"No API key found for {self.version_name}")
+        except:
+            progress_report.reset_batch(f"Batch Failed")
+            self.logger.error("LLM call failed. Ending batch. process_specimen_batch()")
 
 def space_saver(cfg, Dirs, logger):
     dir_out = cfg['leafmachine']['project']['dir_output']
