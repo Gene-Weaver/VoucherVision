@@ -188,26 +188,24 @@ def display_test_results(test_results, JSON_results, llm_version):
     # proportional_rain("🥇", success_count, "💔", failure_count, font_size=72, falling_speed=5, animation_length="infinite")
     rain_emojis(test_results)
 
-
+def add_emoji_delay():
+    time.sleep(0.3)
 
 def rain_emojis(test_results):
-
-    test_results = {
-        'test1': True,   # Test passed
-        'test2': True,   # Test passed
-        'test3': True,   # Test passed
-        'test4': False,  # Test failed
-        'test5': False,  # Test failed
-        'test6': False,  # Test failed
-        'test7': False,  # Test failed
-        'test8': False,  # Test failed
-        'test9': False,  # Test failed
-        'test10': False,  # Test failed
-    }
-    
-
+    # test_results = {
+    #     'test1': True,   # Test passed
+    #     'test2': True,   # Test passed
+    #     'test3': True,   # Test passed
+    #     'test4': False,  # Test failed
+    #     'test5': False,  # Test failed
+    #     'test6': False,  # Test failed
+    #     'test7': False,  # Test failed
+    #     'test8': False,  # Test failed
+    #     'test9': False,  # Test failed
+    #     'test10': False,  # Test failed
+    # }
     success_emojis = ["🥇", "🏆", "🍾", "🙌"]
-    failure_emojis = ["😢", "💔", "😭"]
+    failure_emojis = ["💔", "😭"]
 
     success_count = sum(1 for result in test_results.values() if result)
     failure_count = len(test_results) - success_count
@@ -220,7 +218,7 @@ def rain_emojis(test_results):
             falling_speed=4,
             animation_length=2,
         )
-        time.sleep(0.2)
+        add_emoji_delay()
 
     chosen_emoji = random.choice(failure_emojis)
     for _ in range(failure_count):
@@ -230,7 +228,7 @@ def rain_emojis(test_results):
             falling_speed=5,
             animation_length=1,
         )
-        time.sleep(0.2)
+        add_emoji_delay()
 
 def get_prompt_versions(LLM_version):
     if LLM_version in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]:
