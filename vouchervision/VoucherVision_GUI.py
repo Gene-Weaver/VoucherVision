@@ -405,8 +405,22 @@ def process_batch(progress_report):
         st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
         st.balloons()
 
+def show_header_welcome():
+    st.session_state.logo_path = os.path.join(st.session_state.dir_home, 'img','logo.png')
+    st.session_state.logo = Image.open(st.session_state.logo_path)
+    st.image(st.session_state.logo, width=250)
+    # # st.image("img/logo.png", use_column_width=True)
+    # st.markdown(f'<a href="https://github.com/Gene-Weaver/VoucherVision"><img src="http://localhost:8000/{st.session_state.logo_path}" width="200"></a>', unsafe_allow_html=True)
+    # hide_img_fs = '''
+    # <style>
+    # button[title="View fullscreen"]{
+    #     visibility: hidden;}
+    # </style>
+    # '''
+    # st.markdown(hide_img_fs, unsafe_allow_html=True)
+
 def content_header():
-    st.title("VoucherVision")
+    # st.title("VoucherVision")
 
     col_run_1, col_run_2, col_run_3 = st.columns([4,2,2])
     col_test = st.container()
@@ -443,6 +457,7 @@ def content_header():
         
 
     with col_run_1:
+        show_header_welcome()
         st.subheader('Run VoucherVision')
         if check_if_usable():
             if st.button("Start Processing", type='primary'): #, on_click=process_batch, args=[progress_report]):
@@ -700,6 +715,7 @@ if 'config' not in st.session_state:
     setup_streamlit_config(st.session_state.dir_home)
 if 'private_file' not in st.session_state:
     st.session_state.private_file = does_private_file_exist()
+
 
 if not st.session_state.private_file:
     create_private_file()
