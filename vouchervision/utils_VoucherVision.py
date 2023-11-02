@@ -159,7 +159,7 @@ class VoucherVision():
 
     def pick_model(self, vendor, nt):
         if vendor == 'GPT_3_5':
-            if nt > 3200:
+            if nt > 6000:
                 return "gpt-3.5-turbo-16k-0613", True
             else:
                 return "gpt-3.5-turbo", False
@@ -344,23 +344,25 @@ class VoucherVision():
         self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
         self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
 
-        self.has_key_azure_openai = self.has_API_key(self.cfg_private['openai']['API_VERSION'])
-        self.has_key_openai = self.has_API_key(self.cfg_private['openai']['openai_api_key'])
+        self.has_key_azure_openai = self.has_API_key(self.cfg_private['openai_azure']['api_version'])
+        self.has_key_openai = self.has_API_key(self.cfg_private['openai']['OPENAI_API_KEY'])
         self.has_key_palm2 = self.has_API_key(self.cfg_private['google_palm']['google_palm_api'])
         self.has_key_google_OCR = self.has_API_key(self.cfg_private['google_cloud']['path_json_file'])
 
         if self.has_key_openai:
-            openai.api_key = self.cfg_private['openai']['openai_api_key']
+            openai.api_key = self.cfg_private['openai']['OPENAI_API_KEY']
+            os.environ["OPENAI_API_KEY"] = self.cfg_private['openai']['OPENAI_API_KEY']
+            
 
         if self.has_key_azure_openai:
-            os.environ["OPENAI_API_KEY"] = self.cfg_private['openai']['openai_api_key']
+            # os.environ["OPENAI_API_KEY"] = self.cfg_private['openai_azure']['openai_api_key']
             self.llm = AzureChatOpenAI(
                 deployment_name='gpt-35-turbo',
-                openai_api_version=self.cfg_private['openai']['API_VERSION'],
-                openai_api_key=self.cfg_private['openai']['OPENAI_API_KEY'],
-                openai_api_base=self.cfg_private['openai']['openai_api_base'],
-                openai_organization=self.cfg_private['openai']['OPENAI_organization'],
-                openai_api_type=self.cfg_private['openai']['openai_api_type']
+                openai_api_version=self.cfg_private['openai_azure']['api_version'],
+                openai_api_key=self.cfg_private['openai_azure']['openai_api_key'],
+                openai_api_base=self.cfg_private['openai_azure']['openai_api_base'],
+                openai_organization=self.cfg_private['openai_azure']['openai_organization'],
+                openai_api_type=self.cfg_private['openai_azure']['openai_api_type']
             )
 
         if self.has_key_google_OCR:
@@ -532,6 +534,8 @@ class VoucherVision():
 
                     if is_azure:
                         self.llm.deployment_name = MODEL
+                    else:
+                        self.llm = None
 
                     # Send OCR to chatGPT and return formatted dictonary
                     if use_long_form:

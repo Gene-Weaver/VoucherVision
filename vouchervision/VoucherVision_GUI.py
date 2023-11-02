@@ -276,14 +276,15 @@ def create_private_file_0(cfg_private=None):
 
     if cfg_private is None:
         cfg_private = {}
-        
         cfg_private['openai'] = {}
-        cfg_private['openai']['openai_api_key'] = ''
-        cfg_private['openai']['API_VERSION'] = ''
         cfg_private['openai']['OPENAI_API_KEY'] =''
-        cfg_private['openai']['openai_api_base'] =''
-        cfg_private['openai']['OPENAI_organization'] =''
-        cfg_private['openai']['openai_api_type'] =''
+        
+        cfg_private['openai_azure'] = {}
+        cfg_private['openai_azure']['openai_api_key'] = ''
+        cfg_private['openai_azure']['api_version'] = ''
+        cfg_private['openai_azure']['openai_api_base'] =''
+        cfg_private['openai_azure']['openai_organization'] =''
+        cfg_private['openai_azure']['openai_api_type'] =''
 
         cfg_private['google_cloud'] = {}
         cfg_private['google_cloud']['path_json_file'] =''
@@ -327,7 +328,7 @@ def create_private_file_0(cfg_private=None):
         st.write("---")
         st.subheader("OpenAI")
         st.markdown("API key for first-party OpenAI API. Create an account with OpenAI [here](https://platform.openai.com/signup), then create an API key [here](https://platform.openai.com/account/api-keys).")
-        openai_api_key = st.text_input("openai_api_key", cfg_private['openai'].get('openai_api_key', ''),
+        openai_api_key = st.text_input("openai_api_key", cfg_private['openai'].get('OPENAI_API_KEY', ''),
                                                  help='The actual API key. Likely to be a string of 2 character, a dash, and then a 48-character string: sk-XXXXXXXX...',
                                                  placeholder = 'e.g. sk-XXXXXXXX...',
                                                  type='password')
@@ -335,23 +336,23 @@ def create_private_file_0(cfg_private=None):
         st.write("---")
         st.subheader("OpenAI - Azure")
         st.markdown("This version OpenAI relies on Azure servers directly as is intended for private enterprise instances of OpenAI's services, such as [UM-GPT](https://its.umich.edu/computing/ai). Administrators will provide you with the following information.")
-        azure_openai_api_version = st.text_input("azure_openai_api_version", cfg_private['openai'].get('API_VERSION', ''),
+        azure_openai_api_version = st.text_input("azure_openai_api_version", cfg_private['openai_azure'].get('api_version', ''),
                                                  help='API Version e.g. "2023-05-15"',
                                                  placeholder = 'e.g. 2023-05-15',
                                                  type='password')
-        azure_openai_api_key = st.text_input("azure_openai_api_key", cfg_private['openai'].get('OPENAI_API_KEY', ''),
+        azure_openai_api_key = st.text_input("azure_openai_api_key", cfg_private['openai_azure'].get('openai_api_key', ''),
                                                  help='The actual API key. Likely to be a 32-character string',
                                                  placeholder = 'e.g. 12333333333333333333333333333332',
                                                  type='password')
-        azure_openai_api_base = st.text_input("azure_openai_api_base", cfg_private['openai'].get('openai_api_base', ''),
+        azure_openai_api_base = st.text_input("azure_openai_api_base", cfg_private['openai_azure'].get('openai_api_base', ''),
                                                  help='The base url for the API e.g. "https://api.umgpt.umich.edu/azure-openai-api"',
                                                  placeholder = 'e.g. https://api.umgpt.umich.edu/azure-openai-api',
                                                  type='password')
-        azure_openai_organization = st.text_input("azure_openai_organization", cfg_private['openai'].get('OPENAI_organization', ''),
+        azure_openai_organization = st.text_input("azure_openai_organization", cfg_private['openai_azure'].get('OPENAI_organization', ''),
                                                  help='Your organization code. Likely a short string',
                                                  placeholder = 'e.g. 123456',
                                                  type='password')
-        azure_openai_api_type = st.text_input("azure_openai_api_type", cfg_private['openai'].get('openai_api_type', ''),
+        azure_openai_api_type = st.text_input("azure_openai_api_type", cfg_private['openai_azure'].get('openai_api_type', ''),
                                                  help='The API type. Typically "azure"',
                                                  placeholder = 'e.g. azure',
                                                  type='password')
@@ -372,13 +373,13 @@ def create_private_file_0(cfg_private=None):
 def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
                              azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm):
     # Update the configuration dictionary with the new values
-    cfg_private['openai']['openai_api_key'] = openai_api_key
+    cfg_private['openai']['OPENAI_API_KEY'] = openai_api_key 
 
-    cfg_private['openai']['API_VERSION'] = azure_openai_api_version
-    cfg_private['openai']['OPENAI_API_KEY'] = azure_openai_api_key
-    cfg_private['openai']['openai_api_base'] = azure_openai_api_base
-    cfg_private['openai']['OPENAI_organization'] = azure_openai_organization
-    cfg_private['openai']['openai_api_type'] = azure_openai_api_type
+    cfg_private['openai_azure']['api_version'] = azure_openai_api_version
+    cfg_private['openai_azure']['openai_api_key'] = azure_openai_api_key
+    cfg_private['openai_azure']['openai_api_base'] = azure_openai_api_base
+    cfg_private['openai_azure']['openai_organization'] = azure_openai_organization
+    cfg_private['openai_azure']['openai_api_type'] = azure_openai_api_type
 
     cfg_private['google_cloud']['path_json_file'] = google_vision
 

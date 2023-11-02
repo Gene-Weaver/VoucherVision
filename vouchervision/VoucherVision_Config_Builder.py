@@ -392,9 +392,12 @@ def check_if_usable():
     path_cfg_private = os.path.join(dir_home, 'PRIVATE_DATA.yaml')
     cfg_private = get_cfg_from_full_path(path_cfg_private)
 
-    has_key_azure_openai = has_API_key(cfg_private['openai']['API_VERSION'])
-    has_key_openai = has_API_key(cfg_private['openai']['openai_api_key'])
+    has_key_openai = has_API_key(cfg_private['openai']['OPENAI_API_KEY'])
+
+    has_key_azure_openai = has_API_key(cfg_private['openai_azure']['api_version']) 
+
     has_key_palm2 = has_API_key(cfg_private['google_palm']['google_palm_api'])
+    
     has_key_google_OCR = has_API_key(cfg_private['google_cloud']['path_json_file'])
 
     if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_palm2):
@@ -407,9 +410,12 @@ def check_API_key(dir_home, api_version):
     path_cfg_private = os.path.join(dir_home, 'PRIVATE_DATA.yaml')
     cfg_private = get_cfg_from_full_path(path_cfg_private)
 
-    has_key_azure_openai = has_API_key(cfg_private['openai']['API_VERSION'])
-    has_key_openai = has_API_key(cfg_private['openai']['openai_api_key'])
+    has_key_openai = has_API_key(cfg_private['openai']['OPENAI_API_KEY'])
+
+    has_key_azure_openai = has_API_key(cfg_private['openai_azure']['api_version']) 
+
     has_key_palm2 = has_API_key(cfg_private['google_palm']['google_palm_api'])
+
     has_key_google_OCR = has_API_key(cfg_private['google_cloud']['path_json_file'])
 
     if api_version == 'palm' and has_key_palm2:
