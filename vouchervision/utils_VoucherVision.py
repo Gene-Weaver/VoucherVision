@@ -344,9 +344,12 @@ class VoucherVision():
         self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
         self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
 
-        self.has_key_azure_openai = self.has_API_key(self.cfg_private['openai_azure']['api_version'])
         self.has_key_openai = self.has_API_key(self.cfg_private['openai']['OPENAI_API_KEY'])
+
+        self.has_key_azure_openai = self.has_API_key(self.cfg_private['openai_azure']['api_version'])
+        
         self.has_key_palm2 = self.has_API_key(self.cfg_private['google_palm']['google_palm_api'])
+        
         self.has_key_google_OCR = self.has_API_key(self.cfg_private['google_cloud']['path_json_file'])
 
         if self.has_key_openai:
