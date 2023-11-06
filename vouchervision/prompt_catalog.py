@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import yaml, json
 
 
 #  catalog = PromptCatalog(OCR="Sample OCR text", domain_knowledge_example="Sample domain knowledge", similarity="0.9")
@@ -451,7 +452,7 @@ class PromptCatalog:
                 "elevation_units": {
                     "format": "spell check transcription",
                     "null_value": "",
-                    "description": "Elevation units must be meters. If min_elevation field is populated, then elevation_units: 'm'. Otherwise elevation_units: ''"
+                    "description": "Elevation units must be meters. If min_elevation field is populated, then elevation_units: 'm'. Otherwise elevation_units: ''."
                 },
                 "verbatim_coordinates": {
                     "format": "verbatim transcription",
@@ -570,6 +571,172 @@ class PromptCatalog:
         
         return prompt, self.n_fields, xlsx_headers
     
+    #############################################################################################
+    #############################################################################################
+    #############################################################################################
+    #############################################################################################
+    # These are for dynamically creating your own prompts with n-columns
+
+
+    def prompt_v2_custom(self, rules_config_path, OCR=None, is_palm=False):
+        self.OCR = OCR
+
+        self.rules_config_path = rules_config_path
+        self.rules_config = self.load_rules_config()
+
+        self.instructions = self.rules_config['instructions']
+        self.json_formatting_instructions = self.rules_config['json_formatting_instructions']
+
+        self.rules_list = self.rules_config['rules']
+        self.n_fields = len(self.rules_list['Dictionary'])
+
+        # Set the rules for processing OCR into JSON format
+        self.rules = self.create_rules(is_palm)
+
+        self.structure = self.create_structure(is_palm)
+
+        if is_palm:
+            prompt = f"""Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
+                The rules are:
+                {self.instructions}
+                The unstructured OCR text is:
+                {self.OCR}
+                {self.json_formatting_instructions}
+                This is the JSON template that includes instructions for each key:
+                {self.rules}
+                Please populate the following JSON dictionary based on the rules and the unformatted OCR text:
+                {self.structure}
+                {self.structure}
+                {self.structure}
+                """
+        else:
+            prompt = f"""Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
+                The rules are:
+                {self.instructions}
+                The unstructured OCR text is:
+                {self.OCR}
+                {self.json_formatting_instructions}
+                This is the JSON template that includes instructions for each key:
+                {self.rules}
+                Please populate the following JSON dictionary based on the rules and the unformatted OCR text:
+                {self.structure}
+                """
+        xlsx_headers = self.generate_xlsx_headers(is_palm)
+        
+        return prompt, self.n_fields, xlsx_headers
+
+    def load_rules_config(self):
+        with open(self.rules_config_path, 'r') as stream:
+            try:
+                return yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+                return None
+
+    def create_rules(self, is_palm=False):
+        if is_palm:
+            # Start with a structure for the "Dictionary" section where each key contains its rules
+            dictionary_structure = {
+                key: {
+                    'description': value['description'],
+                    'format': value['format'],
+                    'null_value': value.get('null_value', '')
+                } for key, value in self.rules_list['Dictionary'].items()
+            }
+
+            # Convert the structure to a JSON string without indentation
+            structure_json_str = json.dumps(dictionary_structure)
+            return structure_json_str
+        
+        else:
+            # Start with a structure for the "Dictionary" section where each key contains its rules
+            dictionary_structure = {
+                key: {
+                    'description': value['description'],
+                    'format': value['format'],
+                    'null_value': value.get('null_value', '')
+                } for key, value in self.rules_list['Dictionary'].items()
+            }
+
+            # Combine both sections into the overall structure
+            full_structure = {
+                "Dictionary": dictionary_structure,
+                "SpeciesName": self.rules_list['SpeciesName']
+            }
+
+            # Convert the structure to a JSON string without indentation
+            structure_json_str = json.dumps(full_structure)
+            return structure_json_str
+    
+    def create_structure(self, is_palm=False):
+        if is_palm:
+            # Start with an empty structure for the "Dictionary" section
+            dictionary_structure = {key: "" for key in self.rules_list['Dictionary'].keys()}
+
+            # Convert the structure to a JSON string with indentation for readability
+            structure_json_str = json.dumps(dictionary_structure)
+            return structure_json_str
+        else:
+            # Start with an empty structure for the "Dictionary" section
+            dictionary_structure = {key: "" for key in self.rules_list['Dictionary'].keys()}
+            
+            # Manually define the "SpeciesName" section
+            species_name_structure = {"taxonomy": ""}
+
+            # Combine both sections into the overall structure
+            full_structure = {
+                "Dictionary": dictionary_structure,
+                "SpeciesName": species_name_structure
+            }
+
+            # Convert the structure to a JSON string with indentation for readability
+            structure_json_str = json.dumps(full_structure)
+            return structure_json_str
+
+    def generate_xlsx_headers(self, is_palm):
+        # Extract headers from the 'Dictionary' keys in the JSON template rules
+        if is_palm:
+            xlsx_headers = list(self.rules_list.keys())
+            return xlsx_headers     
+        else:
+            xlsx_headers = list(self.rules_list["Dictionary"].keys())
+            return xlsx_headers
+    
+    def prompt_v2_custom_redo(self, incorrect_json, is_palm):
+        # Load the existing rules and structure
+        self.rules_config = self.load_rules_config()
+        # self.rules = self.create_rules(is_palm)
+        self.structure = self.create_structure(is_palm)
+        
+        # Generate the prompt using the loaded rules and structure
+        if is_palm:
+            prompt = f"""This text is supposed to be JSON, but it contains an error that prevents it from loading with the Python command json.loads().
+                You need to return coorect JSON for the following dictionary. Most likely, a quotation mark inside of a field value has not been escaped properly with a backslash.
+                Given the input, please generate a JSON response. Please note that the response should not contain any special characters, including quotation marks (single ' or double \"), within the JSON values.
+                Escape all JSON control characters that appear in input including ampersand (&) and other control characters. 
+                Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+                Ensure the output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+                The incorrectly formatted JSON dictionary: {incorrect_json}
+                The output JSON structure: {self.structure}
+                The output JSON structure: {self.structure}
+                The output JSON structure: {self.structure}
+                The refactored JSON disctionary: """
+        else:
+            prompt = f"""This text is supposed to be JSON, but it contains an error that prevents it from loading with the Python command json.loads().
+                You need to return coorect JSON for the following dictionary. Most likely, a quotation mark inside of a field value has not been escaped properly with a backslash.
+                Given the input, please generate a JSON response. Please note that the response should not contain any special characters, including quotation marks (single ' or double \"), within the JSON values.
+                Escape all JSON control characters that appear in input including ampersand (&) and other control characters. 
+                Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+                Ensure the output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+                The incorrectly formatted JSON dictionary: {incorrect_json}
+                The output JSON structure: {self.structure}
+                The refactored JSON disctionary: """
+        return prompt
+
+    #############################################################################################
+    #############################################################################################
+    #############################################################################################
+    #############################################################################################
     def prompt_gpt_redo_v1(self, incorrect_json):       
         structure = """Below is the correct JSON formatting. Modify the text to conform to the following format, fixing the incorrect JSON:
         {"Dictionary":

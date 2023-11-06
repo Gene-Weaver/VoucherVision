@@ -174,6 +174,77 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
 
     return config_data, dir_home
 
+def build_api_tests(api):
+    dir_home = os.path.dirname(os.path.dirname(__file__))
+    path_to_configs = os.path.join(dir_home,'demo','demo_configs')
+
+    dir_home = os.path.dirname(os.path.dirname(__file__))
+    dir_images_local = os.path.join(dir_home,'demo','demo_images')
+    validate_dir(os.path.join(dir_home,'demo','demo_configs'))
+    path_domain_knowledge = os.path.join(dir_home,'domain_knowledge','SLTP_UM_AllAsiaMinimalInRegion.xlsx')
+    embeddings_database_name = os.path.splitext(os.path.basename(path_domain_knowledge))[0]
+    prefix_removal = ''
+    suffix_removal = ''
+    catalog_numerical_only = False
+    batch_size = 500
+
+
+    # ### Option 1: "GPT 4" of ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"]
+    # LLM_version_user = 'Azure GPT 4'
+    
+    # ### Option 2: False of [False, True]
+    # use_LeafMachine2_collage_images = False
+    
+    # ### Option 3: False of [False, True]
+    # use_domain_knowledge = True
+
+    test_results = {}
+    if api == 'openai':
+        OPT1, OPT2, OPT3 = TestOptionsAPI_openai.get_options()
+    elif api == 'palm':
+        OPT1, OPT2, OPT3 = TestOptionsAPI_palm.get_options()
+    elif api == 'azure_openai':
+        OPT1, OPT2, OPT3 = TestOptionsAPI_azure_openai.get_options()
+    else:
+        raise
+
+    ind = -1
+    ind_opt1 = -1
+    ind_opt2 = -1
+    ind_opt3 = -1
+
+    for opt1 in OPT1:
+        ind_opt1+= 1
+        for opt2 in OPT2:
+            ind_opt2 += 1
+            for opt3 in OPT3:
+                ind += 1
+                ind_opt3 += 1
+                
+                LLM_version_user = opt1
+                use_LeafMachine2_collage_images = opt2
+                prompt_version = opt3
+
+                filename = f"{ind}__OPT1-{ind_opt1}__OPT2-{ind_opt2}__OPT3-{ind_opt3}.yaml"
+                run_name = f"{ind}__OPT1-{ind_opt1}__OPT2-{ind_opt2}__OPT3-{ind_opt3}"
+
+                dir_output = os.path.join(dir_home,'demo','demo_output','run_name')
+                validate_dir(dir_output)
+                
+                config_data, dir_home = assemble_config(dir_home, run_name, dir_images_local,dir_output,
+                    prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
+                    path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
+                    prompt_version)
+                
+                write_config_file(config_data, os.path.join(dir_home,'demo','demo_configs'),filename=filename)
+
+                test_results[run_name] = False
+            ind_opt3 = -1
+        ind_opt2 = -1
+    ind_opt1 = -1
+        
+    return dir_home, path_to_configs, test_results
+
 def build_demo_tests(llm_version):
     dir_home = os.path.dirname(os.path.dirname(__file__))
     path_to_configs = os.path.join(dir_home,'demo','demo_configs')
@@ -287,6 +358,42 @@ class TestOptionsPalm:
     def get_length(cls):
         return 6
     
+class TestOptionsAPI_openai:
+    OPT1 = ["GPT 3.5"]
+    OPT2 = [False]
+    OPT3 = ["Version 2"]
+
+    @classmethod
+    def get_options(cls):
+        return cls.OPT1, cls.OPT2, cls.OPT3
+    @classmethod
+    def get_length(cls):
+        return 24
+    
+class TestOptionsAPI_azure_openai:
+    OPT1 = ["Azure GPT 3.5"]
+    OPT2 = [False]
+    OPT3 = ["Version 2"]
+
+    @classmethod
+    def get_options(cls):
+        return cls.OPT1, cls.OPT2, cls.OPT3
+    @classmethod
+    def get_length(cls):
+        return 24
+    
+class TestOptionsAPI_palm:
+    OPT1 = ["PaLM 2"]
+    OPT2 = [False]
+    OPT3 = ["Version 2 PaLM 2"]
+
+    @classmethod
+    def get_options(cls):
+        return cls.OPT1, cls.OPT2, cls.OPT3
+    @classmethod
+    def get_length(cls):
+        return 6
+    
 def run_demo_tests_GPT(progress_report):
     dir_home, path_to_configs, test_results = build_demo_tests('gpt')
     progress_report.set_n_overall(len(test_results.items()))
@@ -317,7 +424,7 @@ def run_demo_tests_GPT(progress_report):
         
         if check_API_key(dir_home, api_version) and check_API_key(dir_home, 'google-vision-ocr'):
             try:
-                last_JSON_response = voucher_vision(cfg_file_path, dir_home, cfg_test=None, progress_report=progress_report, test_ind=int(test_ind))
+                last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, cfg_test=None, progress_report=progress_report, test_ind=int(test_ind))
                 test_results[cfg] = True
                 JSON_results[ind] = last_JSON_response
             except Exception as e:
@@ -361,7 +468,7 @@ def run_demo_tests_Palm(progress_report):
         
         if check_API_key(dir_home, api_version) and check_API_key(dir_home, 'google-vision-ocr') :
             try:
-                last_JSON_response = voucher_vision(cfg_file_path, dir_home, cfg_test=None, progress_report=progress_report, test_ind=int(test_ind))
+                last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, cfg_test=None, progress_report=progress_report, test_ind=int(test_ind))
                 test_results[cfg] = True
                 JSON_results[ind] = last_JSON_response
             except Exception as e:
@@ -380,6 +487,43 @@ def run_demo_tests_Palm(progress_report):
             print(f"No API key found for {fail_response}")
 
     return test_results, JSON_results
+
+def run_api_tests(api):
+    try:
+        dir_home, path_to_configs, test_results = build_api_tests(api)
+
+        JSON_results = {}
+
+        for ind, (cfg, result) in enumerate(test_results.items()):
+            if api == 'openai':
+                OPT1, OPT2, OPT3 = TestOptionsAPI_openai.get_options()
+            elif 'azure_openai':
+                OPT1, OPT2, OPT3 = TestOptionsAPI_azure_openai.get_options()
+            elif 'palm':
+                OPT1, OPT2, OPT3 = TestOptionsAPI_palm.get_options()
+            test_ind, ind_opt1, ind_opt2, ind_opt3 = cfg.split('__')
+            opt1_readable = OPT1[int(ind_opt1.split('-')[1])]
+            opt2_readable = "Use LeafMachine2 for Collage Images" if OPT2[int(ind_opt2.split('-')[1])] else "Don't use LeafMachine2 for Collage Images"
+            opt3_readable = f"Prompt {OPT3[int(ind_opt3.split('-')[1])]}"
+            # opt3_readable = "Use Domain Knowledge" if OPT3[int(ind_opt3.split('-')[1])] else "Don't use Domain Knowledge"
+            # Construct the human-readable test name
+            human_readable_name = f"{opt1_readable}, {opt2_readable}, {opt3_readable}"
+            print_main_fail(f"Starting validation test: {human_readable_name}")
+            cfg_file_path = os.path.join(path_to_configs,'.'.join([cfg,'yaml']))
+            
+            if check_API_key(dir_home, api) and check_API_key(dir_home, 'google-vision-ocr') :
+                try:
+                    last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, cfg_test=None, progress_report=None, test_ind=int(test_ind))
+                    test_results[cfg] = True
+                    JSON_results[ind] = last_JSON_response
+                    return True
+
+                except Exception as e:
+                    return False
+            else:
+                return False
+    except:
+        return False
 
 def has_API_key(val):
         if val != '':
@@ -420,9 +564,9 @@ def check_API_key(dir_home, api_version):
 
     if api_version == 'palm' and has_key_palm2:
         return True
-    elif api_version == 'gpt' and has_key_openai:
+    elif api_version in ['gpt','openai'] and has_key_openai:
         return True
-    elif api_version == 'gpt-azure' and has_key_azure_openai:
+    elif api_version in ['gpt-azure', 'azure_openai'] and has_key_azure_openai:
         return True
     elif api_version == 'google-vision-ocr' and has_key_google_OCR:
         return True

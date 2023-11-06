@@ -29,8 +29,11 @@ demo/demo_output/*
 /bin/*
 !/bin/version.yml
 release*
-
-
+expense_report/*
+/custom_prompts/*
+!/custom_prompts/required_structure.yaml
+!/custom_prompts/version_2.yaml
+!/custom_prompts/version_2_OSU.yaml
 leafmachine2/*/.gitignore
 
 /bin/*

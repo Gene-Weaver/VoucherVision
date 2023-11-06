@@ -23,6 +23,14 @@ Table of Contents
     * [Run Tests](#run-tests)
     * [Starting VoucherVision](#starting-vouchervision)
     * [Azure Instances of OpenAI](#azure-instances-of-openai)
+* [Custom Prompt Builder](#custom-prompt-builder)
+    * [Load, Build, Edit](#load-build-edit)
+    * [Instructions](#instructions)
+    * [Defining Column Names Field-Specific Instructions](#defining-column-names-field-specific-instructions)
+    * [Prompting Structure](#prompting-structure)
+    * [Mapping Columns for VoucherVisionEditor](#mapping-columns-for-vouchervisioneditor)
+* [Expense Reporting](#expense-reporting)
+    * [Expense Report Dashboard](#expense-report-dashboard)
 * [User Interface Images](#user-interface-images)
 
 ---
@@ -30,7 +38,7 @@ Table of Contents
 # About
 ## **VoucherVision** - In Beta Testing Phase 🚀
 
-For inquiries or feedback, [please complete our form](https://docs.google.com/forms/d/e/1FAIpQLSe2E9zU1bPJ1BW4PMakEQFsRmLbQ0WTBI2UXHIMEFm4WbnAVw/viewform?usp=sf_link).
+For inquiries, feedback (or if you want to get involved!) [please complete our form](https://docs.google.com/forms/d/e/1FAIpQLSe2E9zU1bPJ1BW4PMakEQFsRmLbQ0WTBI2UXHIMEFm4WbnAVw/viewform?usp=sf_link).
 
 ### **Overview:**  
 Initiated by the **University of Michigan Herbarium**, VoucherVision harnesses the power of large language models (LLMs) to transform the transcription process of natural history specimen labels. Our workflow is as follows:
@@ -50,9 +58,9 @@ The main VoucherVision tool and the VoucherVisionEditor are packaged separately.
 # Try our public demo!
 Our public demo, while lacking several quality control and reliability features found in the full VoucherVision module, provides an exciting glimpse into its capabilities. Feel free to upload your herbarium specimen and see what happens! We make frequent updates, so don't forget to revisit!
 [VoucherVision Demo](https://vouchervision.azurewebsites.net/)
+> The web version is quite far behind this GitHub repo...
 
 ---
-
 
 # Installing VoucherVision
 
@@ -106,22 +114,18 @@ Installation should basically be the same for Linux.
 
 1. Install the required dependencies to use VoucherVision  
     - Option A - If you are using Windows PowerShell:
-    <pre><code class="language-python">pip install wheel streamlit streamlit-extras pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade streamlit }</code></pre>
+    <pre><code class="language-python">pip install wheel streamlit streamlit-extras plotly pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade streamlit }</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-    - Option B - Install individually:
-    <pre><code class="language-python">pip install numpy -U</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-    <pre><code class="language-python">pip install -U scikit-learn</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-    <pre><code class="language-python">pip install --upgrade streamlit</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-    Now the rest of the packages
-    <pre><code class="language-python">pip install wheel streamlit streamlit-extras pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity</code></pre>
+    - Option B:
+    <pre><code class="language-python">pip install wheel streamlit streamlit-extras plotly pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
+2. Upgrade important packages. Run this if there is an update to VoucherVision.
+    <pre><code class="language-python">pip install --upgrade numpy scikit-learnstreamlit google-generativeai        google-cloud-storage google-cloud-vision azureml-sdk azure-identity openai langchain</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-2. Install PyTorch
+3. Install PyTorch
     - The LeafMachine2 machine learning algorithm requires PyTorch. If your computer does not have a GPU, then please install a version of PyTorch that is for CPU only. If your computer does have an Nvidia GPU, then please determine which version of PyTorch matches your current CUDA version. Please see [Troubleshooting CUDA](#troubleshooting-cuda) for help. PyTorch is large and will take a bit to install.
 
     - WITH GPU (or visit [PyTorch.org](https://pytorch.org/get-started/locally/) to find the appropriate version of PyTorch for your CUDA version)
@@ -194,6 +198,58 @@ Once you have provided API keys, you can test all available prompts and LLMs by 
 
 ## Azure Instances of OpenAI
 If your institution has an enterprise instance of OpenAI's services, [like at the University of Michigan](https://its.umich.edu/computing/ai), you can use Azure instead of the OpenAI servers. Your institution should be able to provide you with the required keys (there are 5 required keys for this service). 
+
+# Custom Prompt Builder
+VoucherVision empowers individual institutions to customize the format of the LLM output. Using our pre-defined prompts you can transcribe the label text into 20 columns, but using our Prompt Builder you can load one of our default prompts and adjust the output to meet your needs. More instructions will come soon, but for now here are a few more details. 
+
+### Load, Build, Edit
+
+The Prompt Builder creates a prompt in the structure that VoucherVision expects. This information is stored as a configuration yaml file in `../VoucherVision/custom_prompts/`. We provide a few versions to get started. You can load one of our examples and then use the Prompt Builder to edit or add new columns. 
+
+![prompt_1](https://LeafMachine.org/img/prompt_1.PNG)
+
+### Instructions
+
+Right now, the prompting instructions are not configurable, but that may change in the future. 
+
+![prompt_2](https://LeafMachine.org/img/prompt_1.PNG)
+
+### Defining Column Names Field-Specific Instructions
+
+The central JSON object shows the structure of the columns that you are requesting the LLM to create and populate with information from the specimen's labels. These will become the rows in the final xlsx file the VoucherVision generates. You can pick formatting instructions, set default values, and give detailed instructions.
+
+> Note: formatting instructions are not always followed precisely by the LLM. For example, GPT-4 is capable of granular instructions like converting ALL CAPS TEXT to sentence-case, but GPT-3.5 and PaLM 2 might not be capable of following that instruction every time (which is why we have the VoucherVisionEditor and are working to link these instructions so that humans editing the output can quickly/easily fix these errors).
+
+![prompt_3](https://LeafMachine.org/img/prompt_3.PNG)
+
+### Prompting Structure
+
+The rightmost JSON object is the entire prompt structure. If you load the `required_structure.yaml` prompt, you will wee the bare-bones version of what VoucherVision expects to see. All of the parts are there for a reason. The Prompt Builder UI may be a little unruly right now thanks to quirks with Streamlit, but we still recommend using the UI to build your own prompts to make sure that all of the required components are present. 
+
+![prompt_4](https://LeafMachine.org/img/prompt_4.PNG)
+
+### Mapping Columns for VoucherVisionEditor
+
+Finally, we need to map columns to a VoucherVisionEditor category.
+
+![prompt_5](https://LeafMachine.org/img/prompt_5.PNG)
+
+# Expense Reporting
+VoucherVision logs the number of input and output tokens (using [tiktoken](https://github.com/openai/tiktoken)) from every call. We store the publicly listed prices of the LLM APIs in `../VoucherVision/api_cost/api_cost.yaml`. Then we do some simple math to estimage the cost of run, which is stored inside of your project's output directory `../run_name/Cost/run_name.csv` and all runs are accumulated in a csv file stored in `../VoucherVision/expense_report/expense_report.csv`. VoucherVision only manages `expense_report.csv`, so if you want to split costs by month/quarter then copy and rename `expense_report.csv`. Deleting `expense_report.csv` will let you accumulate more stats.  
+
+> This should be treated as an estimate. The true cost may be slightly different.  
+
+This is an example of the stats that we track:
+| run                        | date                     | api_version | total_cost | n_images | tokens_in | tokens_out | rate_in | rate_out | cost_in   | cost_out |
+|----------------------------|--------------------------|-------------|------------|----------|-----------|------------|---------|----------|-----------|----------|
+| GPT4_test_run1  | 2023_11_05__17-44-31     | GPT_4       | 0.23931    | 2        | 6749      | 614        | 0.03    | 0.06     | 0.20247   | 0.03684  |
+| GPT_3_5_test_run  | 2023_11_05__17-48-48     | GPT_3_5     | 0.0189755  | 4        | 12033     | 463        | 0.0015  | 0.002    | 0.0180495 | 0.000926 |
+| PALM2_test_run  | 2023_11_05__17-50-35     | PALM2       | 0          | 4        | 13514     | 771        | 0       | 0        | 0         | 0        |
+| GPT4_test_run2  | 2023_11_05__18-49-24     | GPT_4       | 0.40962    | 4        | 12032     | 811        | 0.03    | 0.06     | 0.36096   | 0.04866  |
+
+## Expense Report Dashboard
+The sidebar in VoucherVision displays summary stats taken from `expense_report.csv`.
+![Expense Report Dashboard](https://LeafMachine.org/img/expense_report.PNG)
 
 # User Interface Images
 Validation test when the OpenAI key is not provided, but keys for PaLM 2 and Azure OpenAI are present:

@@ -1,4 +1,5 @@
-import os, yaml, datetime, argparse, re, cv2, random, shutil
+import os, yaml, datetime, argparse, re, cv2, random, shutil, tiktoken, json, csv
+from collections import Counter
 import pandas as pd
 from pathlib import Path
 from dataclasses import dataclass
@@ -28,6 +29,145 @@ def get_cfg_from_full_path(path_cfg):
     with open(path_cfg, "r") as ymlfile:
         cfg = yaml.full_load(ymlfile)
     return cfg
+
+def num_tokens_from_string(string: str, encoding_name: str) -> int:
+    encoding = tiktoken.get_encoding(encoding_name)
+    if isinstance(string, dict):
+        string = json.dumps(string)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+def add_to_expense_report(dir_home, data):
+    path_expense_report = os.path.join(dir_home, 'expense_report','expense_report.csv')
+
+    # Check if the file exists
+    file_exists = os.path.isfile(path_expense_report)
+
+    # Open the file in append mode if it exists, or write mode if it doesn't
+    mode = 'a' if file_exists else 'w'
+    
+    with open(path_expense_report, mode=mode, newline='') as file:
+        writer = csv.writer(file)
+        
+        # If the file does not exist, write the header first
+        if not file_exists:
+            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out',])
+        
+        # Write the data row
+        writer.writerow(data)
+
+def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, n_images):
+    version_mapping = {
+            'GPT 4': 'GPT_4',
+            'GPT 3.5': 'GPT_3_5',
+            'Azure GPT 3.5': 'GPT_3_5',
+            'Azure GPT 4': 'GPT_4',
+            'PaLM 2': 'PALM2'
+        }
+    LLM_version = version_mapping[LLM_version0]
+    # Define the CSV file path
+    csv_file_path = os.path.join(Dirs.path_cost, Dirs.run_name + '.csv')
+
+    cost_in, cost_out, total_cost, rate_in, rate_out = calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out)
+    
+    # The data to be written to the CSV file
+    data = [Dirs.run_name, get_datetime(),LLM_version, total_cost, n_images, total_tokens_in, total_tokens_out, rate_in, rate_out, cost_in, cost_out,]
+    
+    # Open the file in write mode
+    with open(csv_file_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write the header
+        writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out',])
+        
+        # Write the data
+        writer.writerow(data)
+    # Create a summary string
+    cost_summary = (f"Cost Summary for {Dirs.run_name}:\n"
+                    f"     API Cost In: ${rate_in} per 1000 Tokens\n" 
+                    f"     API Cost Out: ${rate_out} per 1000 Tokens\n" 
+                    f"     Tokens In: {total_tokens_in} - Cost: ${cost_in:.4f}\n"
+                    f"     Tokens In: {total_tokens_in} - Cost: ${cost_in:.4f}\n"
+                    f"     Tokens Out: {total_tokens_out} - Cost: ${cost_out:.4f}\n"
+                    f"     Images Processed: {n_images}\n"
+                    f"     Total Cost: ${total_cost:.4f}")
+    return cost_summary, data, total_cost
+
+def summarize_expense_report(path_expense_report):
+    # Initialize counters and sums
+    run_count = 0
+    total_cost_sum = 0
+    tokens_in_sum = 0
+    tokens_out_sum = 0
+    rate_in_sum = 0
+    rate_out_sum = 0
+    cost_in_sum = 0
+    cost_out_sum = 0
+    n_images_sum = 0
+    api_version_counts = Counter()
+
+    # Try to read the CSV file into a DataFrame
+    try:
+        df = pd.read_csv(path_expense_report)
+
+        # Process each row in the DataFrame
+        for index, row in df.iterrows():
+            run_count += 1
+            total_cost_sum += row['total_cost']
+            tokens_in_sum += row['tokens_in']
+            tokens_out_sum += row['tokens_out']
+            rate_in_sum += row['rate_in']
+            rate_out_sum += row['rate_out']
+            cost_in_sum += row['cost_in']
+            cost_out_sum += row['cost_out']
+            n_images_sum += row['n_images']
+            api_version_counts[row['api_version']] += 1
+
+    except FileNotFoundError:
+        print(f"The file {path_expense_report} does not exist.")
+        return None
+
+    # Calculate API version percentages
+    api_version_percentages = {version: (count / run_count) * 100 for version, count in api_version_counts.items()}
+
+    # Calculate cost per image for each API version
+    cost_per_image_dict = {}
+    for version, count in api_version_counts.items():
+        total_cost = df[df['api_version'] == version]['total_cost'].sum()
+        n_images = df[df['api_version'] == version]['n_images'].sum()
+        cost_per_image = total_cost / n_images if n_images > 0 else 0
+        cost_per_image_dict[version] = cost_per_image
+
+    # Return the DataFrame and all summaries
+    return {
+        'run_count': run_count,
+        'total_cost_sum': total_cost_sum,
+        'tokens_in_sum': tokens_in_sum,
+        'tokens_out_sum': tokens_out_sum,
+        'rate_in_sum': rate_in_sum,
+        'rate_out_sum': rate_out_sum,
+        'cost_in_sum': cost_in_sum,
+        'cost_out_sum': cost_out_sum,
+        'n_images_sum':n_images_sum,
+        'api_version_percentages': api_version_percentages,
+        'cost_per_image': cost_per_image_dict
+    }, df
+
+def calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out):
+    # Load the rates from the YAML file
+    with open(path_api_cost, 'r') as file:
+        cost_data = yaml.safe_load(file)
+    
+    # Get the rates for the specified LLM version
+    if LLM_version in cost_data:
+        rates = cost_data[LLM_version]
+        cost_in = rates['in'] * (total_tokens_in/1000)
+        cost_out = rates['out'] * (total_tokens_out/1000)
+        total_cost = cost_in + cost_out
+    else:
+        raise ValueError(f"LLM version {LLM_version} not found in the cost data")
+    
+    return cost_in, cost_out, total_cost, rates['in'], rates['out']
 
 def test_GPU():
     info = []

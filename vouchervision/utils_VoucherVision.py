@@ -1,5 +1,5 @@
 import openai
-import os, sys, json, inspect, glob, tiktoken, shutil
+import os, sys, json, inspect, glob, tiktoken, shutil, yaml
 import openpyxl
 from openpyxl import Workbook, load_workbook
 import google.generativeai as palm
@@ -12,7 +12,7 @@ sys.path.append(parentdir)
 parentdir = os.path.dirname(parentdir)
 sys.path.append(parentdir)
 
-from general_utils import get_cfg_from_full_path
+from general_utils import get_cfg_from_full_path, num_tokens_from_string
 from embeddings_db import VoucherVisionEmbedding
 from OCR_google_cloud_vision import detect_text, overlay_boxes_on_image
 from LLM_chatGPT_3_5 import OCR_to_dict, OCR_to_dict_16k
@@ -45,10 +45,11 @@ Prior to StructuredOutputParser:
 
 class VoucherVision():
 
-    def __init__(self, cfg, logger, dir_home, Project, Dirs):
+    def __init__(self, cfg, logger, dir_home, path_custom_prompts, Project, Dirs):
         self.cfg = cfg
         self.logger = logger
         self.dir_home = dir_home
+        self.path_custom_prompts = path_custom_prompts
         self.Project = Project
         self.Dirs = Dirs
         self.headers = None
@@ -76,6 +77,8 @@ class VoucherVision():
         self.use_domain_knowledge = self.cfg['leafmachine']['project']['use_domain_knowledge']
 
         self.catalog_name_options = ["Catalog Number", "catalog_number"]
+
+        self.utility_headers = ["tokens_in", "tokens_out", "path_to_crop","path_to_original","path_to_content","path_to_helper",]
 
         self.map_prompt_versions()
         self.map_dir_labels()
@@ -109,7 +112,7 @@ class VoucherVision():
         self.version_name, self.is_azure, self.model_name, self.has_key = version_mapping[self.chat_version]
 
     def map_prompt_versions(self):
-        prompt_version_map = {
+        self.prompt_version_map = {
             "Version 1": "prompt_v1_verbose",
             "Version 1 No Domain Knowledge": "prompt_v1_verbose_noDomainKnowledge",
             "Version 2": "prompt_v2_json_rules",
@@ -117,7 +120,11 @@ class VoucherVision():
             "Version 1 PaLM 2 No Domain Knowledge": 'prompt_v1_palm2_noDomainKnowledge', 
             "Version 2 PaLM 2": 'prompt_v2_palm2',
         }
-        self.prompt_version = prompt_version_map[self.prompt_version0]
+        self.prompt_version = self.prompt_version_map.get(self.prompt_version0, self.path_custom_prompts)
+        self.is_predefined_prompt = self.is_in_prompt_version_map(self.prompt_version)
+
+    def is_in_prompt_version_map(self, value):
+        return value in self.prompt_version_map.values()
 
     def init_embeddings(self):
         if self.use_domain_knowledge:
@@ -136,10 +143,25 @@ class VoucherVision():
         # Use glob to get all image paths in the directory
         self.img_paths = glob.glob(os.path.join(self.dir_labels, "*"))
 
-    def init_transcription_xlsx(self):
-        self.HEADERS_v1_n22 = ["Catalog Number","Genus","Species","subspecies","variety","forma","Country","State","County","Locality Name","Min Elevation","Max Elevation","Elevation Units","Verbatim Coordinates","Datum","Cultivated","Habitat","Collectors","Collector Number","Verbatim Date","Date","End Date","path_to_crop","path_to_original","path_to_content","path_to_helper"] 
-        self.HEADERS_v2_n26 = ["catalog_number","genus","species","subspecies","variety","forma","country","state","county","locality_name","min_elevation","max_elevation","elevation_units","verbatim_coordinates","decimal_coordinates","datum","cultivated","habitat","plant_description","collectors","collector_number","determined_by","multiple_names","verbatim_date","date","end_date","path_to_crop","path_to_original","path_to_content","path_to_helper"]
+    def load_rules_config(self):
+        with open(self.path_custom_prompts, 'r') as stream:
+            try:
+                return yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+                return None
+            
+    def generate_xlsx_headers(self):
+        # Extract headers from the 'Dictionary' keys in the JSON template rules
+        xlsx_headers = list(self.rules_config_json['rules']["Dictionary"].keys())
+        xlsx_headers = xlsx_headers + self.utility_headers
+        return xlsx_headers
 
+    def init_transcription_xlsx(self):
+        self.HEADERS_v1_n22 = ["Catalog Number","Genus","Species","subspecies","variety","forma","Country","State","County","Locality Name","Min Elevation","Max Elevation","Elevation Units","Verbatim Coordinates","Datum","Cultivated","Habitat","Collectors","Collector Number","Verbatim Date","Date","End Date"] 
+        self.HEADERS_v2_n26 = ["catalog_number","genus","species","subspecies","variety","forma","country","state","county","locality_name","min_elevation","max_elevation","elevation_units","verbatim_coordinates","decimal_coordinates","datum","cultivated","habitat","plant_description","collectors","collector_number","determined_by","multiple_names","verbatim_date","date","end_date"]
+        self.HEADERS_v1_n22 = self.HEADERS_v1_n22 + self.utility_headers
+        self.HEADERS_v2_n26 = self.HEADERS_v2_n26 + self.utility_headers
         # Initialize output file
         self.path_transcription = os.path.join(self.Dirs.transcription,"transcribed.xlsx")
 
@@ -152,7 +174,16 @@ class VoucherVision():
             self.headers_used = 'HEADERS_v1_n22'
         
         else:
-            raise
+            if not self.is_predefined_prompt:
+                # Load the rules configuration
+                self.rules_config_json = self.load_rules_config()
+                # Generate the headers from the configuration
+                self.headers = self.generate_xlsx_headers()
+                # Set the headers used to the dynamically generated headers
+                self.headers_used = 'CUSTOM'
+            else:
+                # If it's a predefined prompt, raise an exception as we don't have further instructions
+                raise ValueError("Predefined prompt is not handled in this context.")
 
         self.create_or_load_excel_with_headers(os.path.join(self.Dirs.transcription,"transcribed.xlsx"), self.headers)
 
@@ -270,7 +301,7 @@ class VoucherVision():
 
 
 
-    def add_data_to_excel_from_response(self, path_transcription, response, filename_without_extension, path_to_crop, path_to_content, path_to_helper):
+    def add_data_to_excel_from_response(self, path_transcription, response, filename_without_extension, path_to_crop, path_to_content, path_to_helper, nt_in, nt_out):
         wb = openpyxl.load_workbook(path_transcription)
         sheet = wb.active
 
@@ -327,6 +358,10 @@ class VoucherVision():
                 sheet.cell(row=next_row, column=i, value=path_to_content)
             elif header.value == "path_to_helper":
                 sheet.cell(row=next_row, column=i, value=path_to_helper)
+            elif header.value == "tokens_in":
+                sheet.cell(row=next_row, column=i, value=nt_in)
+            elif header.value == "tokens_out":
+                sheet.cell(row=next_row, column=i, value=nt_out)
         # save the workbook
         wb.save(path_transcription)
 
@@ -349,7 +384,7 @@ class VoucherVision():
         self.has_key_azure_openai = self.has_API_key(self.cfg_private['openai_azure']['api_version'])
         
         self.has_key_palm2 = self.has_API_key(self.cfg_private['google_palm']['google_palm_api'])
-        
+
         self.has_key_google_OCR = self.has_API_key(self.cfg_private['google_cloud']['path_json_file'])
 
         if self.has_key_openai:
@@ -401,7 +436,7 @@ class VoucherVision():
         if isinstance(data, dict):
             if self.headers_used == 'HEADERS_v1_n22':
                 return modify_catalog_key("Catalog Number", filename_without_extension, data)
-            elif self.headers_used == 'HEADERS_v2_n26':
+            elif self.headers_used in ['HEADERS_v2_n26', 'CUSTOM']:
                 return modify_catalog_key("catalog_number", filename_without_extension, data)
             else:
                 raise ValueError("Invalid headers used.")
@@ -451,20 +486,25 @@ class VoucherVision():
         self.logger.info(f'Length of OCR raw -- {len(self.OCR)}')
 
         # if prompt_version == 'prompt_v1_verbose':
-        if self.use_domain_knowledge:
-            # Find a similar example from the domain knowledge
-            domain_knowledge_example = self.Voucher_Vision_Embedding.query_db(self.OCR, 1)
-            similarity= self.Voucher_Vision_Embedding.get_similarity()
+        if self.is_predefined_prompt:
+            if self.use_domain_knowledge:
+                # Find a similar example from the domain knowledge
+                domain_knowledge_example = self.Voucher_Vision_Embedding.query_db(self.OCR, 1)
+                similarity= self.Voucher_Vision_Embedding.get_similarity()
 
-            if prompt_version == 'prompt_v1_verbose':
-                prompt, n_fields, xlsx_headers = Catalog.prompt_v1_verbose(OCR=self.OCR,domain_knowledge_example=domain_knowledge_example,similarity=similarity)
+                if prompt_version == 'prompt_v1_verbose':
+                    prompt, n_fields, xlsx_headers = Catalog.prompt_v1_verbose(OCR=self.OCR,domain_knowledge_example=domain_knowledge_example,similarity=similarity)
 
+            else:
+                if prompt_version == 'prompt_v1_verbose_noDomainKnowledge':
+                    prompt, n_fields, xlsx_headers = Catalog.prompt_v1_verbose_noDomainKnowledge(OCR=self.OCR)
+
+                elif prompt_version ==  'prompt_v2_json_rules':
+                    prompt, n_fields, xlsx_headers = Catalog.prompt_v2_json_rules(OCR=self.OCR)
         else:
-            if prompt_version == 'prompt_v1_verbose_noDomainKnowledge':
-                prompt, n_fields, xlsx_headers = Catalog.prompt_v1_verbose_noDomainKnowledge(OCR=self.OCR)
+            prompt, n_fields, xlsx_headers = Catalog.prompt_v2_custom(self.path_custom_prompts, OCR=self.OCR)
+            
 
-            elif prompt_version ==  'prompt_v2_json_rules':
-                prompt, n_fields, xlsx_headers = Catalog.prompt_v2_json_rules(OCR=self.OCR)
 
         nt = num_tokens_from_string(prompt, "cl100k_base")
         self.logger.info(f'Prompt token length --- {nt}')
@@ -472,7 +512,7 @@ class VoucherVision():
         MODEL, use_long_form = self.pick_model(gpt, nt)
         self.logger.info(f'Waiting for {gpt} API call --- Using {MODEL}')
 
-        return MODEL, prompt, use_long_form, n_fields, xlsx_headers
+        return MODEL, prompt, use_long_form, n_fields, xlsx_headers, nt
 
         
     # def setup_GPT(self, opt, gpt):
@@ -510,10 +550,14 @@ class VoucherVision():
 
 
     def use_chatGPT(self, is_azure, progress_report, gpt):
+        total_tokens_in = 0
+        total_tokens_out = 0
         final_JSON_response = None
-        progress_report.set_n_batches(len(self.img_paths))
+        if progress_report is not None:
+            progress_report.set_n_batches(len(self.img_paths))
         for i, path_to_crop in enumerate(self.img_paths):
-            progress_report.update_batch(f"Working on image {i+1} of {len(self.img_paths)}")
+            if progress_report is not None:
+                progress_report.update_batch(f"Working on image {i+1} of {len(self.img_paths)}")
 
             if os.path.basename(path_to_crop) in self.completed_specimens:
                 self.logger.info(f'[Skipping] specimen {os.path.basename(path_to_crop)} already processed')
@@ -526,14 +570,16 @@ class VoucherVision():
                 self.OCR, self.bounds, self.text_to_box_mapping = detect_text(path_to_crop)
                 self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Finished OCR')
                 if len(self.OCR) > 0:
+                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Creating OCR Overlay Image')
                     self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds)
+                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
                     
                     self.write_json_to_file(txt_file_path_OCR, {"OCR":self.OCR})
                     self.write_json_to_file(txt_file_path_OCR_bounds, {"OCR_Bounds":self.bounds})
                     self.overlay_image.save(jpg_file_path_OCR_helper)
 
                     # Setup Dict
-                    MODEL, prompt, use_long_form, n_fields, xlsx_headers = self.setup_GPT(self.prompt_version, gpt)
+                    MODEL, prompt, use_long_form, n_fields, xlsx_headers, nt_in = self.setup_GPT(self.prompt_version, gpt)
 
                     if is_azure:
                         self.llm.deployment_name = MODEL
@@ -543,31 +589,43 @@ class VoucherVision():
                     # Send OCR to chatGPT and return formatted dictonary
                     if use_long_form:
                         response_candidate = OCR_to_dict_16k(is_azure, self.logger, MODEL, prompt, self.llm, self.prompt_version) 
+                        nt_out = num_tokens_from_string(response_candidate, "cl100k_base")
                     else:
                         response_candidate = OCR_to_dict(is_azure, self.logger, MODEL, prompt, self.llm, self.prompt_version)
+                        nt_out = num_tokens_from_string(response_candidate, "cl100k_base")
                 else: 
                     response_candidate = None
+                    nt_out = 0
 
-                final_JSON_response0 = self.save_json_and_xlsx(response_candidate, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper)
+                total_tokens_in += nt_in
+                total_tokens_out += nt_out
+
+                final_JSON_response0 = self.save_json_and_xlsx(response_candidate, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
                 if response_candidate is not None:
                     final_JSON_response = final_JSON_response0
+
                 self.logger.info(f'Formatted JSON\n{final_JSON_response}')
                 self.logger.info(f'Finished {MODEL} API calls\n')
-            
-        progress_report.reset_batch(f"Batch Complete")
+        
+        if progress_report is not None:
+            progress_report.reset_batch(f"Batch Complete")
         try:
             final_JSON_response = json.loads(final_JSON_response.strip('```').replace('json\n', '', 1).replace('json', '', 1))
         except:
             pass
-        return final_JSON_response
+        return final_JSON_response, total_tokens_in, total_tokens_out
 
                     
 
     def use_PaLM(self, progress_report):
+        total_tokens_in = 0
+        total_tokens_out = 0
         final_JSON_response = None
-        progress_report.set_n_batches(len(self.img_paths))
+        if progress_report is not None:
+            progress_report.set_n_batches(len(self.img_paths))
         for i, path_to_crop in enumerate(self.img_paths):
-            progress_report.update_batch(f"Working on image {i+1} of {len(self.img_paths)}")
+            if progress_report is not None:
+                progress_report.update_batch(f"Working on image {i+1} of {len(self.img_paths)}")
             if os.path.basename(path_to_crop) in self.completed_specimens:
                 self.logger.info(f'[Skipping] specimen {os.path.basename(path_to_crop)} already processed')
             else:
@@ -580,26 +638,34 @@ class VoucherVision():
                     self.OCR = self.OCR.replace("\'", "Minutes").replace('\"', "Seconds")
                     self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Finished OCR')
 
+                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Creating OCR Overlay Image')
                     self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds)
+                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
                     
                     self.write_json_to_file(txt_file_path_OCR, {"OCR":self.OCR})
                     self.write_json_to_file(txt_file_path_OCR_bounds, {"OCR_Bounds":self.bounds})
                     self.overlay_image.save(jpg_file_path_OCR_helper)
 
                     # Send OCR to chatGPT and return formatted dictonary
-                    response_candidate = OCR_to_dict_PaLM(self.logger, self.OCR, self.prompt_version, self.Voucher_Vision_Embedding)
+                    response_candidate, nt_in = OCR_to_dict_PaLM(self.logger, self.OCR, self.prompt_version, self.Voucher_Vision_Embedding)
+                    nt_out = num_tokens_from_string(response_candidate, "cl100k_base")
                     
                 else:
                     response_candidate = None
+                    nt_out = 0
 
-                final_JSON_response0 = self.save_json_and_xlsx(response_candidate, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper)
+                total_tokens_in += nt_in
+                total_tokens_out += nt_out
+
+                final_JSON_response0 = self.save_json_and_xlsx(response_candidate, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
                 if response_candidate is not None:
                     final_JSON_response = final_JSON_response0
                 self.logger.info(f'Formatted JSON\n{final_JSON_response}')
                 self.logger.info(f'Finished PaLM 2 API calls\n')
 
-        progress_report.reset_batch(f"Batch Complete")
-        return final_JSON_response
+        if progress_report is not None:
+            progress_report.reset_batch(f"Batch Complete")
+        return final_JSON_response, total_tokens_in, total_tokens_out
 
 
     '''
@@ -649,41 +715,48 @@ class VoucherVision():
 
         return filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper
 
-    def save_json_and_xlsx(self, response, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper):
+    def save_json_and_xlsx(self, response, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out):
         if response is None:
             response = self.create_null_json()
             self.write_json_to_file(txt_file_path, response)
 
             # Then add the null info to the spreadsheet
             response_null = self.create_null_row(filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper)
-            self.add_data_to_excel_from_response(self.path_transcription, response_null, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper)
+            self.add_data_to_excel_from_response(self.path_transcription, response_null, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in=0, nt_out=0)
         
         ### Set completed JSON
         else:
             response = self.clean_catalog_number(response, filename_without_extension)
             self.write_json_to_file(txt_file_path, response)
             # add to the xlsx file
-            self.add_data_to_excel_from_response(self.path_transcription, response, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper)
+            self.add_data_to_excel_from_response(self.path_transcription, response, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
         return response
     
     def process_specimen_batch(self, progress_report):
         try:
             if self.has_key:
                 if self.model_name:
-                    response = self.use_chatGPT(self.is_azure, progress_report, self.model_name)
+                    final_json_response, total_tokens_in, total_tokens_out = self.use_chatGPT(self.is_azure, progress_report, self.model_name)
                 else:
-                    response = self.use_PaLM(progress_report)
-                return response
+                    final_json_response, total_tokens_in, total_tokens_out = self.use_PaLM(progress_report)
+                return final_json_response, total_tokens_in, total_tokens_out
             else:
                 self.logger.info(f'No API key found for {self.version_name}')
                 raise Exception(f"No API key found for {self.version_name}")
         except:
-            progress_report.reset_batch(f"Batch Failed")
+            if progress_report is not None:
+                progress_report.reset_batch(f"Batch Failed")
             self.logger.error("LLM call failed. Ending batch. process_specimen_batch()")
             for handler in self.logger.handlers[:]:
                 handler.close()
                 self.logger.removeHandler(handler)
             raise
+
+    def process_specimen_batch_OCR_test(self, path_to_crop):
+        for img_filename in os.listdir(path_to_crop):
+            img_path = os.path.join(path_to_crop, img_filename)
+        self.OCR, self.bounds, self.text_to_box_mapping = detect_text(img_path)
+
 
 def space_saver(cfg, Dirs, logger):
     dir_out = cfg['leafmachine']['project']['dir_output']
@@ -717,13 +790,3 @@ def space_saver(cfg, Dirs, logger):
                 if os.path.isdir(item_path):  # if the item is a directory
                     if os.path.exists(item_path):
                         shutil.rmtree(item_path)  # delete the directory
-
-def num_tokens_from_string(string: str, encoding_name: str) -> int:
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
-
-
-
-
-

@@ -1,11 +1,11 @@
 import openai
-import os, json, sys, inspect, tiktoken, time, requests
+import os, json, sys, inspect, time, requests
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 from langchain.prompts import PromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI, AzureChatOpenAI
 from langchain.schema import HumanMessage
-from general_utils import get_cfg_from_full_path
+from general_utils import num_tokens_from_string
 
 currentdir = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
@@ -231,7 +231,8 @@ def structured_output_parser_for_function_calls_fail(is_azure, MODEL, failed_res
         prompt_redo = Prompt.prompt_gpt_redo_v1(failed_response)
     elif prompt_version in ['prompt_v2_json_rules']:
         prompt_redo = Prompt.prompt_gpt_redo_v2(failed_response)
-    else: raise
+    else:
+        prompt_redo = Prompt.prompt_v2_custom_redo(failed_response, is_palm=False)
 
     response_schemas = [
         ResponseSchema(name="Summary", description="A one sentence summary of the content"),
@@ -279,14 +280,6 @@ def structured_output_parser_for_function_calls_fail(is_azure, MODEL, failed_res
         refined_response = structured_output_parser_for_function_calls_fail(is_azure, MODEL, output.content, logger, llm, prompt_version, is_helper, try_ind)
 
     return refined_response
-
-
-
-def num_tokens_from_string(string: str, encoding_name: str) -> int:
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
-
 
 
 

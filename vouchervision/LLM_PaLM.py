@@ -12,18 +12,69 @@ currentdir = os.path.dirname(os.path.abspath(
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from prompts import PROMPT_PaLM_UMICH_skeleton_all_asia, PROMPT_PaLM_OCR_Organized, PROMPT_PaLM_Redo
 from prompt_catalog import PromptCatalog
-"""
-Safety setting regularly block a response, so set to 4 to disable
+from general_utils import num_tokens_from_string
 
-class HarmBlockThreshold(Enum):
-    HARM_BLOCK_THRESHOLD_UNSPECIFIED = 0
-    BLOCK_LOW_AND_ABOVE = 1
-    BLOCK_MEDIUM_AND_ABOVE = 2
-    BLOCK_ONLY_HIGH = 3
-    BLOCK_NONE = 4
 """
+DEPRECATED:
+    Safety setting regularly block a response, so set to 4 to disable
+
+    class HarmBlockThreshold(Enum):
+        HARM_BLOCK_THRESHOLD_UNSPECIFIED = 0
+        BLOCK_LOW_AND_ABOVE = 1
+        BLOCK_MEDIUM_AND_ABOVE = 2
+        BLOCK_ONLY_HIGH = 3
+        BLOCK_NONE = 4
+"""
+
+SAFETY_SETTINGS = [
+    {
+        "category": "HARM_CATEGORY_DEROGATORY",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_TOXICITY",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_VIOLENCE",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_SEXUAL",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_MEDICAL",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_DANGEROUS",
+        "threshold": "BLOCK_NONE",
+    },
+]
+
+PALM_SETTINGS = {
+    'model': 'models/text-bison-001',
+    'temperature': 0,
+    'candidate_count': 1,
+    'top_k': 40,
+    'top_p': 0.95,
+    'max_output_tokens': 8000,
+    'stop_sequences': [],
+    'safety_settings': SAFETY_SETTINGS,
+}
+
+PALM_SETTINGS_REDO = {
+    'model': 'models/text-bison-001',
+    'temperature': 0.05,
+    'candidate_count': 1,
+    'top_k': 40,
+    'top_p': 0.95,
+    'max_output_tokens': 8000,
+    'stop_sequences': [],
+    'safety_settings': SAFETY_SETTINGS,
+}
 
 def OCR_to_dict_PaLM(logger, OCR, prompt_version, VVE):
     try:
@@ -51,8 +102,9 @@ def OCR_to_dict_PaLM(logger, OCR, prompt_version, VVE):
         version = 'v1'
         prompt = Prompt.prompt_v1_palm2_noDomainKnowledge(OCR)
     else:
-        raise
-
+        version = 'custom'
+        prompt, n_fields, xlsx_headers = Prompt.prompt_v2_custom(prompt_version, OCR=OCR, is_palm=True)
+        # raise
 
     nt = num_tokens_from_string(prompt, "cl100k_base")
     # try:
@@ -75,25 +127,24 @@ def OCR_to_dict_PaLM(logger, OCR, prompt_version, VVE):
         # except:
             # print(f'Waiting for PaLM 2 API call --- Content')
 
-        safety_thresh = 4
-        PaLM_settings = {'model': 'models/text-bison-001','temperature': 0,'candidate_count': 1,'top_k': 40,'top_p': 0.95,'max_output_tokens': 8000,'stop_sequences': [],
-                         'safety_settings': [{"category":"HARM_CATEGORY_DEROGATORY","threshold":safety_thresh},{"category":"HARM_CATEGORY_TOXICITY","threshold":safety_thresh},{"category":"HARM_CATEGORY_VIOLENCE","threshold":safety_thresh},{"category":"HARM_CATEGORY_SEXUAL","threshold":safety_thresh},{"category":"HARM_CATEGORY_MEDICAL","threshold":safety_thresh},{"category":"HARM_CATEGORY_DANGEROUS","threshold":safety_thresh}],}
-        
-        response = palm.generate_text(**PaLM_settings, prompt=prompt)
+        # safety_thresh = 4
+        # PaLM_settings = {'model': 'models/text-bison-001','temperature': 0,'candidate_count': 1,'top_k': 40,'top_p': 0.95,'max_output_tokens': 8000,'stop_sequences': [],
+                        #  'safety_settings': [{"category":"HARM_CATEGORY_DEROGATORY","threshold":safety_thresh},{"category":"HARM_CATEGORY_TOXICITY","threshold":safety_thresh},{"category":"HARM_CATEGORY_VIOLENCE","threshold":safety_thresh},{"category":"HARM_CATEGORY_SEXUAL","threshold":safety_thresh},{"category":"HARM_CATEGORY_MEDICAL","threshold":safety_thresh},{"category":"HARM_CATEGORY_DANGEROUS","threshold":safety_thresh}],}
+        response = palm.generate_text(prompt=prompt, **PALM_SETTINGS)
 
 
         if response and response.result:
             if isinstance(response.result, (str, bytes)):
-                response_valid = check_and_redo_JSON(response, PaLM_settings, logger, version)
+                response_valid = check_and_redo_JSON(response, logger, version)
             else:
                 response_valid = {}
         else:
             response_valid = {}
 
         logger.info(f'Candidate JSON\n{response.result}')
-        return response_valid
+        return response_valid, nt
 
-def check_and_redo_JSON(response, PaLM_settings, logger, version):
+def check_and_redo_JSON(response, logger, version):
     try:
         response_valid = json.loads(response.result)
         logger.info(f'Response --- First call passed')
@@ -111,18 +162,20 @@ def check_and_redo_JSON(response, PaLM_settings, logger, version):
                 prompt_redo = Prompt.prompt_palm_redo_v1(response.result)
             elif version == 'v2':
                 prompt_redo = Prompt.prompt_palm_redo_v2(response.result)
+            elif version == 'custom':
+                prompt_redo = Prompt.prompt_v2_custom_redo(response.result, is_palm=True)
+
 
             # prompt_redo = PROMPT_PaLM_Redo(response.result)
             try:
-                response = palm.generate_text(**PaLM_settings, prompt=prompt_redo)
+                response = palm.generate_text(prompt=prompt_redo, **PALM_SETTINGS)
                 response_valid = json.loads(response.result)
                 logger.info(f'Response --- Second call passed')
                 return response_valid
             except JSONDecodeError:
                 logger.info(f'Response --- Second call failed. Final redo. Temperature changed to 0.05')
                 try:
-                    PaLM_settings["temperature"]=0.05
-                    response = palm.generate_text(**PaLM_settings, prompt=prompt_redo)
+                    response = palm.generate_text(prompt=prompt_redo, **PALM_SETTINGS_REDO)
                     response_valid = json.loads(response.result)
                     logger.info(f'Response --- Third call passed')
                     return response_valid
@@ -154,9 +207,3 @@ def create_OCR_analog_for_input(domain_knowledge_example):
 
 def strip_problematic_chars(s):
     return ''.join(c for c in s if c.isprintable())
-
-
-def num_tokens_from_string(string: str, encoding_name: str) -> int:
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens

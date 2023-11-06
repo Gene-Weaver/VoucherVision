@@ -1,0 +1,62 @@
+LLM: gpt
+instructions: '1. Refactor the unstructured OCR text into a dictionary based on the
+  JSON structure outlined below.
+
+  2. You should map the unstructured OCR text to the appropriate JSON key and then
+  populate the field based on its rules.
+
+  3. Some JSON key fields are permitted to remain empty if the corresponding information
+  is not found in the unstructured OCR text.
+
+  4. Ignore any information in the OCR text that doesn''t fit into the defined JSON
+  structure.
+
+  5. Duplicate dictionary fields are not allowed.
+
+  6. Ensure that all JSON keys are in lowercase.
+
+  7. Ensure that new JSON field values follow sentence case capitalization.
+
+  8. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format
+  and data types specified in the template.
+
+  9. Ensure the output JSON string is valid JSON format. It should not have trailing
+  commas or unquoted keys.
+
+  10. Only return a JSON dictionary represented as a string. You should not explain
+  your answer.'
+json_formatting_instructions: "The next section of instructions outlines how to format\
+  \ the JSON dictionary. The keys are the same as those of the final formatted JSON\
+  \ object.\nFor each key there is a format requirement that specifies how to transcribe\
+  \ the information for that key. \nThe possible formatting options are:\n1. \"verbatim\
+  \ transcription\" - field is populated with verbatim text from the unformatted OCR.\n\
+  2. \"spell check transcription\" - field is populated with spelling corrected text\
+  \ from the unformatted OCR.\n3. \"boolean yes no\" - field is populated with only\
+  \ yes or no.\n4. \"boolean 1 0\" - field is populated with only 1 or 0.\n5. \"integer\"\
+  \ - field is populated with only an integer.\n6. \"[list]\" - field is populated\
+  \ from one of the values in the list.\n7. \"yyyy-mm-dd\" - field is populated with\
+  \ a date in the format year-month-day.\nThe desired null value is also given. Populate\
+  \ the field with the null value of the information for that key is not present in\
+  \ the unformatted OCR text."
+mapping:
+  # Add column names to the desired category. This is used to map the VV Editor.
+  COLLECTING: []
+  GEOGRAPHY: []
+  LOCALITY: []
+  MISCELLANEOUS: []
+  TAXONOMY:
+  - catalog_number
+rules:
+  Dictionary:
+    # Manually add rows here. You MUST keep 'catalog_number' unchanged. Use 'catalog_number' as a guide for adding more columns.
+    # The only values allowed in the 'format' key are those outlines above in the 'json_formatting_instructions' section.
+    # If you want an empty cell by default, use '' for the 'null_value'.
+    catalog_number:
+      description: The barcode identifier, typically a number with at least 6 digits,
+        but fewer than 30 digits.
+      format: verbatim transcription
+      null_value: ''
+  # Do not change or remove below. This is required for some LLMs
+  SpeciesName:
+    taxonomy:
+    - Genus_species

@@ -43,8 +43,13 @@ class Dir_Structure():
 
         # Processing dirs
         self.path_archival_components = os.path.join(self.dir_project,'Archival_Components')
+        validate_dir(self.path_archival_components)
+
         self.path_config_file = os.path.join(self.dir_project,'Config_File')
         validate_dir(self.path_config_file)
+
+        self.path_cost = os.path.join(self.dir_project,'Cost')
+        validate_dir(self.path_cost)
 
         # Logging
         self.path_log = os.path.join(self.dir_project,'Logs')
@@ -70,7 +75,6 @@ class Dir_Structure():
         # validate_dir(self.ruler_info)
         
 
-        validate_dir(self.path_archival_components)
         validate_dir(os.path.join(self.path_archival_components, 'JSON'))
         validate_dir(os.path.join(self.path_archival_components, 'labels'))
 

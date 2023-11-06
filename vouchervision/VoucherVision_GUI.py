@@ -1,16 +1,26 @@
 import streamlit as st
-import yaml, os, json, random, time
+import yaml, os, json, random, time, re
+import matplotlib.pyplot as plt
+import plotly.graph_objs as go
+import numpy as np
+from itertools import chain
 from PIL import Image
 import pandas as pd
 from typing import Union
 from streamlit_extras.let_it_rain import rain
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
-from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm, check_if_usable
-from vouchervision.vouchervision_main import voucher_vision
-from vouchervision.general_utils import load_config_file_testing, test_GPU, get_cfg_from_full_path
+from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm, check_if_usable, run_api_tests
+from vouchervision.vouchervision_main import voucher_vision, voucher_vision_OCR_test
+from vouchervision.general_utils import load_config_file_testing, test_GPU, get_cfg_from_full_path, summarize_expense_report
+from vouchervision.utils_VoucherVision import detect_text
 # from vouchervision.emoji_rain import proportional_rain
 
 PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE = ["Version 1","Version 1 PaLM 2"]
+COLORS_EXPENSE_REPORT = {
+        'GPT_4': '#8fff66',    # Bright Green
+        'GPT_3_5': '#006400',  # Dark Green
+        'PALM2': '#66a8ff'     # blue
+    }
 
 class ProgressReport:
     def __init__(self, overall_bar, batch_bar, text_overall, text_batch):
@@ -231,13 +241,17 @@ def rain_emojis(test_results):
         add_emoji_delay()
 
 def get_prompt_versions(LLM_version):
+    yaml_files = [f for f in os.listdir(os.path.join(st.session_state.dir_home, 'custom_prompts')) if f.endswith('.yaml')]
+
     if LLM_version in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]:
-        return (["Version 1", "Version 1 No Domain Knowledge", "Version 2"], "Version 2")
+        versions = ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
+        return (versions + yaml_files, "Version 2")
     elif LLM_version in ["PaLM 2",]:
-        return (["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"], "Version 2 PaLM 2")
+        versions = ["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"]
+        return (versions + yaml_files, "Version 2 PaLM 2")
     else:
         # Handle other cases or raise an error
-        return ([], None)
+        return (yaml_files, None)
 
 def get_private_file():
     dir_home = os.path.dirname(os.path.dirname(__file__))
@@ -272,7 +286,7 @@ def create_private_file():
         create_private_file_0()
 
 def create_private_file_0(cfg_private=None):
-    col_private,_,__= st.columns([6,2,2])
+    col_private,_= st.columns([12,2])
 
     if cfg_private is None:
         cfg_private = {}
@@ -318,20 +332,29 @@ def create_private_file_0(cfg_private=None):
             - The JSON key file will automatically be downloaded to your computer.
         - **Store Safely**: This file contains sensitive data that can be used to authenticate and bill your Google Cloud account. Never commit it to public repositories or expose it in any way. Always keep it safe and secure.
         """)
-
-        google_vision = st.text_input("Full path to Google Cloud JSON API key file", cfg_private['google_cloud'].get('path_json_file', ''),
-                                                 help='This API Key is in the form of a JSON file. Please save the JSON file in a safe directory. DO NOT store the JSON key inside of the VoucherVision directory.',
+        with st.container():
+            c_in_ocr, c_button_ocr = st.columns([10,2])
+            with c_in_ocr:
+                google_vision = st.text_input(label = 'Full path to Google Cloud JSON API key file', value = cfg_private['google_cloud'].get('path_json_file', ''),
                                                  placeholder = 'e.g. C:/Documents/Secret_Files/google_API/application_default_credentials.json',
-                                                 type='password')
+                                                 help ="This API Key is in the form of a JSON file. Please save the JSON file in a safe directory. DO NOT store the JSON key inside of the VoucherVision directory.",
+                                                 type='password',key="Full path to Google Cloud JSON API key file")
+            with c_button_ocr:
+                st.empty()
 
         
         st.write("---")
         st.subheader("OpenAI")
         st.markdown("API key for first-party OpenAI API. Create an account with OpenAI [here](https://platform.openai.com/signup), then create an API key [here](https://platform.openai.com/account/api-keys).")
-        openai_api_key = st.text_input("openai_api_key", cfg_private['openai'].get('OPENAI_API_KEY', ''),
+        with st.container():
+            c_in_openai, c_button_openai = st.columns([10,2])
+            with c_in_openai:
+                openai_api_key = st.text_input("openai_api_key", cfg_private['openai'].get('OPENAI_API_KEY', ''),
                                                  help='The actual API key. Likely to be a string of 2 character, a dash, and then a 48-character string: sk-XXXXXXXX...',
                                                  placeholder = 'e.g. sk-XXXXXXXX...',
                                                  type='password')
+            with c_button_openai:
+                st.empty()
 
         st.write("---")
         st.subheader("OpenAI - Azure")
@@ -356,19 +379,98 @@ def create_private_file_0(cfg_private=None):
                                                  help='The API type. Typically "azure"',
                                                  placeholder = 'e.g. azure',
                                                  type='password')
-
+        with st.container():
+            c_in_azure, c_button_azure = st.columns([10,2])
+            with c_button_azure:
+                st.empty()
         
         st.write("---")
         st.subheader("Google PaLM 2")
         st.markdown('Follow these [instructions](https://developers.generativeai.google/tutorials/setup) to generate an API key for PaLM 2. You may need to also activate an account with [MakerSuite](https://makersuite.google.com/app/apikey) and enable "early access."')
-        google_palm = st.text_input("Google PaLM 2 API Key", cfg_private['google_palm'].get('google_palm_api', ''),
+        with st.container():
+            c_in_palm, c_button_palm = st.columns([10,2])
+            with c_in_palm:
+                google_palm = st.text_input("Google PaLM 2 API Key", cfg_private['google_palm'].get('google_palm_api', ''),
                                                  help='The MakerSuite API key e.g. a 32-character string',
                                                  placeholder='e.g. SATgthsykuE64FgrrrrEervr3S4455t_geyDeGq',
                                                  type='password')
 
+        with st.container():
+            with c_button_ocr:
+                st.write("##")
+                st.button("Test OCR", on_click=test_API, args=['google_vision',c_in_ocr, cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
+                                                                    azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm])
+
+        with st.container():
+            with c_button_openai:
+                st.write("##")
+                st.button("Test OpenAI", on_click=test_API, args=['openai',c_in_openai, cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
+                                                                    azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm])
+                
+        with st.container():
+            with c_button_azure:
+                st.write("##")
+                st.button("Test Azure OpenAI", on_click=test_API, args=['azure_openai',c_in_azure, cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
+                                                                    azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm])
+                
+        with st.container():
+            with c_button_palm:
+                st.write("##")
+                st.button("Test PaLM 2", on_click=test_API, args=['palm',c_in_palm, cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
+                                                                    azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm])
+
+
         st.button("Set API Keys",type='primary', on_click=save_changes_to_API_keys, args=[cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
                                                                     azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm])
+        if st.button('Proceed to VoucherVision'):
+            st.session_state.proceed_to_main = True
+
+def test_API(api, message_loc, cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key, azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm):
+    # Save the API keys
+    save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm)
+    
+    with st.spinner('Performing validation checks...'):
+        if api == 'google_vision':
+            print("*** Google Vision OCR API Key ***")
+            try:
+                demo_images_path = os.path.join(st.session_state.dir_home, 'demo', 'demo_images')
+                voucher_vision_OCR_test(os.path.join(st.session_state.dir_home,'demo','validation_configs','google_vision_ocr_test.yaml'), st.session_state.dir_home, None, demo_images_path)
+                with message_loc:
+                    st.success("Google Vision OCR API Key Valid :white_check_mark:")
+                return True
+            except:
+                with message_loc:
+                    st.error("Google Vision OCR API Key Failed!")
+                return False
             
+        elif api == 'openai':
+            print("*** OpenAI API Key ***")
+            if run_api_tests('openai'):
+                with message_loc:
+                    st.success("OpenAI API Key Valid :white_check_mark:")
+            else:
+                with message_loc:
+                    st.error("OpenAI API Key Failed:exclamation:")
+                return False
+        elif api == 'azure_openai':
+            print("*** Azure OpenAI API Key ***")
+            if run_api_tests('azure_openai'):
+                with message_loc:
+                    st.success("Azure OpenAI API Key Valid :white_check_mark:")
+            else:
+                with message_loc:
+                    st.error("Azure OpenAI API Key Failed:exclamation:")
+                return False
+        elif api == 'palm':
+            print("*** Google PaLM 2 API Key ***")
+            if run_api_tests('palm'):
+                with message_loc:
+                    st.success("Google PaLM 2 API Key Valid :white_check_mark:")
+            else:
+                with message_loc:
+                    st.error("Google PaLM 2 API Key Failed:exclamation:")
+                return False
+       
 
 def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
                              azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm):
@@ -388,23 +490,409 @@ def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version
     write_config_file(cfg_private, st.session_state.dir_home, filename="PRIVATE_DATA.yaml")
     st.session_state.private_file = does_private_file_exist()
 
+# Function to load a YAML file and update session_state
+def load_prompt_yaml(filename):
+    with open(filename, 'r') as file:
+        st.session_state['prompt_info'] = yaml.safe_load(file)
+        st.session_state['instructions'] = st.session_state['prompt_info'].get('instructions', st.session_state['default_instructions']) 
+        st.session_state['json_formatting_instructions'] = st.session_state['prompt_info'].get('json_formatting_instructions', st.session_state['default_json_formatting_instructions'] )
+        st.session_state['rules'] = st.session_state['prompt_info'].get('rules', {})
+        st.session_state['mapping'] = st.session_state['prompt_info'].get('mapping', {})
+        st.session_state['LLM'] = st.session_state['prompt_info'].get('LLM', 'gpt')
 
-def process_batch(progress_report):
-    # First, write the config file.
-    write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
+        # Placeholder:
+        st.session_state['assigned_columns'] = list(chain.from_iterable(st.session_state['mapping'].values())) 
+
+def save_prompt_yaml(filename):
+    yaml_content = {
+        'instructions': st.session_state['instructions'],
+        'json_formatting_instructions': st.session_state['json_formatting_instructions'],
+        'rules': st.session_state['rules'],
+        'mapping': st.session_state['mapping'],
+        'LLM': st.session_state['LLM']
+    }
     
-    # Call the machine function.
-    last_JSON_response = voucher_vision(None, st.session_state.dir_home, None, progress_report)
-    # Format the JSON string for display.
-    if last_JSON_response is None:
-        st.markdown(f"Last JSON object in the batch: NONE")
+    dir_prompt = os.path.join(st.session_state.dir_home, 'custom_prompts')
+    filepath = os.path.join(dir_prompt, f"{filename}.yaml")
+
+    with open(filepath, 'w') as file:
+        yaml.safe_dump(yaml_content, file)
+
+    st.success(f"Prompt saved as '{filename}.yaml'.")
+
+def check_unique_mapping_assignments():
+    if len(st.session_state['assigned_columns']) != len(set(st.session_state['assigned_columns'])):
+        st.error("Each column name must be assigned to only one category.")
+        return False
     else:
-        try:
-            formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
-        except:
-            formatted_json = json.dumps(last_JSON_response, indent=4)
-        st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
-        st.balloons()
+        st.success("Mapping confirmed.")
+        return True
+
+def check_prompt_yaml_filename(fname):
+    # Check if the filename only contains letters, numbers, underscores, and dashes
+    pattern = r'^[\w-]+$'
+    
+    # The \w matches any alphanumeric character and is equivalent to the character class [a-zA-Z0-9_].
+    # The hyphen - is literally matched.
+
+    if re.match(pattern, fname):
+        return True
+    else:
+        return False
+
+
+def btn_load_prompt(selected_yaml_file, dir_prompt):
+    if selected_yaml_file:
+        yaml_file_path = os.path.join(dir_prompt, selected_yaml_file)
+        load_prompt_yaml(yaml_file_path)
+    elif not selected_yaml_file:
+        # Directly assigning default values since no file is selected
+        st.session_state['prompt_info'] = {}
+        st.session_state['instructions'] = st.session_state['default_instructions']
+        st.session_state['json_formatting_instructions'] = st.session_state['default_json_formatting_instructions'] 
+        st.session_state['rules'] = {}
+        st.session_state['LLM'] = 'gpt'
+        
+        st.session_state['assigned_columns'] = []
+
+        st.session_state['prompt_info'] = {
+            'instructions': st.session_state['instructions'],
+            'json_formatting_instructions': st.session_state['json_formatting_instructions'],
+            'rules': st.session_state['rules'],
+            'mapping': st.session_state['mapping'],
+            'LLM': st.session_state['LLM']
+        }
+
+def build_LLM_prompt_config():
+    st.session_state['assigned_columns'] = []
+    st.session_state['default_instructions'] = """1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+2. You should map the unstructured OCR text to the appropriate JSON key and then populate the field based on its rules.
+3. Some JSON key fields are permitted to remain empty if the corresponding information is not found in the unstructured OCR text.
+4. Ignore any information in the OCR text that doesn't fit into the defined JSON structure.
+5. Duplicate dictionary fields are not allowed.
+6. Ensure that all JSON keys are in lowercase.
+7. Ensure that new JSON field values follow sentence case capitalization.
+8. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+9. Ensure the output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+10. Only return a JSON dictionary represented as a string. You should not explain your answer."""
+    st.session_state['default_json_formatting_instructions'] = """The next section of instructions outlines how to format the JSON dictionary. The keys are the same as those of the final formatted JSON object.
+For each key there is a format requirement that specifies how to transcribe the information for that key. 
+The possible formatting options are:
+1. "verbatim transcription" - field is populated with verbatim text from the unformatted OCR.
+2. "spell check transcription" - field is populated with spelling corrected text from the unformatted OCR.
+3. "boolean yes no" - field is populated with only yes or no.
+4. "boolean 1 0" - field is populated with only 1 or 0.
+5. "integer" - field is populated with only an integer.
+6. "[list]" - field is populated from one of the values in the list.
+7. "yyyy-mm-dd" - field is populated with a date in the format year-month-day.
+The desired null value is also given. Populate the field with the null value of the information for that key is not present in the unformatted OCR text."""
+    
+    # Start building the Streamlit app
+    col_prompt_main_left, ___, col_prompt_main_right = st.columns([6,1,3])
+
+    
+    with col_prompt_main_left:
+        
+        st.title("Custom LLM Prompt Builder")
+        st.subheader('About')
+        st.write("This form allows you to craft a prompt for your specific task.")
+        st.subheader('How it works')
+        st.write("1. Edit this page until you are happy with your instructions. We recommend looking at the basic structure, writing down your prompt inforamtion in a Word document so that it does not randomly disappear, and then copying and pasting that info into this form once your whole prompt structure is defined.")
+        st.write("2. After you enter all of your prompt instructions, click 'Save' and give your file a name.")
+        st.write("3. This file will be saved as a yaml configuration file in the `..VoucherVision/custom_prompts` folder.")
+        st.write("4. When you go back the main VoucherVision page you will now see your custom prompt available in the 'Prompt Version' dropdown menu.")
+        st.write("5. Select your custom prompt. Note, your prompt will only be available for the LLM that you set when filling out the form below.")
+
+
+        dir_prompt = os.path.join(st.session_state.dir_home, 'custom_prompts')
+        yaml_files = [f for f in os.listdir(dir_prompt) if f.endswith('.yaml')]
+        col_load_text, col_load_btn = st.columns([8,2])
+        with col_load_text:
+        # Dropdown for selecting a YAML file
+            selected_yaml_file = st.selectbox('Select a prompt YAML file to load:', [''] + yaml_files)
+        with col_load_btn:
+            st.write('##')
+            # Button to load the selected prompt
+            st.button('Load Prompt', on_click=btn_load_prompt, args=[selected_yaml_file, dir_prompt])
+                
+
+
+        # Define the options for the dropdown
+        llm_options = ['gpt', 'palm']
+        # Create the dropdown and set the value to session_state['LLM']
+        st.session_state['LLM'] = st.selectbox('Set LLM:', llm_options, index=llm_options.index(st.session_state.get('LLM', 'gpt')))
+
+        
+
+        # Instructions Section
+        st.header("Instructions")
+        st.write("These are the general instructions that guide the LLM through the transcription task. We recommend using the default instructions unless you have a specific reason to change them.")
+        
+        st.session_state['instructions'] = st.text_area("Enter instructions:", value=st.session_state['default_instructions'].strip(), height=350, disabled=True)
+
+        st.write('---')
+
+        # Column Instructions Section
+        st.header("JSON Formatting Instructions")
+        st.write("The following section tells the LLM how we want to structure the JSON dictionary. We do not recommend changing this section because it would likely result in unstable and inconsistent behavior.")
+        st.session_state['json_formatting_instructions'] = st.text_area("Enter column instructions:", value=st.session_state['default_json_formatting_instructions'], height=350, disabled=True)
+
+
+
+
+
+        st.write('---')
+        col_left, col_right = st.columns([6,4])
+        with col_left:
+            st.subheader('Add/Edit Columns')
+            
+            # Initialize rules in session state if not already present
+            if 'rules' not in st.session_state or not st.session_state['rules']:
+                st.session_state['rules']['Dictionary'] = {
+                    "catalog_number": {
+                        "format": "verbatim transcription",
+                        "null_value": "",
+                        "description": "The barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits."
+                    }
+                }
+                st.session_state['rules']['SpeciesName'] = {
+                    "taxonomy": ["Genus_species"]
+                }
+
+            # Layout for adding a new column name
+            # col_text, col_textbtn = st.columns([8, 2])
+            # with col_text:
+            new_column_name = st.text_input("Enter a new column name:")
+            # with col_textbtn:
+            # st.write('##')
+            if st.button("Add New Column") and new_column_name:
+                if new_column_name not in st.session_state['rules']['Dictionary']:
+                    st.session_state['rules']['Dictionary'][new_column_name] = {"format": "", "null_value": "", "description": ""}
+                    st.success(f"New column '{new_column_name}' added. Now you can edit its properties.")
+                else:
+                    st.error("Column name already exists. Please enter a unique column name.")
+
+            # Get columns excluding the protected "catalog_number"
+            st.write('#')
+            editable_columns = [col for col in st.session_state['rules']['Dictionary'] if col != "catalog_number"]
+            column_name = st.selectbox("Select a column to edit:", [""] + editable_columns)
+
+            # Handle rules editing
+            current_rule = st.session_state['rules']['Dictionary'].get(column_name, {
+                "format": "",
+                "null_value": "",
+                "description": ""
+            })
+
+            if 'selected_column' not in st.session_state:
+                st.session_state['selected_column'] = column_name
+
+            
+
+
+            # Form for input fields
+            with st.form(key='rule_form'):
+                format_options = ["verbatim transcription", "spell check transcription", "boolean yes no", "boolean 1 0", "integer", "[list]", "yyyy-mm-dd"]
+                current_rule["format"] = st.selectbox("Format:", format_options, index=format_options.index(current_rule["format"]) if current_rule["format"] else 0)
+                current_rule["null_value"] = st.text_input("Null value:", value=current_rule["null_value"])
+                current_rule["description"] = st.text_area("Description:", value=current_rule["description"])
+                commit_button = st.form_submit_button("Commit Column")
+
+            default_rule = {
+                "format": format_options[0],  # default format
+                "null_value": "",  # default null value
+                "description": "",  # default description
+            }
+            if st.session_state['selected_column'] != column_name:
+                # Column has changed. Update the session_state selected column.
+                st.session_state['selected_column'] = column_name
+                # Reset the current rule to the default for this new column, or a blank rule if not set.
+                current_rule = st.session_state['rules']['Dictionary'].get(column_name, default_rule.copy())
+
+            # Handle commit action
+            if commit_button and column_name:
+                # Commit the rules to the session state.
+                st.session_state['rules']['Dictionary'][column_name] = current_rule.copy()
+                st.success(f"Column '{column_name}' added/updated in rules.")
+
+                # Force the form to reset by clearing the fields from the session state
+                st.session_state.pop('selected_column', None)  # Clear the selected column to force reset
+
+                # st.session_state['rules'][column_name] = current_rule
+                # st.success(f"Column '{column_name}' added/updated in rules.")
+
+                # # Reset current_rule to default values for the next input
+                # current_rule["format"] = default_rule["format"]
+                # current_rule["null_value"] = default_rule["null_value"]
+                # current_rule["description"] = default_rule["description"]
+
+                # # To ensure that the form fields are reset, we can clear them from the session state
+                # for key in current_rule.keys():
+                #     st.session_state[key] = default_rule[key]
+
+            # Layout for removing an existing column
+            # del_col, del_colbtn = st.columns([8, 2])
+            # with del_col:
+            delete_column_name = st.selectbox("Select a column to delete:", [""] + editable_columns, key='delete_column')
+            # with del_colbtn:
+            # st.write('##')
+            if st.button("Delete Column") and delete_column_name:
+                del st.session_state['rules'][delete_column_name]
+                st.success(f"Column '{delete_column_name}' removed from rules.")
+
+
+            
+
+        with col_right:
+            # Display the current state of the JSON rules
+            st.subheader('Formatted Columns')
+            st.json(st.session_state['rules']['Dictionary'])
+
+            # st.subheader('All Prompt Info')
+            # st.json(st.session_state['prompt_info'])
+
+
+        st.write('---')
+
+
+        col_left_mapping, col_right_mapping = st.columns([6,4])
+        with col_left_mapping:
+            st.header("Mapping")
+            st.write("Assign each column name to a single category.")
+            st.session_state['refresh_mapping'] = False
+
+            # Dynamically create a list of all column names that can be assigned
+            # This assumes that the column names are the keys in the dictionary under 'rules'
+            all_column_names = list(st.session_state['rules']['Dictionary'].keys())
+
+            categories = ['TAXONOMY', 'GEOGRAPHY', 'LOCALITY', 'COLLECTING', 'MISCELLANEOUS']
+            if ('mapping' not in st.session_state) or (st.session_state['mapping'] == {}):
+                st.session_state['mapping'] = {category: [] for category in categories}
+            for category in categories:
+                # Filter out the already assigned columns
+                available_columns = [col for col in all_column_names if col not in st.session_state['assigned_columns'] or col in st.session_state['mapping'].get(category, [])]
+
+                # Ensure the current mapping is a subset of the available options
+                current_mapping = [col for col in st.session_state['mapping'].get(category, []) if col in available_columns]
+
+                # Provide a safe default if the current mapping is empty or contains invalid options
+                safe_default = current_mapping if all(col in available_columns for col in current_mapping) else []
+
+                # Create a multi-select widget for the category with a safe default
+                selected_columns = st.multiselect(
+                    f"Select columns for {category}:",
+                    available_columns,
+                    default=safe_default,
+                    key=f"mapping_{category}"
+                )
+                # Update the assigned_columns based on the selections
+                for col in current_mapping:
+                    if col not in selected_columns and col in st.session_state['assigned_columns']:
+                        st.session_state['assigned_columns'].remove(col)
+                        st.session_state['refresh_mapping'] = True
+
+                for col in selected_columns:
+                    if col not in st.session_state['assigned_columns']:
+                        st.session_state['assigned_columns'].append(col)
+                        st.session_state['refresh_mapping'] = True
+
+                # Update the mapping in session state when there's a change
+                st.session_state['mapping'][category] = selected_columns
+            if st.session_state['refresh_mapping']:
+                st.session_state['refresh_mapping'] = False
+
+        # Button to confirm and save the mapping configuration
+        if st.button('Confirm Mapping'):
+            if check_unique_mapping_assignments():
+                # Proceed with further actions since the mapping is confirmed and unique
+                pass
+
+        with col_right_mapping:
+            # Display the current state of the JSON rules
+            st.subheader('Formatted Column Maps')
+            st.json(st.session_state['mapping'])
+
+
+        col_left_save, col_right_save = st.columns([6,4])
+        with col_left_save:
+            # Input for new file name
+            new_filename = st.text_input("Enter filename to save your prompt as a configuration YAML:",placeholder='my_prompt_name')
+            # Button to save the new YAML file
+            if st.button('Save YAML', type='primary'):
+                if new_filename:
+                    if check_unique_mapping_assignments():
+                        if check_prompt_yaml_filename(new_filename):
+                            save_prompt_yaml(new_filename)
+                        else:
+                            st.error("File name can only contain letters, numbers, underscores, and dashes. Cannot contain spaces.")
+                    else:
+                        st.error("Mapping contains an error. Make sure that each column is assigned to only ***one*** category.")
+                else:
+                    st.error("Please enter a filename.")
+        
+            if st.button('Exit'):
+                st.session_state.proceed_to_build_llm_prompt = False
+                st.session_state.proceed_to_main = True
+                st.rerun()
+    with col_prompt_main_right:
+        st.subheader('All Prompt Components')
+        st.session_state['prompt_info'] = {
+            'instructions': st.session_state['instructions'],
+            'json_formatting_instructions': st.session_state['json_formatting_instructions'],
+            'rules': st.session_state['rules'],
+            'mapping': st.session_state['mapping'],
+            'LLM': st.session_state['LLM']
+        }
+        st.json(st.session_state['prompt_info'])
+    # # Mapping Section
+    # st.header("Mapping")
+    # mapping = {}
+    # category_options = ["TAXONOMY", "GEOGRAPHY", "LOCALITY", "COLLECTING", "MISCELLANEOUS"]
+    # if columns:
+    #     for column in columns.split(','):
+    #         column = column.strip()
+    #         category = st.selectbox(f"Category for {column}:", category_options, key=f"category_{column}")
+    #         mapping[column] = category
+    
+
+    # # Button to save YAML file
+    # if st.button("Save YAML"):
+    #     yaml_content = {
+    #         "instructions": instructions_list,
+    #         "column_instructions": column_instructions,
+    #         "rules": rules,
+    #         "mapping": mapping
+    #     }
+    #     save_yaml(yaml_content, filename="rules_config.yaml")
+    #     st.success("YAML configuration saved!")
+
+    # Optional: Display the YAML content on the page
+    # if st.checkbox("Show YAML"):
+    # st.write(yaml_content)
+
+def save_yaml(content, filename="rules_config.yaml"):
+    with open(filename, 'w') as file:
+        yaml.dump(content, file)
+
+# def process_batch(progress_report):
+#     # First, write the config file.
+#     write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
+
+#     # If using a custom prompt, pass the full path to the prompt config. else it's just a meaningless path that won't do anything
+#     path_custom_prompts = os.path.join(st.session_state.dir_home,'custom_prompts',st.session_state.config['leafmachine']['LLM_version'])
+
+#     # Call the machine function.
+#     last_JSON_response = voucher_vision(None, st.session_state.dir_home, path_custom_prompts, None, progress_report)
+#     # Format the JSON string for display.
+#     if last_JSON_response is None:
+#         st.markdown(f"Last JSON object in the batch: NONE")
+#     else:
+#         try:
+#             formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
+#         except:
+#             formatted_json = json.dumps(last_JSON_response, indent=4)
+#         st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
+#         st.balloons()
 
 def show_header_welcome():
     st.session_state.logo_path = os.path.join(st.session_state.dir_home, 'img','logo.png')
@@ -461,13 +949,18 @@ def content_header():
         show_header_welcome()
         st.subheader('Run VoucherVision')
         if check_if_usable():
-            if st.button("Start Processing", type='primary'): #, on_click=process_batch, args=[progress_report]):
+            if st.button("Start Processing", type='primary'):
             
                 # First, write the config file.
                 write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
-                
+
+                path_custom_prompts = os.path.join(st.session_state.dir_home,'custom_prompts',st.session_state.config['leafmachine']['project']['prompt_version'])
                 # Call the machine function.
-                last_JSON_response = voucher_vision(None, st.session_state.dir_home, None, progress_report)
+                last_JSON_response, total_cost = voucher_vision(None, st.session_state.dir_home, path_custom_prompts, None, progress_report,path_api_cost=os.path.join(st.session_state.dir_home,'api_cost','api_cost.yaml'))
+                
+                if total_cost:
+                    st.success(f":money_with_wings: This run cost :heavy_dollar_sign:{total_cost:.4f}")
+                
                 # Format the JSON string for display.
                 if last_JSON_response is None:
                     st.markdown(f"Last JSON object in the batch: NONE")
@@ -479,9 +972,8 @@ def content_header():
                     st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
                     st.balloons()
 
-                # st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report])
         else:
-            st.button("Start Processing", type='primary', on_click=process_batch, args=[progress_report], disabled=True)
+            st.button("Start Processing", type='primary', disabled=True)
             st.error(":heavy_exclamation_mark: Required API keys not set. Please visit the 'API Keys' tab and set the Google Vision OCR API key and at least one LLM key.")
 
     with col_run_2:
@@ -544,8 +1036,7 @@ def content_tab_settings():
         st.subheader('LLM Version')
         st.markdown(
             """
-            Select an LLM
-            - GPT-4 is 20x more expensive than GPT-3.5  
+            ***Note:*** GPT-4 is 20x more expensive than GPT-3.5  
             """
             )
         st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"], index=["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"].index(st.session_state.config['leafmachine'].get('LLM_version', 'Azure GPT 4')))
@@ -682,16 +1173,158 @@ def content_tab_domain():
             st.session_state.config['leafmachine']['project']['embeddings_database_name'] = st.text_input("Embeddings database name (only use underscores)", st.session_state.config['leafmachine']['project'].get('embeddings_database_name', ''), disabled=True)
             st.session_state.config['leafmachine']['project']['build_new_embeddings_database'] = st.checkbox("Build *new* embeddings database", st.session_state.config['leafmachine']['project'].get('build_new_embeddings_database', False), disabled=True)
             st.session_state.config['leafmachine']['project']['path_to_domain_knowledge_xlsx'] = st.text_input("Path to domain knowledge CSV file (will be used to create new embeddings database)", st.session_state.config['leafmachine']['project'].get('path_to_domain_knowledge_xlsx', ''), disabled=True)
-            
+
+def render_expense_report_summary():
+    expense_summary = st.session_state.expense_summary
+    expense_report = st.session_state.expense_report
+    st.header('Expense Report Summary')
+
+    if expense_summary:
         
+        
+
+        st.metric(label="Total Cost", value=f"${round(expense_summary['total_cost_sum'], 4):,}")
+        col1, col2 = st.columns(2)
+
+        # Run count and total costs
+        with col1:
+            st.metric(label="Run Count", value=expense_summary['run_count'])
+            st.metric(label="Tokens In", value=f"{expense_summary['tokens_in_sum']:,}")
+
+        # Token information
+        with col2:
+            st.metric(label="Total Images", value=expense_summary['n_images_sum'])
+            st.metric(label="Tokens Out", value=f"{expense_summary['tokens_out_sum']:,}")
+
+        
+
+
+
+        # Calculate cost proportion per image for each API version
+        st.subheader('Average Cost per Image by API Version')
+        cost_labels = []
+        cost_values = []
+        total_images = 0
+        cost_per_image_dict = {}
+        # Iterate through the expense report to accumulate costs and image counts
+        for index, row in expense_report.iterrows():
+            api_version = row['api_version']
+            total_cost = row['total_cost']
+            n_images = row['n_images']
+            total_images += n_images  # Keep track of total images processed
+            if api_version not in cost_per_image_dict:
+                cost_per_image_dict[api_version] = {'total_cost': 0, 'n_images': 0}
+            cost_per_image_dict[api_version]['total_cost'] += total_cost
+            cost_per_image_dict[api_version]['n_images'] += n_images
+
+        api_versions = list(cost_per_image_dict.keys())
+        colors = [COLORS_EXPENSE_REPORT[version] if version in COLORS_EXPENSE_REPORT else '#DDDDDD' for version in api_versions]
+        
+        # Calculate the cost per image for each API version
+        for version, cost_data in cost_per_image_dict.items():
+            total_cost = cost_data['total_cost']
+            n_images = cost_data['n_images']
+            # Calculate the cost per image for this version
+            cost_per_image = total_cost / n_images if n_images > 0 else 0
+            cost_labels.append(version)
+            cost_values.append(cost_per_image)
+        # Generate the pie chart
+        cost_pie_chart = go.Figure(data=[go.Pie(labels=cost_labels, values=cost_values, hole=.3)])
+        # Update traces for custom text in hoverinfo, displaying cost with a dollar sign and two decimal places
+        cost_pie_chart.update_traces(
+            marker=dict(colors=colors),
+            text=[f"${value:.2f}" for value in cost_values],  # Formats the cost as a string with a dollar sign and two decimals
+            textinfo='percent+label',
+            hoverinfo='label+percent+text'  # Adds custom text (formatted cost) to the hover information
+        )
+        st.plotly_chart(cost_pie_chart, use_container_width=True)
+
+
+
+        st.subheader('Proportion of Total Cost by API Version')
+        cost_labels = []
+        cost_proportions = []
+        total_cost_by_version = {}
+        # Sum the total cost for each API version
+        for index, row in expense_report.iterrows():
+            api_version = row['api_version']
+            total_cost = row['total_cost']
+            if api_version not in total_cost_by_version:
+                total_cost_by_version[api_version] = 0
+            total_cost_by_version[api_version] += total_cost
+        # Calculate the combined total cost for all versions
+        combined_total_cost = sum(total_cost_by_version.values())
+        # Calculate the proportion of total cost for each API version
+        for version, total_cost in total_cost_by_version.items():
+            proportion = (total_cost / combined_total_cost) * 100 if combined_total_cost > 0 else 0
+            cost_labels.append(version)
+            cost_proportions.append(proportion)
+        # Generate the pie chart
+        cost_pie_chart = go.Figure(data=[go.Pie(labels=cost_labels, values=cost_proportions, hole=.3)])
+        # Update traces for custom text in hoverinfo
+        cost_pie_chart.update_traces(
+            marker=dict(colors=colors),
+            text=[f"${cost:.2f}" for cost in total_cost_by_version.values()],  # This will format the cost to 2 decimal places
+            textinfo='percent+label',
+            hoverinfo='label+percent+text'  # This tells Plotly to show the label, percent, and custom text (cost) on hover
+        )
+        st.plotly_chart(cost_pie_chart, use_container_width=True)
+
+        # API version usage percentages pie chart
+        st.subheader('Runs by API Version')
+        api_versions = list(expense_summary['api_version_percentages'].keys())
+        percentages = [expense_summary['api_version_percentages'][version] for version in api_versions]
+        pie_chart = go.Figure(data=[go.Pie(labels=api_versions, values=percentages, hole=.3)])
+        pie_chart.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+        pie_chart.update_traces(marker=dict(colors=colors),)
+        st.plotly_chart(pie_chart, use_container_width=True)
+
+    else:
+        st.error('No expense report data available.')
+
+def sidebar_content():
+    st.session_state.expense_summary, st.session_state.expense_report = summarize_expense_report(os.path.join(st.session_state.dir_home,'expense_report','expense_report.csv'))
+    render_expense_report_summary()  
+    # # Check if the expense summary is available in the session state
+    # if 'expense' not in st.session_state or st.session_state.expense is None:
+    #     st.sidebar.write('No expense report data available.')
+    #     return
+    
+    # # Retrieve the expense report summary
+    # expense_summary = st.session_state.expense
+
+    # # Display the expense report summary
+    # st.sidebar.markdown('**Run Count**: ' + str(expense_summary['run_count']))
+
+    # # API version usage percentages
+    # st.sidebar.markdown('**API Version Usage**:')
+    # for version, percentage in expense_summary['api_version_percentages'].items():
+    #     st.sidebar.markdown(f'- {version}: {percentage:.2f}%')
+
+    # # Summary of costs and tokens
+    # st.sidebar.markdown('**Total Cost**: $' + str(round(expense_summary['total_cost_sum'], 4)))
+    # st.sidebar.markdown('**Tokens In**: ' + str(expense_summary['tokens_in_sum']))
+    # st.sidebar.markdown('**Tokens Out**: ' + str(expense_summary['tokens_out_sum']))
+    # # st.sidebar.markdown('**Rate In**: $' + str(round(expense_summary['rate_in_sum'], 2)) + ' per 1000 tokens')
+    # # st.sidebar.markdown('**Rate Out**: $' + str(round(expense_summary['rate_out_sum'], 2)) + ' per 1000 tokens')
+    # st.sidebar.markdown('**Cost In**: $' + str(round(expense_summary['cost_in_sum'], 4)))
+    # st.sidebar.markdown('**Cost Out**: $' + str(round(expense_summary['cost_out_sum'], 4)))
+
 def main():
+    with st.sidebar:
+        sidebar_content()
     # Main App
     content_header()
 
-    tab_settings, tab_domain, tab_component, tab_processing, tab_private, tab_delete = st.tabs(["Project Settings", "Domain Knowledge","Component Detector", "Processing Options", "API Keys", "Space-Saver"])
+    tab_settings, tab_prompt, tab_domain, tab_component, tab_processing, tab_private, tab_delete = st.tabs(["Project Settings", "Prompt Builder", "Domain Knowledge","Component Detector", "Processing Options", "API Keys", "Space-Saver"])
 
     with tab_settings:
         content_tab_settings()
+
+    with tab_prompt:
+        if st.button("Build Custom LLM Prompt"):
+            st.session_state.proceed_to_build_llm_prompt = True
+            st.rerun()
         
     with tab_component:
         content_tab_component()
@@ -714,11 +1347,27 @@ st.set_page_config(layout="wide", page_icon='img/icon.ico', page_title='VoucherV
 if 'config' not in st.session_state:
     st.session_state.config, st.session_state.dir_home = build_VV_config()
     setup_streamlit_config(st.session_state.dir_home)
+
+if 'proceed_to_main' not in st.session_state:
+    st.session_state.proceed_to_main = False  # New state variable to control the flow
+
+if 'proceed_to_build_llm_prompt' not in st.session_state:
+    st.session_state.proceed_to_build_llm_prompt = False  # New state variable to control the flow
+
 if 'private_file' not in st.session_state:
     st.session_state.private_file = does_private_file_exist()
+    if st.session_state.private_file:
+        st.session_state.proceed_to_main = True
 
+# Initialize session_state variables if they don't exist
+if 'prompt_info' not in st.session_state:
+    st.session_state['prompt_info'] = {}
+if 'rules' not in st.session_state:
+    st.session_state['rules'] = {}
 
-if not st.session_state.private_file:
+if not st.session_state.private_file or not st.session_state.proceed_to_main:
     create_private_file()
+elif st.session_state.proceed_to_build_llm_prompt:
+    build_LLM_prompt_config()
 else:
     main()
