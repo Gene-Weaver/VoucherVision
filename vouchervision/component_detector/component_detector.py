@@ -409,7 +409,7 @@ def create_dictionary_from_txt(logger, dir_components, component, Project):
 def dict_to_json(dict_labels, dir_components, name_json):
     dir_components = os.path.join(dir_components, 'JSON')
     with open(os.path.join(dir_components, name_json), "w") as outfile:
-        json.dump(dict_labels, outfile)
+        json.dump(dict_labels, outfile, default_flow_style=False, sort_keys=False)
 
 def fetch_labels(dir_exisiting_labels, new_dir):
     shutil.copytree(dir_exisiting_labels, new_dir)

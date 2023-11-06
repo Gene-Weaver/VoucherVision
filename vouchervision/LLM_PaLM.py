@@ -94,7 +94,7 @@ def OCR_to_dict_PaLM(logger, OCR, prompt_version, VVE):
         # Find a similar example from the domain knowledge
         domain_knowledge_example = VVE.query_db(OCR, 4)
         similarity= VVE.get_similarity()
-        domain_knowledge_example_string = json.dumps(domain_knowledge_example)
+        domain_knowledge_example_string = json.dumps(domain_knowledge_example, default_flow_style=False, sort_keys=False)
         in_list, out_list = create_OCR_analog_for_input(domain_knowledge_example)
         prompt = Prompt.prompt_v1_palm2(in_list, out_list, OCR)
 
@@ -189,7 +189,7 @@ def create_OCR_analog_for_input(domain_knowledge_example):
     # Iterate over the domain_knowledge_example (list of dictionaries)
     for row_dict in domain_knowledge_example:
         # Convert the dictionary to a JSON string and add it to the out_list
-        domain_knowledge_example_string = json.dumps(row_dict)
+        domain_knowledge_example_string = json.dumps(row_dict, default_flow_style=False, sort_keys=False)
         out_list.append(domain_knowledge_example_string)
 
         # Create a single string from all values in the row_dict

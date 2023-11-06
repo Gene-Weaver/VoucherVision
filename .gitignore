@@ -26,6 +26,7 @@ KP_Test/
 # VV Specific
 .streamlit*/
 demo/demo_output/*
+demo/validation_configs/*
 /bin/*
 !/bin/version.yml
 release*

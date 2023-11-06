@@ -114,7 +114,7 @@ Installation should basically be the same for Linux.
 
 1. Install the required dependencies to use VoucherVision  
     - Option A - If you are using Windows PowerShell:
-    <pre><code class="language-python">pip install wheel streamlit streamlit-extras plotly pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade streamlit }</code></pre>
+    <pre><code class="language-python">pip install wheel streamlit streamlit-extras plotly pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade numpy scikit-learnstreamlit google-generativeai google-cloud-storage google-cloud-vision azureml-sdk azure-identity openai langchain }</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
     - Option B:
@@ -122,7 +122,7 @@ Installation should basically be the same for Linux.
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 2. Upgrade important packages. Run this if there is an update to VoucherVision.
-    <pre><code class="language-python">pip install --upgrade numpy scikit-learnstreamlit google-generativeai        google-cloud-storage google-cloud-vision azureml-sdk azure-identity openai langchain</code></pre>
+    <pre><code class="language-python">pip install --upgrade numpy scikit-learn streamlit google-generativeai google-cloud-storage google-cloud-vision azureml-sdk azure-identity openai langchain</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 3. Install PyTorch

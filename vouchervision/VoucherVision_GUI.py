@@ -11,9 +11,8 @@ from streamlit_extras.let_it_rain import rain
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
 from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm, check_if_usable, run_api_tests
 from vouchervision.vouchervision_main import voucher_vision, voucher_vision_OCR_test
-from vouchervision.general_utils import load_config_file_testing, test_GPU, get_cfg_from_full_path, summarize_expense_report
-from vouchervision.utils_VoucherVision import detect_text
-# from vouchervision.emoji_rain import proportional_rain
+from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report
+from vouchervision.utils_VoucherVision import create_google_ocr_yaml_config
 
 PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE = ["Version 1","Version 1 PaLM 2"]
 COLORS_EXPENSE_REPORT = {
@@ -111,7 +110,7 @@ def display_scrollable_results(JSON_results, test_results, OPT2, OPT3):
             if JSON_results[idx] is None:
                 results_html += f"<p>None</p>"
             else:
-                formatted_json = json.dumps(JSON_results[idx], indent=4)
+                formatted_json = json.dumps(JSON_results[idx], indent=4, default_flow_style=False, sort_keys=False)
                 results_html += f"<pre>[{opt2_readable}] + [{opt3_readable}]<br/>{formatted_json}</pre>"
         
         # End the custom container
@@ -433,8 +432,11 @@ def test_API(api, message_loc, cfg_private,openai_api_key,azure_openai_api_versi
         if api == 'google_vision':
             print("*** Google Vision OCR API Key ***")
             try:
+                demo_config_path = os.path.join(st.session_state.dir_home,'demo','validation_configs','google_vision_ocr_test.yaml')
                 demo_images_path = os.path.join(st.session_state.dir_home, 'demo', 'demo_images')
-                voucher_vision_OCR_test(os.path.join(st.session_state.dir_home,'demo','validation_configs','google_vision_ocr_test.yaml'), st.session_state.dir_home, None, demo_images_path)
+                demo_out_path = os.path.join(st.session_state.dir_home, 'demo', 'demo_output','run_name')
+                create_google_ocr_yaml_config(demo_config_path, demo_images_path, demo_out_path)
+                voucher_vision_OCR_test(demo_config_path, st.session_state.dir_home, None, demo_images_path)
                 with message_loc:
                     st.success("Google Vision OCR API Key Valid :white_check_mark:")
                 return True
@@ -516,7 +518,7 @@ def save_prompt_yaml(filename):
     filepath = os.path.join(dir_prompt, f"{filename}.yaml")
 
     with open(filepath, 'w') as file:
-        yaml.safe_dump(yaml_content, file)
+        yaml.safe_dump(yaml_content, file, default_flow_style=False, sort_keys=False)
 
     st.success(f"Prompt saved as '{filename}.yaml'.")
 
@@ -872,7 +874,7 @@ The desired null value is also given. Populate the field with the null value of 
 
 def save_yaml(content, filename="rules_config.yaml"):
     with open(filename, 'w') as file:
-        yaml.dump(content, file)
+        yaml.dump(content, file, default_flow_style=False, sort_keys=False)
 
 # def process_batch(progress_report):
 #     # First, write the config file.
@@ -966,9 +968,9 @@ def content_header():
                     st.markdown(f"Last JSON object in the batch: NONE")
                 else:
                     try:
-                        formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
+                        formatted_json = json.dumps(json.loads(last_JSON_response), indent=4, default_flow_style=False, sort_keys=False)
                     except:
-                        formatted_json = json.dumps(last_JSON_response, indent=4)
+                        formatted_json = json.dumps(last_JSON_response, indent=4, default_flow_style=False, sort_keys=False)
                     st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
                     st.balloons()
 

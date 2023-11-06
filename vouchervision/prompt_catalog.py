@@ -645,7 +645,7 @@ class PromptCatalog:
             }
 
             # Convert the structure to a JSON string without indentation
-            structure_json_str = json.dumps(dictionary_structure)
+            structure_json_str = json.dumps(dictionary_structure, default_flow_style=False, sort_keys=False)
             return structure_json_str
         
         else:
@@ -665,7 +665,7 @@ class PromptCatalog:
             }
 
             # Convert the structure to a JSON string without indentation
-            structure_json_str = json.dumps(full_structure)
+            structure_json_str = json.dumps(full_structure, default_flow_style=False, sort_keys=False)
             return structure_json_str
     
     def create_structure(self, is_palm=False):
@@ -674,7 +674,7 @@ class PromptCatalog:
             dictionary_structure = {key: "" for key in self.rules_list['Dictionary'].keys()}
 
             # Convert the structure to a JSON string with indentation for readability
-            structure_json_str = json.dumps(dictionary_structure)
+            structure_json_str = json.dumps(dictionary_structure, default_flow_style=False, sort_keys=False)
             return structure_json_str
         else:
             # Start with an empty structure for the "Dictionary" section
@@ -690,7 +690,7 @@ class PromptCatalog:
             }
 
             # Convert the structure to a JSON string with indentation for readability
-            structure_json_str = json.dumps(full_structure)
+            structure_json_str = json.dumps(full_structure, default_flow_style=False, sort_keys=False)
             return structure_json_str
 
     def generate_xlsx_headers(self, is_palm):
