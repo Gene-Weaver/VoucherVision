@@ -11,8 +11,7 @@ from streamlit_extras.let_it_rain import rain
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
 from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm, check_if_usable, run_api_tests
 from vouchervision.vouchervision_main import voucher_vision, voucher_vision_OCR_test
-from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report
-from vouchervision.utils_VoucherVision import create_google_ocr_yaml_config
+from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report, create_google_ocr_yaml_config
 
 PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE = ["Version 1","Version 1 PaLM 2"]
 COLORS_EXPENSE_REPORT = {
@@ -275,19 +274,24 @@ def create_space_saver():
         st.session_state.config['leafmachine']['project']['delete_all_temps'] = st.checkbox("Keep only the final transcription file", st.session_state.config['leafmachine']['project'].get('delete_all_temps', False),help="*WARNING:* This limits your ability to do quality assurance. This will delete all folders created by VoucherVision, leaving only the `transcription.xlsx` file.")
 
 
+# def create_private_file():
+#     st.session_state.proceed_to_main = False
+
+#     if st.session_state.private_file:
+#         cfg_private = get_private_file()
+#         create_private_file_0(cfg_private)
+#     else:
+#         st.title("VoucherVision")
+#         create_private_file_0()
+
 def create_private_file():
+    st.session_state.proceed_to_main = False
+    st.title("VoucherVision")
+    col_private,_= st.columns([12,2])
 
     if st.session_state.private_file:
         cfg_private = get_private_file()
-        create_private_file_0(cfg_private)
     else:
-        st.title("VoucherVision")
-        create_private_file_0()
-
-def create_private_file_0(cfg_private=None):
-    col_private,_= st.columns([12,2])
-
-    if cfg_private is None:
         cfg_private = {}
         cfg_private['openai'] = {}
         cfg_private['openai']['OPENAI_API_KEY'] =''
@@ -304,6 +308,7 @@ def create_private_file_0(cfg_private=None):
 
         cfg_private['google_palm'] = {}
         cfg_private['google_palm']['google_palm_api'] =''
+    
 
     with col_private:
         st.header("Set API keys")
@@ -337,7 +342,7 @@ def create_private_file_0(cfg_private=None):
                 google_vision = st.text_input(label = 'Full path to Google Cloud JSON API key file', value = cfg_private['google_cloud'].get('path_json_file', ''),
                                                  placeholder = 'e.g. C:/Documents/Secret_Files/google_API/application_default_credentials.json',
                                                  help ="This API Key is in the form of a JSON file. Please save the JSON file in a safe directory. DO NOT store the JSON key inside of the VoucherVision directory.",
-                                                 type='password',key="Full path to Google Cloud JSON API key file")
+                                                 type='password',key='924857298734590283750932809238')
             with c_button_ocr:
                 st.empty()
 
@@ -422,6 +427,7 @@ def create_private_file_0(cfg_private=None):
         st.button("Set API Keys",type='primary', on_click=save_changes_to_API_keys, args=[cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
                                                                     azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm])
         if st.button('Proceed to VoucherVision'):
+            st.session_state.proceed_to_private = False
             st.session_state.proceed_to_main = True
 
 def test_API(api, message_loc, cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key, azure_openai_api_base,azure_openai_organization,azure_openai_api_type,google_vision,google_palm):
@@ -1337,7 +1343,9 @@ def main():
         content_tab_processing()
 
     with tab_private:
-        create_private_file()
+        if st.button("Edit API Keys"):
+            st.session_state.proceed_to_private = True
+            st.rerun()
 
     with tab_delete:
         create_space_saver()
@@ -1354,6 +1362,8 @@ if 'proceed_to_main' not in st.session_state:
 
 if 'proceed_to_build_llm_prompt' not in st.session_state:
     st.session_state.proceed_to_build_llm_prompt = False  # New state variable to control the flow
+if 'proceed_to_private' not in st.session_state:
+    st.session_state.proceed_to_private = False  # New state variable to control the flow
 
 if 'private_file' not in st.session_state:
     st.session_state.private_file = does_private_file_exist()
@@ -1366,9 +1376,11 @@ if 'prompt_info' not in st.session_state:
 if 'rules' not in st.session_state:
     st.session_state['rules'] = {}
 
-if not st.session_state.private_file or not st.session_state.proceed_to_main:
+if not st.session_state.private_file:
     create_private_file()
 elif st.session_state.proceed_to_build_llm_prompt:
     build_LLM_prompt_config()
-else:
+elif st.session_state.proceed_to_private:
+    create_private_file()
+elif st.session_state.proceed_to_main:
     main()

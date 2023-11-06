@@ -169,6 +169,102 @@ def calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out
     
     return cost_in, cost_out, total_cost, rates['in'], rates['out']
 
+def create_google_ocr_yaml_config(output_file, dir_images_local, dir_output):
+    # Define the configuration dictionary
+    config = {
+        'leafmachine': {
+            'LLM_version': 'PaLM 2',
+            'archival_component_detector': {
+                'detector_iteration': 'PREP_final',
+                'detector_type': 'Archival_Detector',
+                'detector_version': 'PREP_final',
+                'detector_weights': 'best.pt',
+                'do_save_prediction_overlay_images': True,
+                'ignore_objects_for_overlay': [],
+                'minimum_confidence_threshold': 0.5
+            },
+            'cropped_components': {
+                'binarize_labels': False,
+                'binarize_labels_skeletonize': False,
+                'do_save_cropped_annotations': True,
+                'save_cropped_annotations': ['label', 'barcode'],
+                'save_per_annotation_class': True,
+                'save_per_image': False
+            },
+            'data': {
+                'do_apply_conversion_factor': False,
+                'include_darwin_core_data_from_combined_file': False,
+                'save_individual_csv_files_landmarks': False,
+                'save_individual_csv_files_measurements': False,
+                'save_individual_csv_files_rulers': False,
+                'save_individual_efd_files': False,
+                'save_json_measurements': False,
+                'save_json_rulers': False
+            },
+            'do': {
+                'check_for_corrupt_images_make_vertical': True,
+                'check_for_illegal_filenames': False
+            },
+            'logging': {
+                'log_level': None
+            },
+            'modules': {
+                'specimen_crop': True
+            },
+            'overlay': {
+                'alpha_transparency_archival': 0.3,
+                'alpha_transparency_plant': 0,
+                'alpha_transparency_seg_partial_leaf': 0.3,
+                'alpha_transparency_seg_whole_leaf': 0.4,
+                'ignore_archival_detections_classes': [],
+                'ignore_landmark_classes': [],
+                'ignore_plant_detections_classes': ['leaf_whole', 'specimen'],
+                'line_width_archival': 12,
+                'line_width_efd': 12,
+                'line_width_plant': 12,
+                'line_width_seg': 12,
+                'overlay_background_color': 'black',
+                'overlay_dpi': 300,
+                'save_overlay_to_jpgs': True,
+                'save_overlay_to_pdf': False,
+                'show_archival_detections': True,
+                'show_landmarks': True,
+                'show_plant_detections': True,
+                'show_segmentations': True
+            },
+            'print': {
+                'optional_warnings': True,
+                'verbose': True
+            },
+            'project': {
+                'batch_size': 500,
+                'build_new_embeddings_database': False,
+                'catalog_numerical_only': False,
+                'continue_run_from_partial_xlsx': '',
+                'delete_all_temps': False,
+                'delete_temps_keep_VVE': False,
+                'dir_images_local': dir_images_local,
+                'dir_output': dir_output,
+                'embeddings_database_name': 'SLTP_UM_AllAsiaMinimalInRegion',
+                'image_location': 'local',
+                'num_workers': 1,
+                'path_to_domain_knowledge_xlsx': '',
+                'prefix_removal': '',
+                'prompt_version': 'Version 2 PaLM 2',
+                'run_name': 'google_vision_ocr_test',
+                'suffix_removal': '',
+                'use_domain_knowledge': False
+            },
+            'use_RGB_label_images': False
+        }
+    }
+    # Generate the YAML string from the data structure
+    yaml_str = yaml.dump(config, default_flow_style=False, sort_keys=False)
+
+    # Write the YAML string to a file
+    with open(output_file, 'w') as file:
+        file.write(yaml_str)
+        
 def test_GPU():
     info = []
     success = False
