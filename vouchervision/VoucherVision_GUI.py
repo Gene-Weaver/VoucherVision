@@ -865,76 +865,20 @@ The desired null value is also given. Populate the field with the null value of 
             'LLM': st.session_state['LLM']
         }
         st.json(st.session_state['prompt_info'])
-    # # Mapping Section
-    # st.header("Mapping")
-    # mapping = {}
-    # category_options = ["TAXONOMY", "GEOGRAPHY", "LOCALITY", "COLLECTING", "MISCELLANEOUS"]
-    # if columns:
-    #     for column in columns.split(','):
-    #         column = column.strip()
-    #         category = st.selectbox(f"Category for {column}:", category_options, key=f"category_{column}")
-    #         mapping[column] = category
-    
-
-    # # Button to save YAML file
-    # if st.button("Save YAML"):
-    #     yaml_content = {
-    #         "instructions": instructions_list,
-    #         "column_instructions": column_instructions,
-    #         "rules": rules,
-    #         "mapping": mapping
-    #     }
-    #     save_yaml(yaml_content, filename="rules_config.yaml")
-    #     st.success("YAML configuration saved!")
-
-    # Optional: Display the YAML content on the page
-    # if st.checkbox("Show YAML"):
-    # st.write(yaml_content)
-
+   
 def save_yaml(content, filename="rules_config.yaml"):
     with open(filename, 'w') as file:
         yaml.dump(content, file)
-
-# def process_batch(progress_report):
-#     # First, write the config file.
-#     write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
-
-#     # If using a custom prompt, pass the full path to the prompt config. else it's just a meaningless path that won't do anything
-#     path_custom_prompts = os.path.join(st.session_state.dir_home,'custom_prompts',st.session_state.config['leafmachine']['LLM_version'])
-
-#     # Call the machine function.
-#     last_JSON_response = voucher_vision(None, st.session_state.dir_home, path_custom_prompts, None, progress_report)
-#     # Format the JSON string for display.
-#     if last_JSON_response is None:
-#         st.markdown(f"Last JSON object in the batch: NONE")
-#     else:
-#         try:
-#             formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
-#         except:
-#             formatted_json = json.dumps(last_JSON_response, indent=4)
-#         st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
-#         st.balloons()
 
 def show_header_welcome():
     st.session_state.logo_path = os.path.join(st.session_state.dir_home, 'img','logo.png')
     st.session_state.logo = Image.open(st.session_state.logo_path)
     st.image(st.session_state.logo, width=250)
-    # # st.image("img/logo.png", use_column_width=True)
-    # st.markdown(f'<a href="https://github.com/Gene-Weaver/VoucherVision"><img src="http://localhost:8000/{st.session_state.logo_path}" width="200"></a>', unsafe_allow_html=True)
-    # hide_img_fs = '''
-    # <style>
-    # button[title="View fullscreen"]{
-    #     visibility: hidden;}
-    # </style>
-    # '''
-    # st.markdown(hide_img_fs, unsafe_allow_html=True)
 
 def content_header():
-    # st.title("VoucherVision")
-
     col_run_1, col_run_2, col_run_3 = st.columns([4,2,2])
     col_test = st.container()
-    # _, col_test, __ = st.columns([1,10,1])
+
     st.write("")
     st.write("")
     st.write("")
