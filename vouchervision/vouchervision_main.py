@@ -140,7 +140,7 @@ def voucher_vision_OCR_test(cfg_file_path, dir_home, cfg_test, path_to_crop):
     crop_detections_from_images_VV(cfg, logger, dir_home, Project, Dirs)
 
     # Process labels
-    Voucher_Vision = VoucherVision(cfg, logger, dir_home, Project, Dirs)
+    Voucher_Vision = VoucherVision(cfg, logger, dir_home, None, Project, Dirs)
     last_JSON_response = Voucher_Vision.process_specimen_batch_OCR_test(path_to_crop)
 
 if __name__ == '__main__':    

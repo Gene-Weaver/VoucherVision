@@ -259,12 +259,12 @@ def create_google_ocr_yaml_config(output_file, dir_images_local, dir_output):
         }
     }
     # Generate the YAML string from the data structure
-    yaml_str = yaml.dump(config, default_flow_style=False, sort_keys=False)
+    yaml_str = yaml.dump(config)
 
     # Write the YAML string to a file
     with open(output_file, 'w') as file:
         file.write(yaml_str)
-        
+
 def test_GPU():
     info = []
     success = False

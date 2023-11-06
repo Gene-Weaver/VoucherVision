@@ -448,7 +448,7 @@ class VoucherVision():
         '''Writes dictionary data to a JSON file.'''
         with open(filepath, 'w') as txt_file:
             if isinstance(data, dict):
-                data = json.dumps(data, indent=4, default_flow_style=False, sort_keys=False)
+                data = json.dumps(data, indent=4)
             txt_file.write(data)
 
     def create_null_json(self):

@@ -513,16 +513,18 @@ def run_api_tests(api):
             
             if check_API_key(dir_home, api) and check_API_key(dir_home, 'google-vision-ocr') :
                 try:
-                    last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, cfg_test=None, progress_report=None, test_ind=int(test_ind))
+                    last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, None, cfg_test=None, progress_report=None, test_ind=int(test_ind))
                     test_results[cfg] = True
                     JSON_results[ind] = last_JSON_response
                     return True
 
                 except Exception as e:
+                    print(e)
                     return False
             else:
                 return False
-    except:
+    except Exception as e:
+        print(e)
         return False
 
 def has_API_key(val):

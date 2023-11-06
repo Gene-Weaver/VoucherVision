@@ -109,7 +109,7 @@ def display_scrollable_results(JSON_results, test_results, OPT2, OPT3):
             if JSON_results[idx] is None:
                 results_html += f"<p>None</p>"
             else:
-                formatted_json = json.dumps(JSON_results[idx], indent=4, default_flow_style=False, sort_keys=False)
+                formatted_json = json.dumps(JSON_results[idx], indent=4)
                 results_html += f"<pre>[{opt2_readable}] + [{opt3_readable}]<br/>{formatted_json}</pre>"
         
         # End the custom container
@@ -446,38 +446,51 @@ def test_API(api, message_loc, cfg_private,openai_api_key,azure_openai_api_versi
                 with message_loc:
                     st.success("Google Vision OCR API Key Valid :white_check_mark:")
                 return True
-            except:
+            except Exception as e:
                 with message_loc:
-                    st.error("Google Vision OCR API Key Failed!")
+                    st.error(f"Google Vision OCR API Key Failed! {e}")
                 return False
             
         elif api == 'openai':
             print("*** OpenAI API Key ***")
-            if run_api_tests('openai'):
+            try:
+                if run_api_tests('openai'):
+                    with message_loc:
+                        st.success("OpenAI API Key Valid :white_check_mark:")
+                else:
+                    with message_loc:
+                        st.error("OpenAI API Key Failed:exclamation:")
+                    return False
+            except Exception as e:
                 with message_loc:
-                    st.success("OpenAI API Key Valid :white_check_mark:")
-            else:
-                with message_loc:
-                    st.error("OpenAI API Key Failed:exclamation:")
-                return False
+                    st.error(f"OpenAI API Key Failed:exclamation: {e}")
+
         elif api == 'azure_openai':
             print("*** Azure OpenAI API Key ***")
-            if run_api_tests('azure_openai'):
+            try:
+                if run_api_tests('azure_openai'):
+                    with message_loc:
+                        st.success("Azure OpenAI API Key Valid :white_check_mark:")
+                else:
+                    with message_loc:
+                        st.error(f"Azure OpenAI API Key Failed:exclamation:")
+                    return False
+            except Exception as e:
                 with message_loc:
-                    st.success("Azure OpenAI API Key Valid :white_check_mark:")
-            else:
-                with message_loc:
-                    st.error("Azure OpenAI API Key Failed:exclamation:")
-                return False
+                    st.error(f"Azure OpenAI API Key Failed:exclamation: {e}")
         elif api == 'palm':
             print("*** Google PaLM 2 API Key ***")
-            if run_api_tests('palm'):
+            try:
+                if run_api_tests('palm'):
+                    with message_loc:
+                        st.success("Google PaLM 2 API Key Valid :white_check_mark:")
+                else:
+                    with message_loc:
+                        st.error("Google PaLM 2 API Key Failed:exclamation:")
+                    return False
+            except Exception as e:
                 with message_loc:
-                    st.success("Google PaLM 2 API Key Valid :white_check_mark:")
-            else:
-                with message_loc:
-                    st.error("Google PaLM 2 API Key Failed:exclamation:")
-                return False
+                    st.error(f"Google PaLM 2 API Key Failed:exclamation: {e}")
        
 
 def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
@@ -524,7 +537,7 @@ def save_prompt_yaml(filename):
     filepath = os.path.join(dir_prompt, f"{filename}.yaml")
 
     with open(filepath, 'w') as file:
-        yaml.safe_dump(yaml_content, file, default_flow_style=False, sort_keys=False)
+        yaml.safe_dump(yaml_content, file)
 
     st.success(f"Prompt saved as '{filename}.yaml'.")
 
@@ -880,7 +893,7 @@ The desired null value is also given. Populate the field with the null value of 
 
 def save_yaml(content, filename="rules_config.yaml"):
     with open(filename, 'w') as file:
-        yaml.dump(content, file, default_flow_style=False, sort_keys=False)
+        yaml.dump(content, file)
 
 # def process_batch(progress_report):
 #     # First, write the config file.
@@ -974,9 +987,9 @@ def content_header():
                     st.markdown(f"Last JSON object in the batch: NONE")
                 else:
                     try:
-                        formatted_json = json.dumps(json.loads(last_JSON_response), indent=4, default_flow_style=False, sort_keys=False)
+                        formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
                     except:
-                        formatted_json = json.dumps(last_JSON_response, indent=4, default_flow_style=False, sort_keys=False)
+                        formatted_json = json.dumps(last_JSON_response, indent=4)
                     st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
                     st.balloons()
 
