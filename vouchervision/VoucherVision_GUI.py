@@ -1182,9 +1182,6 @@ def render_expense_report_summary():
     st.header('Expense Report Summary')
 
     if expense_summary:
-        
-        
-
         st.metric(label="Total Cost", value=f"${round(expense_summary['total_cost_sum'], 4):,}")
         col1, col2 = st.columns(2)
 
@@ -1197,9 +1194,6 @@ def render_expense_report_summary():
         with col2:
             st.metric(label="Total Images", value=expense_summary['n_images_sum'])
             st.metric(label="Tokens Out", value=f"{expense_summary['tokens_out_sum']:,}")
-
-        
-
 
 
         # Calculate cost proportion per image for each API version
@@ -1285,8 +1279,13 @@ def render_expense_report_summary():
         st.error('No expense report data available.')
 
 def sidebar_content():
-    st.session_state.expense_summary, st.session_state.expense_report = summarize_expense_report(os.path.join(st.session_state.dir_home,'expense_report','expense_report.csv'))
-    render_expense_report_summary()  
+    try:
+        st.session_state.expense_summary, st.session_state.expense_report = summarize_expense_report(os.path.join(st.session_state.dir_home,'expense_report','expense_report.csv'))
+        render_expense_report_summary()  
+    except:
+        st.header('Expense Report Summary')
+        st.write('Available after first run...')
+        
     # # Check if the expense summary is available in the session state
     # if 'expense' not in st.session_state or st.session_state.expense is None:
     #     st.sidebar.write('No expense report data available.')
