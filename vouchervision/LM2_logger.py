@@ -1,5 +1,5 @@
 import logging, os, psutil, torch, platform, cpuinfo, yaml #py-cpuinfo
-from vouchervision.general_utils import get_datetime, print_main_warn
+from vouchervision.general_utils import get_datetime, print_main_warn, print_main_info
 
 def start_logging(Dirs, cfg):
     run_name = cfg['leafmachine']['project']['run_name']
@@ -65,8 +65,8 @@ def start_logging(Dirs, cfg):
     else:
         logger.info("No GPU found")
         logger.info("LeafMachine2 image cropping and embedding search will be extremely slow or not possible.")
-        print_main_warn("No GPU found!")
-        print_main_warn("LeafMachine2 image cropping and embedding search will be extremely slow or not possible.")
+        print_main_info("No GPU found!")
+        print_main_info("LeafMachine2 image cropping and embedding search will be extremely slow or not possible.")
 
     # Get memory information
     mem_info = psutil.virtual_memory()

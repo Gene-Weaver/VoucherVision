@@ -11,7 +11,7 @@ from streamlit_extras.let_it_rain import rain
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
 from vouchervision.VoucherVision_Config_Builder import build_VV_config, run_demo_tests_GPT, run_demo_tests_Palm , TestOptionsGPT, TestOptionsPalm, check_if_usable, run_api_tests
 from vouchervision.vouchervision_main import voucher_vision, voucher_vision_OCR_test
-from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report, create_google_ocr_yaml_config
+from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report, create_google_ocr_yaml_config, validate_dir
 
 PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE = ["Version 1","Version 1 PaLM 2"]
 COLORS_EXPENSE_REPORT = {
@@ -1243,6 +1243,7 @@ def render_expense_report_summary():
 
 def sidebar_content():
     try:
+        validate_dir(os.path.join(st.session_state.dir_home,'expense_report'))
         st.session_state.expense_summary, st.session_state.expense_report = summarize_expense_report(os.path.join(st.session_state.dir_home,'expense_report','expense_report.csv'))
         render_expense_report_summary()  
     except:
