@@ -45,6 +45,8 @@ class ProgressReport:
         self.total_batches = n_batches
 
     def set_n_overall(self, total_overall_steps):
+        self.current_overall_step = 0
+        self.overall_bar.progress(0)
         self.total_overall_steps = total_overall_steps
 
     def reset_batch(self, step_name):
@@ -946,15 +948,19 @@ def content_header():
     with col_run_1:
         show_header_welcome()
         st.subheader('Run VoucherVision')
+        N_STEPS = 6
         if check_if_usable():
             if st.button("Start Processing", type='primary'):
+                # Define number of overall steps
+                progress_report.set_n_overall(N_STEPS)
+                progress_report.update_overall(f"Starting VoucherVision...")
             
                 # First, write the config file.
                 write_config_file(st.session_state.config, st.session_state.dir_home, filename="VoucherVision.yaml")
 
                 path_custom_prompts = os.path.join(st.session_state.dir_home,'custom_prompts',st.session_state.config['leafmachine']['project']['prompt_version'])
                 # Call the machine function.
-                last_JSON_response, total_cost = voucher_vision(None, st.session_state.dir_home, path_custom_prompts, None, progress_report,path_api_cost=os.path.join(st.session_state.dir_home,'api_cost','api_cost.yaml'))
+                last_JSON_response, total_cost = voucher_vision(None, st.session_state.dir_home, path_custom_prompts, None, progress_report,path_api_cost=os.path.join(st.session_state.dir_home,'api_cost','api_cost.yaml'), is_real_run=True)
                 
                 if total_cost:
                     st.success(f":money_with_wings: This run cost :heavy_dollar_sign:{total_cost:.4f}")

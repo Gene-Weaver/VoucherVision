@@ -737,7 +737,9 @@ class VoucherVision():
             self.add_data_to_excel_from_response(self.path_transcription, response, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
         return response
     
-    def process_specimen_batch(self, progress_report):
+    def process_specimen_batch(self, progress_report, is_real_run=False):
+        if is_real_run:
+            progress_report.update_overall(f"Transcribing Labels")
         try:
             if self.has_key:
                 if self.model_name:

@@ -16,7 +16,7 @@ from fetch_data import fetch_data
 from utils_VoucherVision import VoucherVision, space_saver
 
 
-def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progress_report, path_api_cost=None, test_ind = None):
+def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progress_report, path_api_cost=None, test_ind = None, is_real_run=False):
     # get_n_overall = progress_report.get_n_overall()
     # progress_report.update_overall(f"Working on {test_ind+1} of {get_n_overall}")
 
@@ -43,6 +43,8 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     #         cfg['leafmachine']['project']['run_name'] = run_name[dir_ind]
 
     # Dir structure
+    if is_real_run:
+        progress_report.update_overall(f"Creating Output Directory Structure")
     print_main_start("Creating Directory Structure")
     Dirs = Dir_Structure(cfg)
 
@@ -50,6 +52,8 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     logger = start_logging(Dirs, cfg)
 
     # Check to see if required ML files are ready to use
+    if is_real_run:
+        progress_report.update_overall(f"Fetching LeafMachine2 Files")
     ready_to_use = fetch_data(logger, dir_home, cfg_file_path)
     assert ready_to_use, "Required ML files are not ready to use!\nThe download may have failed,\nor\nthe directory structure of LM2 has been altered"
 
@@ -62,7 +66,7 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
 
     # Detect Archival Components
     print_main_start("Locating Archival Components")
-    Project = detect_archival_components(cfg, logger, dir_home, Project, Dirs)
+    Project = detect_archival_components(cfg, logger, dir_home, Project, Dirs, is_real_run, progress_report)
 
     # Save cropped detections
     crop_detections_from_images_VV(cfg, logger, dir_home, Project, Dirs)
@@ -70,7 +74,7 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     # Process labels
     Voucher_Vision = VoucherVision(cfg, logger, dir_home, path_custom_prompts, Project, Dirs)
     n_images = len(Voucher_Vision.img_paths)
-    last_JSON_response, total_tokens_in, total_tokens_out = Voucher_Vision.process_specimen_batch(progress_report)
+    last_JSON_response, total_tokens_in, total_tokens_out = Voucher_Vision.process_specimen_batch(progress_report, is_real_run)
     
     if path_api_cost:
         cost_summary, data, total_cost = save_token_info_as_csv(Dirs, cfg['leafmachine']['LLM_version'], path_api_cost, total_tokens_in, total_tokens_out, n_images)
@@ -83,6 +87,9 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     logger.name = 'Run Complete! :)'
     logger.info(f"[Total elapsed time] {round((t_overall_s - t_overall)/60)} minutes")
     space_saver(cfg, Dirs, logger)
+
+    if is_real_run:
+        progress_report.update_overall(f"Run Complete! :sunglasses:")
 
     for handler in logger.handlers[:]:
         handler.close()
