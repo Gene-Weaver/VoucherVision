@@ -1,3 +1,6 @@
+prompt_author: unknown          
+prompt_author_institution: unknown          
+prompt_description: unknown          
 LLM: gpt
 instructions: '1. Refactor the unstructured OCR text into a dictionary based on the
   JSON structure outlined below.

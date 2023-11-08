@@ -35,6 +35,7 @@ def build_VV_config():
     LLM_version_user = 'Azure GPT 4'
     prompt_version = 'Version 2' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
     use_LeafMachine2_collage_images = False # Use LeafMachine2 collage images
+    do_create_OCR_helper_image = False
 
     batch_size = 500
 
@@ -49,12 +50,12 @@ def build_VV_config():
     return assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
                     path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                    prompt_version, use_domain_knowledge=False)
+                    prompt_version, do_create_OCR_helper_image, use_domain_knowledge=False)
 
 def assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
                     path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                    prompt_version, use_domain_knowledge=False):
+                    prompt_version, do_create_OCR_helper_image_user, use_domain_knowledge=False):
     
 
     # Initialize the base structure
@@ -104,6 +105,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
 
     LLM_version = LLM_version_user 
     use_RGB_label_images = use_LeafMachine2_collage_images # Use LeafMachine2 collage images
+    do_create_OCR_helper_image = do_create_OCR_helper_image_user
     
     cropped_components_section = {
         'do_save_cropped_annotations': True,
@@ -166,6 +168,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
     config_data['leafmachine']['project'] = project_section
     config_data['leafmachine']['LLM_version'] = LLM_version
     config_data['leafmachine']['use_RGB_label_images'] = use_RGB_label_images
+    config_data['leafmachine']['do_create_OCR_helper_image'] = do_create_OCR_helper_image
     config_data['leafmachine']['cropped_components'] = cropped_components_section
     config_data['leafmachine']['modules'] = modules_section
     config_data['leafmachine']['data'] = data_section
@@ -187,6 +190,7 @@ def build_api_tests(api):
     suffix_removal = ''
     catalog_numerical_only = False
     batch_size = 500
+    do_create_OCR_helper_image = False
 
 
     # ### Option 1: "GPT 4" of ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"]
@@ -234,7 +238,7 @@ def build_api_tests(api):
                 config_data, dir_home = assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
                     path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                    prompt_version)
+                    prompt_version,do_create_OCR_helper_image)
                 
                 write_config_file(config_data, os.path.join(dir_home,'demo','demo_configs'),filename=filename)
 
@@ -258,7 +262,7 @@ def build_demo_tests(llm_version):
     suffix_removal = ''
     catalog_numerical_only = False
     batch_size = 500
-
+    do_create_OCR_helper_image = False
 
     # ### Option 1: "GPT 4" of ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"]
     # LLM_version_user = 'Azure GPT 4'
@@ -306,23 +310,23 @@ def build_demo_tests(llm_version):
                         config_data, dir_home = assemble_config(dir_home, run_name, dir_images_local,dir_output,
                             prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
                             path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                            prompt_version, use_domain_knowledge=True)
+                            prompt_version, do_create_OCR_helper_image, use_domain_knowledge=True)
                     else:
                         config_data, dir_home = assemble_config(dir_home, run_name, dir_images_local,dir_output,
                             prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
                             path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                            prompt_version)
+                            prompt_version, do_create_OCR_helper_image)
                 elif llm_version == 'palm':
                     if prompt_version in ['Version 1 PaLM 2']:
                         config_data, dir_home = assemble_config(dir_home, run_name, dir_images_local,dir_output,
                             prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
                             path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                            prompt_version, use_domain_knowledge=True)
+                            prompt_version, do_create_OCR_helper_image, use_domain_knowledge=True)
                     else:
                         config_data, dir_home = assemble_config(dir_home, run_name, dir_images_local,dir_output,
                             prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,
                             path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                            prompt_version)
+                            prompt_version, do_create_OCR_helper_image)
                 
                 
                 write_config_file(config_data, os.path.join(dir_home,'demo','demo_configs'),filename=filename)
@@ -335,7 +339,7 @@ def build_demo_tests(llm_version):
     return dir_home, path_to_configs, test_results
 
 class TestOptionsGPT:
-    OPT1 = ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]
+    OPT1 = ["gpt-4-1106-preview","GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]
     OPT2 = [False, True]
     OPT3 = ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
 
@@ -468,7 +472,7 @@ def run_demo_tests_Palm(progress_report):
         
         if check_API_key(dir_home, api_version) and check_API_key(dir_home, 'google-vision-ocr') :
             try:
-                last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, cfg_test=None, progress_report=progress_report, test_ind=int(test_ind))
+                last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, cfg_test=None, path_custom_prompts=None, progress_report=progress_report, test_ind=int(test_ind))
                 test_results[cfg] = True
                 JSON_results[ind] = last_JSON_response
             except Exception as e:
@@ -513,7 +517,7 @@ def run_api_tests(api):
             
             if check_API_key(dir_home, api) and check_API_key(dir_home, 'google-vision-ocr') :
                 try:
-                    last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, None, cfg_test=None, progress_report=None, test_ind=int(test_ind))
+                    last_JSON_response, total_cost = voucher_vision(cfg_file_path, dir_home, None,path_custom_prompts=None , cfg_test=None, progress_report=None, test_ind=int(test_ind))
                     test_results[cfg] = True
                     JSON_results[ind] = last_JSON_response
                     return True

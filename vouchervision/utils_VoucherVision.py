@@ -99,6 +99,7 @@ class VoucherVision():
     def map_API_options(self):
         self.chat_version = self.cfg['leafmachine']['LLM_version']
         version_mapping = {
+            'gpt-4-1106-preview':  ('OpenAI gpt-4-1106-preview', False, 'gpt-4-1106-preview', self.has_key_openai),
             'GPT 4': ('OpenAI GPT 4', False, 'GPT_4', self.has_key_openai),
             'GPT 3.5': ('OpenAI GPT 3.5', False, 'GPT_3_5', self.has_key_openai),
             'Azure GPT 3.5': ('(Azure) OpenAI GPT 3.5', True, 'Azure_GPT_3_5', self.has_key_azure_openai),
@@ -196,10 +197,14 @@ class VoucherVision():
                 return "gpt-3.5-turbo", False
         if vendor == 'GPT_4':
             return "gpt-4", False
+        if vendor == "gpt-4-1106-preview":
+            return "gpt-4-1106-preview", False
+        
         if vendor == 'Azure_GPT_3_5':
             return "gpt-35-turbo", False
         if vendor == 'Azure_GPT_4':
             return "gpt-4", False
+        
            
     def create_or_load_excel_with_headers(self, file_path, headers, show_head=False):
         output_dir_names = ['Archival_Components', 'Config_File', 'Cropped_Images', 'Logs', 'Original_Images', 'Transcription']
@@ -448,7 +453,7 @@ class VoucherVision():
         '''Writes dictionary data to a JSON file.'''
         with open(filepath, 'w') as txt_file:
             if isinstance(data, dict):
-                data = json.dumps(data, indent=4)
+                data = json.dumps(data, indent=4, sort_keys=False)
             txt_file.write(data)
 
     def create_null_json(self):
@@ -571,9 +576,9 @@ class VoucherVision():
                 self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Finished OCR')
                 if len(self.OCR) > 0:
                     self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Creating OCR Overlay Image')
-                    self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds)
+                    self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds, self.cfg['leafmachine']['do_create_OCR_helper_image'])
                     self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
-                    
+
                     self.write_json_to_file(txt_file_path_OCR, {"OCR":self.OCR})
                     self.write_json_to_file(txt_file_path_OCR_bounds, {"OCR_Bounds":self.bounds})
                     self.overlay_image.save(jpg_file_path_OCR_helper)
@@ -639,9 +644,9 @@ class VoucherVision():
                     self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Finished OCR')
 
                     self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Creating OCR Overlay Image')
-                    self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds)
+                    self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds, self.cfg['leafmachine']['do_create_OCR_helper_image'])
                     self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
-                    
+                
                     self.write_json_to_file(txt_file_path_OCR, {"OCR":self.OCR})
                     self.write_json_to_file(txt_file_path_OCR_bounds, {"OCR_Bounds":self.bounds})
                     self.overlay_image.save(jpg_file_path_OCR_helper)

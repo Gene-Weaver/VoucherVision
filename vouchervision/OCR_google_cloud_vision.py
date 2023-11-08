@@ -60,10 +60,14 @@ def detect_text(path):
     else:
         return '', None, None
     
-def overlay_boxes_on_image(path, bounds):
-    image = Image.open(path)
-    draw_boxes(image, bounds, "green")
-    return image
+def overlay_boxes_on_image(path, bounds,do_create_OCR_helper_image):
+    if do_create_OCR_helper_image:
+        image = Image.open(path)
+        draw_boxes(image, bounds, "green")
+        return image
+    else:
+        image = Image.open(path)
+        return image
 
 
 

@@ -1,3 +1,6 @@
+prompt_author: Will Weaver          
+prompt_author_institution: UM          
+prompt_description: Version 2 slightly modified for OSU, but still unfinished   
 LLM: gpt
 instructions: '1. Refactor the unstructured OCR text into a dictionary based on the
   JSON structure outlined below.

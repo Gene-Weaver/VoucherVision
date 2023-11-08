@@ -109,7 +109,7 @@ def display_scrollable_results(JSON_results, test_results, OPT2, OPT3):
             if JSON_results[idx] is None:
                 results_html += f"<p>None</p>"
             else:
-                formatted_json = json.dumps(JSON_results[idx], indent=4)
+                formatted_json = json.dumps(JSON_results[idx], indent=4, sort_keys=False)
                 results_html += f"<pre>[{opt2_readable}] + [{opt3_readable}]<br/>{formatted_json}</pre>"
         
         # End the custom container
@@ -241,7 +241,7 @@ def rain_emojis(test_results):
 def get_prompt_versions(LLM_version):
     yaml_files = [f for f in os.listdir(os.path.join(st.session_state.dir_home, 'custom_prompts')) if f.endswith('.yaml')]
 
-    if LLM_version in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]:
+    if LLM_version in ["gpt-4-1106-preview", "GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5"]:
         versions = ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
         return (versions + yaml_files, "Version 2")
     elif LLM_version in ["PaLM 2",]:
@@ -515,6 +515,9 @@ def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version
 def load_prompt_yaml(filename):
     with open(filename, 'r') as file:
         st.session_state['prompt_info'] = yaml.safe_load(file)
+        st.session_state['prompt_author'] = st.session_state['prompt_info'].get('prompt_author', st.session_state['default_prompt_author']) 
+        st.session_state['prompt_author_institution'] = st.session_state['prompt_info'].get('prompt_author_institution', st.session_state['default_prompt_author_institution']) 
+        st.session_state['prompt_description'] = st.session_state['prompt_info'].get('prompt_description', st.session_state['default_prompt_description']) 
         st.session_state['instructions'] = st.session_state['prompt_info'].get('instructions', st.session_state['default_instructions']) 
         st.session_state['json_formatting_instructions'] = st.session_state['prompt_info'].get('json_formatting_instructions', st.session_state['default_json_formatting_instructions'] )
         st.session_state['rules'] = st.session_state['prompt_info'].get('rules', {})
@@ -526,18 +529,21 @@ def load_prompt_yaml(filename):
 
 def save_prompt_yaml(filename):
     yaml_content = {
+        'prompt_author': st.session_state['prompt_author'],
+        'prompt_author_institution': st.session_state['prompt_author_institution'],
+        'prompt_description': st.session_state['prompt_description'],
+        'LLM': st.session_state['LLM'],
         'instructions': st.session_state['instructions'],
         'json_formatting_instructions': st.session_state['json_formatting_instructions'],
         'rules': st.session_state['rules'],
         'mapping': st.session_state['mapping'],
-        'LLM': st.session_state['LLM']
     }
     
     dir_prompt = os.path.join(st.session_state.dir_home, 'custom_prompts')
     filepath = os.path.join(dir_prompt, f"{filename}.yaml")
 
     with open(filepath, 'w') as file:
-        yaml.safe_dump(yaml_content, file)
+        yaml.safe_dump(dict(yaml_content), file, sort_keys=False)
 
     st.success(f"Prompt saved as '{filename}.yaml'.")
 
@@ -569,6 +575,9 @@ def btn_load_prompt(selected_yaml_file, dir_prompt):
     elif not selected_yaml_file:
         # Directly assigning default values since no file is selected
         st.session_state['prompt_info'] = {}
+        st.session_state['prompt_author'] = st.session_state['default_prompt_author']
+        st.session_state['prompt_author_institution'] = st.session_state['default_prompt_author_institution']
+        st.session_state['prompt_description'] = st.session_state['default_prompt_description']
         st.session_state['instructions'] = st.session_state['default_instructions']
         st.session_state['json_formatting_instructions'] = st.session_state['default_json_formatting_instructions'] 
         st.session_state['rules'] = {}
@@ -577,6 +586,9 @@ def btn_load_prompt(selected_yaml_file, dir_prompt):
         st.session_state['assigned_columns'] = []
 
         st.session_state['prompt_info'] = {
+            'prompt_author': st.session_state['prompt_author'],
+            'prompt_author_institution': st.session_state['prompt_author_institution'],
+            'prompt_description': st.session_state['prompt_description'],
             'instructions': st.session_state['instructions'],
             'json_formatting_instructions': st.session_state['json_formatting_instructions'],
             'rules': st.session_state['rules'],
@@ -586,6 +598,9 @@ def btn_load_prompt(selected_yaml_file, dir_prompt):
 
 def build_LLM_prompt_config():
     st.session_state['assigned_columns'] = []
+    st.session_state['default_prompt_author'] = 'unknown'
+    st.session_state['default_prompt_author_institution'] = 'unknown'
+    st.session_state['default_prompt_description'] = 'unknown'
     st.session_state['default_instructions'] = """1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
 2. You should map the unstructured OCR text to the appropriate JSON key and then populate the field based on its rules.
 3. Some JSON key fields are permitted to remain empty if the corresponding information is not found in the unstructured OCR text.
@@ -638,25 +653,43 @@ The desired null value is also given. Populate the field with the null value of 
                 
 
 
+        
+
+        
+        # Prompt Author Information
+        st.header("Prompt Author Information")
+        st.write("We value community contributions! Please provide your name(s) (or pseudonym if you prefer) for credit. If you leave this field blank, it will say 'unknown'.")
+        st.session_state['prompt_author'] = st.text_input("Enter names of prompt author(s)", value=st.session_state['default_prompt_author'])
+
+        st.write("Please provide your institution name. If you leave this field blank, it will say 'unknown'.")
+        st.session_state['prompt_author_institution'] = st.text_input("Enter name of institution", value=st.session_state['default_prompt_author_institution'])
+
+        st.write("Please provide a description of your prompt and its intended task. Is it designed for a specific collection? Taxa? Database structure?")
+        st.session_state['prompt_description'] = st.text_input("Enter description of prompt", value=st.session_state['default_prompt_description'])
+
+        
+        st.write('---')
+        st.header("Set LLM Model Type")
         # Define the options for the dropdown
         llm_options = ['gpt', 'palm']
         # Create the dropdown and set the value to session_state['LLM']
-        st.session_state['LLM'] = st.selectbox('Set LLM:', llm_options, index=llm_options.index(st.session_state.get('LLM', 'gpt')))
-
+        st.write("Which LLM is this prompt designed for? This will not restrict its use to a specific LLM, but some prompts will behave in different ways across models.")
+        st.write("For example, VoucherVision will automatically add multiple JSON formatting blocks to all PaLM 2 prompts to coax PaLM 2 to return a valid JSON object.")
+        st.session_state['LLM'] = st.selectbox('Set LLM', llm_options, index=llm_options.index(st.session_state.get('LLM', 'gpt')))
         
-
+        st.write('---')
         # Instructions Section
         st.header("Instructions")
         st.write("These are the general instructions that guide the LLM through the transcription task. We recommend using the default instructions unless you have a specific reason to change them.")
         
-        st.session_state['instructions'] = st.text_area("Enter instructions:", value=st.session_state['default_instructions'].strip(), height=350, disabled=True)
+        st.session_state['instructions'] = st.text_area("Enter instructions", value=st.session_state['default_instructions'].strip(), height=350, disabled=True)
 
         st.write('---')
 
         # Column Instructions Section
         st.header("JSON Formatting Instructions")
         st.write("The following section tells the LLM how we want to structure the JSON dictionary. We do not recommend changing this section because it would likely result in unstable and inconsistent behavior.")
-        st.session_state['json_formatting_instructions'] = st.text_area("Enter column instructions:", value=st.session_state['default_json_formatting_instructions'], height=350, disabled=True)
+        st.session_state['json_formatting_instructions'] = st.text_area("Enter column instructions", value=st.session_state['default_json_formatting_instructions'], height=350, disabled=True)
 
 
 
@@ -855,20 +888,20 @@ The desired null value is also given. Populate the field with the null value of 
                 st.session_state.proceed_to_build_llm_prompt = False
                 st.session_state.proceed_to_main = True
                 st.rerun()
+
     with col_prompt_main_right:
         st.subheader('All Prompt Components')
         st.session_state['prompt_info'] = {
+            'prompt_author': st.session_state['prompt_author'],
+            'prompt_author_institution': st.session_state['prompt_author_institution'],
+            'prompt_description': st.session_state['prompt_description'],
+            'LLM': st.session_state['LLM'],
             'instructions': st.session_state['instructions'],
             'json_formatting_instructions': st.session_state['json_formatting_instructions'],
             'rules': st.session_state['rules'],
             'mapping': st.session_state['mapping'],
-            'LLM': st.session_state['LLM']
         }
         st.json(st.session_state['prompt_info'])
-   
-def save_yaml(content, filename="rules_config.yaml"):
-    with open(filename, 'w') as file:
-        yaml.dump(content, file)
 
 def show_header_welcome():
     st.session_state.logo_path = os.path.join(st.session_state.dir_home, 'img','logo.png')
@@ -931,9 +964,9 @@ def content_header():
                     st.markdown(f"Last JSON object in the batch: NONE")
                 else:
                     try:
-                        formatted_json = json.dumps(json.loads(last_JSON_response), indent=4)
+                        formatted_json = json.dumps(json.loads(last_JSON_response), indent=4, sort_keys=False)
                     except:
-                        formatted_json = json.dumps(last_JSON_response, indent=4)
+                        formatted_json = json.dumps(last_JSON_response, indent=4, sort_keys=False)
                     st.markdown(f"Last JSON object in the batch:\n```\n{formatted_json}\n```")
                     st.balloons()
 
@@ -1004,7 +1037,7 @@ def content_tab_settings():
             ***Note:*** GPT-4 is 20x more expensive than GPT-3.5  
             """
             )
-        st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"], index=["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"].index(st.session_state.config['leafmachine'].get('LLM_version', 'Azure GPT 4')))
+        st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", ["gpt-4-1106-preview", "GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"], index=["gpt-4-1106-preview", "GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5", "PaLM 2"].index(st.session_state.config['leafmachine'].get('LLM_version', 'Azure GPT 4')))
 
         st.write("---")
         st.subheader('Prompt Version')
@@ -1016,23 +1049,7 @@ def content_tab_settings():
                 selected_version = default_version
             st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", versions, index=versions.index(selected_version))
 
-        # if st.session_state.config['leafmachine']['LLM_version'] in ["GPT 4", "GPT 3.5", "Azure GPT 4", "Azure GPT 3.5",]:
-        #     st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", ["Version 1", "Version 1 No Domain Knowledge", "Version 2"], index=["Version 1", "Version 1 No Domain Knowledge", "Version 2"].index(st.session_state.config['leafmachine']['project'].get('prompt_version', "Version 2")))
-        # elif st.session_state.config['leafmachine']['LLM_version'] in ["PaLM 2",]:
-        #     st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", ["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"], index=["Version 1 PaLM 2", "Version 1 PaLM 2 No Domain Knowledge", "Version 2 PaLM 2"].index(st.session_state.config['leafmachine']['project'].get('prompt_version', "Version 2 PaLM 2")))
 
-    ### Modules
-    # with col_m1:
-    #     st.session_state.config['leafmachine']['modules']['specimen_crop'] = st.checkbox("Specimen Close-up", st.session_state.config['leafmachine']['modules'].get('specimen_crop', True),disabled=True)
-
-    ### cropped_components
-    # with col_cropped_1:
-    #     st.session_state.config['leafmachine']['cropped_components']['do_save_cropped_annotations'] = st.checkbox("Save cropped components as images", st.session_state.config['leafmachine']['cropped_components'].get('do_save_cropped_annotations', True), disabled=True)
-    #     st.session_state.config['leafmachine']['cropped_components']['save_per_image'] = st.checkbox("Save cropped components grouped by specimen", st.session_state.config['leafmachine']['cropped_components'].get('save_per_image', False), disabled=True)
-    #     st.session_state.config['leafmachine']['cropped_components']['save_per_annotation_class'] = st.checkbox("Save cropped components grouped by type", st.session_state.config['leafmachine']['cropped_components'].get('save_per_annotation_class', True), disabled=True)
-    #     st.session_state.config['leafmachine']['cropped_components']['binarize_labels'] = st.checkbox("Binarize labels", st.session_state.config['leafmachine']['cropped_components'].get('binarize_labels', False), disabled=True)
-    #     st.session_state.config['leafmachine']['cropped_components']['binarize_labels_skeletonize'] = st.checkbox("Binarize and skeletonize labels", st.session_state.config['leafmachine']['cropped_components'].get('binarize_labels_skeletonize', False), disabled=True)
-    
     with col_cropped_1:
         default_crops = st.session_state.config['leafmachine']['cropped_components'].get('save_cropped_annotations', ['leaf_whole'])
         st.write("Prior to transcription, use LeafMachine2 to crop all labels from input images to create label collages for each specimen image. (Requires GPU)")
@@ -1041,6 +1058,11 @@ def content_tab_settings():
         st.session_state.config['leafmachine']['cropped_components']['save_cropped_annotations'] = st.multiselect("Components to crop",  
                 ['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',
                 'leaf_whole', 'leaf_partial', 'leaflet', 'seed_fruit_one', 'seed_fruit_many', 'flower_one', 'flower_many', 'bud','specimen','roots','wood'],default=default_crops)
+    
+        st.subheader('Create OCR Overlay Image')
+        st.write('This will plot bounding boxes around all text that Google Vision was able to detect. If there are no boxes around text, then the OCR failed, so that missing text will not be seen by the LLM when it is creating the JSON object. The created image will be viewable in the VoucherVisionEditor.')
+        st.session_state.config['leafmachine']['do_create_OCR_helper_image'] = st.checkbox("Create image showing an overlay of the OCR detections", st.session_state.config['leafmachine'].get('do_create_OCR_helper_image', False))
+    
     with col_cropped_2:
         ba = os.path.join(st.session_state.dir_home,'demo', 'ba','ba2.png')
         image = Image.open(ba)
@@ -1242,38 +1264,22 @@ def render_expense_report_summary():
         st.error('No expense report data available.')
 
 def sidebar_content():
-    try:
+    if not os.path.exists(os.path.join(st.session_state.dir_home,'expense_report')):
         validate_dir(os.path.join(st.session_state.dir_home,'expense_report'))
-        st.session_state.expense_summary, st.session_state.expense_report = summarize_expense_report(os.path.join(st.session_state.dir_home,'expense_report','expense_report.csv'))
+    expense_report_path = os.path.join(st.session_state.dir_home, 'expense_report', 'expense_report.csv')
+
+    if os.path.exists(expense_report_path):
+        # File exists, proceed with summarization
+        st.session_state.expense_summary, st.session_state.expense_report = summarize_expense_report(expense_report_path)
         render_expense_report_summary()  
-    except:
+    else:
+        # File does not exist, handle this case appropriately
+        # For example, you could set the session state variables to None or an empty value
+        st.session_state.expense_summary, st.session_state.expense_report = None, None
         st.header('Expense Report Summary')
         st.write('Available after first run...')
-        
-    # # Check if the expense summary is available in the session state
-    # if 'expense' not in st.session_state or st.session_state.expense is None:
-    #     st.sidebar.write('No expense report data available.')
-    #     return
-    
-    # # Retrieve the expense report summary
-    # expense_summary = st.session_state.expense
 
-    # # Display the expense report summary
-    # st.sidebar.markdown('**Run Count**: ' + str(expense_summary['run_count']))
 
-    # # API version usage percentages
-    # st.sidebar.markdown('**API Version Usage**:')
-    # for version, percentage in expense_summary['api_version_percentages'].items():
-    #     st.sidebar.markdown(f'- {version}: {percentage:.2f}%')
-
-    # # Summary of costs and tokens
-    # st.sidebar.markdown('**Total Cost**: $' + str(round(expense_summary['total_cost_sum'], 4)))
-    # st.sidebar.markdown('**Tokens In**: ' + str(expense_summary['tokens_in_sum']))
-    # st.sidebar.markdown('**Tokens Out**: ' + str(expense_summary['tokens_out_sum']))
-    # # st.sidebar.markdown('**Rate In**: $' + str(round(expense_summary['rate_in_sum'], 2)) + ' per 1000 tokens')
-    # # st.sidebar.markdown('**Rate Out**: $' + str(round(expense_summary['rate_out_sum'], 2)) + ' per 1000 tokens')
-    # st.sidebar.markdown('**Cost In**: $' + str(round(expense_summary['cost_in_sum'], 4)))
-    # st.sidebar.markdown('**Cost Out**: $' + str(round(expense_summary['cost_out_sum'], 4)))
 
 def main():
     with st.sidebar:

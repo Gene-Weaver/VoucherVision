@@ -23,7 +23,7 @@ https://helpx.adobe.com/content/dam/help/en/photoshop/pdf/dng_commandline.pdf
 
 def validate_dir(dir):
     if not os.path.exists(dir):
-        os.makedirs(dir)
+        os.makedirs(dir, exist_ok=True)
 
 def get_cfg_from_full_path(path_cfg):
     with open(path_cfg, "r") as ymlfile:
@@ -33,7 +33,7 @@ def get_cfg_from_full_path(path_cfg):
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     encoding = tiktoken.get_encoding(encoding_name)
     if isinstance(string, dict):
-        string = json.dumps(string)
+        string = json.dumps(string, sort_keys=False)
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
@@ -58,6 +58,7 @@ def add_to_expense_report(dir_home, data):
 
 def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, n_images):
     version_mapping = {
+            "gpt-4-1106-preview":"GPT_4",
             'GPT 4': 'GPT_4',
             'GPT 3.5': 'GPT_3_5',
             'Azure GPT 3.5': 'GPT_3_5',
@@ -260,7 +261,7 @@ def create_google_ocr_yaml_config(output_file, dir_images_local, dir_output):
     }
     # Generate the YAML string from the data structure
     validate_dir(os.path.dirname(output_file))
-    yaml_str = yaml.dump(config)
+    yaml_str = yaml.dump(config, sort_keys=False)
 
     # Write the YAML string to a file
     with open(output_file, 'w') as file:
@@ -414,7 +415,7 @@ def save_config_file(cfg, logger, Dirs):
 
 def write_yaml(cfg, path_cfg):
     with open(path_cfg, 'w') as file:
-        yaml.dump(cfg, file)
+        yaml.dump(cfg, file, sort_keys=False)
 
 def split_into_batches(Project, logger, cfg):
     logger.name = 'Creating Batches'
