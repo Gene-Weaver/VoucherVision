@@ -222,6 +222,8 @@ def structured_output_parser(is_azure, MODEL, llm, prompt_template, logger, prom
         return None
 
 def structured_output_parser_for_function_calls_fail(is_azure, MODEL, failed_response, logger, llm, prompt_version, is_helper=False, try_ind=0):
+    if try_ind == 0:
+        original_failed_response = failed_response
     if try_ind > 5:
         return None
 
@@ -271,13 +273,17 @@ def structured_output_parser_for_function_calls_fail(is_azure, MODEL, failed_res
     except json.decoder.JSONDecodeError as e:
         try_ind += 1
         error_message = str(e)
-        redo_content = f'The error messsage is: {error_message}\nThe broken JSON object is: {output.content}'
-        logger.info(f'[Failed JSON Object]\n{output.content}')
-        refined_response = structured_output_parser_for_function_calls_fail(is_azure, MODEL, redo_content, logger, llm, prompt_version, is_helper, try_ind)
+        redo_content = f'The error messsage is: {error_message}\nThe broken JSON object is: {original_failed_response}'  # Use original_failed_response here
+        logger.info(f'[Failed JSON Object]\n{original_failed_response}')  # And here
+        refined_response = structured_output_parser_for_function_calls_fail(
+            is_azure, MODEL, redo_content, logger, llm, prompt_version, is_helper, try_ind, original_failed_response
+        )
     except:
         try_ind += 1
-        logger.info(f'[Failed JSON Object]\n{output.content}')
-        refined_response = structured_output_parser_for_function_calls_fail(is_azure, MODEL, output.content, logger, llm, prompt_version, is_helper, try_ind)
+        logger.info(f'[Failed JSON Object]\n{original_failed_response}')  # And here
+        refined_response = structured_output_parser_for_function_calls_fail(
+            is_azure, MODEL, original_failed_response, logger, llm, prompt_version, is_helper, try_ind, original_failed_response
+        )
 
     return refined_response
 

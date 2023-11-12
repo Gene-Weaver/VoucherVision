@@ -134,6 +134,9 @@ def display_scrollable_results(JSON_results, test_results, OPT2, OPT3):
         st.markdown(css, unsafe_allow_html=True)
         st.markdown(results_html, unsafe_allow_html=True)
 
+def refresh():
+    st.write('')
+
 def display_test_results(test_results, JSON_results, llm_version):
     if llm_version == 'gpt':
         OPT1, OPT2, OPT3 = TestOptionsGPT.get_options()
@@ -910,8 +913,19 @@ def show_header_welcome():
     st.session_state.logo = Image.open(st.session_state.logo_path)
     st.image(st.session_state.logo, width=250)
 
+def determine_n_images():
+    try:
+        # Check if 'dir_uploaded_images' key exists and it is not empty
+        if 'dir_uploaded_images' in st and st['dir_uploaded_images']:
+            dir_path = st['dir_uploaded_images']  # This would be the path to the directory
+            return len([f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))])
+        else:
+            return None
+    except:
+        return None
+    
 def content_header():
-    col_run_1, col_run_2, col_run_3 = st.columns([4,2,2])
+    col_run_1, col_run_2, col_run_3 = st.columns([4,4,2])
     col_test = st.container()
 
     st.write("")
@@ -949,8 +963,14 @@ def content_header():
         show_header_welcome()
         st.subheader('Run VoucherVision')
         N_STEPS = 6
+
+        if determine_n_images():
+            st.session_state['processing_add_on'] = f" {determine_n_images()} Images"
+        else:
+            st.session_state['processing_add_on'] = ''
+
         if check_if_usable():
-            if st.button("Start Processing", type='primary'):
+            if st.button(f"Start Processing{st.session_state['processing_add_on']}", type='primary'):
                 # Define number of overall steps
                 progress_report.set_n_overall(N_STEPS)
                 progress_report.update_overall(f"Starting VoucherVision...")
@@ -979,10 +999,9 @@ def content_header():
         else:
             st.button("Start Processing", type='primary', disabled=True)
             st.error(":heavy_exclamation_mark: Required API keys not set. Please visit the 'API Keys' tab and set the Google Vision OCR API key and at least one LLM key.")
+        st.button("Refresh", on_click=refresh)
 
     with col_run_2:
-        st.subheader('Run Tests', help="")
-        st.write('We include a single image for testing. If you want to test all of the available prompts and LLMs on a different set of images, copy your images into `../VoucherVision/demo/demo_images`.')
         if st.button("Test GPT"):
             progress_report.set_n_overall(TestOptionsGPT.get_length())
             test_results, JSON_results = run_demo_tests_GPT(progress_report)
@@ -1018,13 +1037,13 @@ def content_tab_settings():
     st.header('Input Images')
     col_local_1, col_local_2 = st.columns([4,2])              
 
-    # st.write("---")
-    # st.header('Modules')
-    # col_m1, col_m2 = st.columns(2)
+    st.write("---")
+    st.header('LeafMachine2 Label Collage')    
+    col_cropped_1, col_cropped_2 = st.columns([4,4])   
 
     st.write("---")
-    st.header('Cropped Components')    
-    col_cropped_1, col_cropped_2 = st.columns([4,4])        
+    st.header('OCR Overlay Image')    
+    col_ocr_1, col_ocr_2 = st.columns([4,4])        
 
     os.path.join(st.session_state.dir_home, )
     ### Project
@@ -1064,15 +1083,20 @@ def content_tab_settings():
         st.session_state.config['leafmachine']['cropped_components']['save_cropped_annotations'] = st.multiselect("Components to crop",  
                 ['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',
                 'leaf_whole', 'leaf_partial', 'leaflet', 'seed_fruit_one', 'seed_fruit_many', 'flower_one', 'flower_many', 'bud','specimen','roots','wood'],default=default_crops)
-    
-        st.subheader('Create OCR Overlay Image')
-        st.write('This will plot bounding boxes around all text that Google Vision was able to detect. If there are no boxes around text, then the OCR failed, so that missing text will not be seen by the LLM when it is creating the JSON object. The created image will be viewable in the VoucherVisionEditor.')
-        st.session_state.config['leafmachine']['do_create_OCR_helper_image'] = st.checkbox("Create image showing an overlay of the OCR detections", st.session_state.config['leafmachine'].get('do_create_OCR_helper_image', False))
-    
+        
     with col_cropped_2:
         ba = os.path.join(st.session_state.dir_home,'demo', 'ba','ba2.png')
         image = Image.open(ba)
         st.image(image, caption='LeafMachine2 Collage', output_format = "PNG")
+    
+    with col_ocr_1:
+        st.write('This will plot bounding boxes around all text that Google Vision was able to detect. If there are no boxes around text, then the OCR failed, so that missing text will not be seen by the LLM when it is creating the JSON object. The created image will be viewable in the VoucherVisionEditor.')
+        st.session_state.config['leafmachine']['do_create_OCR_helper_image'] = st.checkbox("Create image showing an overlay of the OCR detections", st.session_state.config['leafmachine'].get('do_create_OCR_helper_image', False))
+    
+    with col_ocr_2:
+        ocr = os.path.join(st.session_state.dir_home,'demo', 'ba','ocr.png')
+        image_ocr = Image.open(ocr)
+        st.image(image_ocr, caption='OCR Overlay Images', output_format = "PNG")
 
 def content_tab_component():
     st.header('Archival Components')
@@ -1339,6 +1363,8 @@ if 'private_file' not in st.session_state:
     st.session_state.private_file = does_private_file_exist()
     if st.session_state.private_file:
         st.session_state.proceed_to_main = True
+if 'processing_add_on' not in st.session_state:
+    st.session_state['processing_add_on'] = ''
 
 # Initialize session_state variables if they don't exist
 if 'prompt_info' not in st.session_state:

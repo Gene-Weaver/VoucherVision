@@ -7,6 +7,7 @@ Table of Contents
 
 * [Table of Contents](#table-of-contents)
 * [About](#about)
+* [Roadmap and New Features List](#roadmap-and-new-features-list)
 * [Try our public demo!](#try-our-public-demo)
 * [Installing VoucherVision](#installing-VoucherVision)
    * [Prerequisites](#prerequisites)
@@ -40,7 +41,7 @@ Table of Contents
 
 For inquiries, feedback (or if you want to get involved!) [please complete our form](https://docs.google.com/forms/d/e/1FAIpQLSe2E9zU1bPJ1BW4PMakEQFsRmLbQ0WTBI2UXHIMEFm4WbnAVw/viewform?usp=sf_link).
 
-### **Overview:**  
+## **Overview:**  
 Initiated by the **University of Michigan Herbarium**, VoucherVision harnesses the power of large language models (LLMs) to transform the transcription process of natural history specimen labels. Our workflow is as follows:
 - Text extraction from specimen labels with **LeafMachine2**.
 - Text interpretation using **Google Vision OCR**.
@@ -48,17 +49,52 @@ Initiated by the **University of Michigan Herbarium**, VoucherVision harnesses t
   
 For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.com/Gene-Weaver/VoucherVisionEditor) serves as a quality control tool.
 
+## Roadmap and New Features List
+
+#### VoucherVision
+- [ ] Update to GPT 1106 builds
+- [ ] Option to zip output files for simpler import into VVE
+- [ ] Instead of saving a copy of the original image inplace of the OCR/collage images when they are not selected, just change the path to the original image.
+- [x] Expense tracking
+    - [x] Dashboard
+    - [ ] More granular support for different GPT versions
+    - [x] Project-based and cummulative tracking
+- [x] Hugging Face Spaces
+    - [x] Working and refactored
+    - [ ] Visualize locations on a map (verbatim and decimal)
+    - [x] Tested with batch of 300 images
+        - [x] GPT 3.5
+        - [ ] GPT 4
+        - [ ] PaLM 2
+    - [ ] Optimize for +300 images at a time
+- [x] Modular Prompt Builder
+    - [x] Build, save, load, submit to VV library
+    - [ ] Assess whether order of column matters
+    - [ ] Assess shorter prompt effectiveness
+    - [ ] Restrict special columns to conform with VVE requirements (catalog_number, coordinates)
+
+#### VoucherVisionEditor
+- [ ] Streamline the startup procedure
+- [ ] Add configurable dropdown menus for certain fields
+- [ ] Make sure that VVE can accomodate arbitrary column names
+- [ ] Remove legacy support (version 1 prompts)
+- [ ] Taxonomy validation helper
+- [x] Visualize locations on a map (verbatim and decimal)
+- [ ] More support for datum and verbatim coordinates
+- [ ] Compare raw OCR to values in form to flag hallucinations/generated content
+- [ ] Accept zipped folders as input
+- [ ] Flag user when multiple people/names/determinations are present
+
 ### **Package Information:**  
 The main VoucherVision tool and the VoucherVisionEditor are packaged separately. This separation ensures that lower-performance computers can still install and utilize the editor. While VoucherVision is optimized to function smoothly on virtually any modern system, maximizing its capabilities (like using LeafMachine2 label collages or running Retrieval Augmented Generation (RAG) prompts) mandates a GPU.
 
-> ***NOTE:*** You can absolutely run VoucherVision on non-GPU systems, but RAG will not be possible (luckily the apparent best prompt--Version2--does not use RAG). Additionally, opting to include LeafMachine2 collages without a GPU will significantly extend processing times.
+> ***NOTE:*** You can absolutely run VoucherVision on non-GPU systems, but RAG will not be possible (luckily the apparent best prompts 'Version2+' does not use RAG). 
 
 ---
 
 # Try our public demo!
-Our public demo, while lacking several quality control and reliability features found in the full VoucherVision module, provides an exciting glimpse into its capabilities. Feel free to upload your herbarium specimen and see what happens! We make frequent updates, so don't forget to revisit!
-[VoucherVision Demo](https://vouchervision.azurewebsites.net/)
-> The web version is quite far behind this GitHub repo...
+Our public demo, while lacking several quality control and reliability features found in the full VoucherVision module, provides an exciting glimpse into its capabilities. Feel free to upload your herbarium specimen and see what happens!
+[VoucherVision Demo](https://huggingface.co/spaces/phyloforfun/VoucherVision)
 
 ---
 

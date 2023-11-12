@@ -710,7 +710,8 @@ class PromptCatalog:
         
         # Generate the prompt using the loaded rules and structure
         if is_palm:
-            prompt = f"""This text is supposed to be JSON, but it contains an error that prevents it from loading with the Python command json.loads().
+            prompt = f"""The incorrectly formatted JSON dictionary below is not valid. It contains an error that prevents it from loading with the Python command json.loads().
+                The incorrectly formatted JSON dictionary below is the literal string returned by a previous function and the error may be caused by markdown formatting.
                 You need to return coorect JSON for the following dictionary. Most likely, a quotation mark inside of a field value has not been escaped properly with a backslash.
                 Given the input, please generate a JSON response. Please note that the response should not contain any special characters, including quotation marks (single ' or double \"), within the JSON values.
                 Escape all JSON control characters that appear in input including ampersand (&) and other control characters. 
@@ -720,9 +721,10 @@ class PromptCatalog:
                 The output JSON structure: {self.structure}
                 The output JSON structure: {self.structure}
                 The output JSON structure: {self.structure}
-                The refactored JSON disctionary: """
+                Please reformat the incorrectly formatted JSON dictionary given the output JSON structure: """
         else:
-            prompt = f"""This text is supposed to be JSON, but it contains an error that prevents it from loading with the Python command json.loads().
+            prompt = f"""The incorrectly formatted JSON dictionary below is not valid. It contains an error that prevents it from loading with the Python command json.loads().
+                The incorrectly formatted JSON dictionary below is the literal string returned by a previous function and the error may be caused by markdown formatting.
                 You need to return coorect JSON for the following dictionary. Most likely, a quotation mark inside of a field value has not been escaped properly with a backslash.
                 Given the input, please generate a JSON response. Please note that the response should not contain any special characters, including quotation marks (single ' or double \"), within the JSON values.
                 Escape all JSON control characters that appear in input including ampersand (&) and other control characters. 
@@ -730,7 +732,7 @@ class PromptCatalog:
                 Ensure the output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
                 The incorrectly formatted JSON dictionary: {incorrect_json}
                 The output JSON structure: {self.structure}
-                The refactored JSON disctionary: """
+                Please reformat the incorrectly formatted JSON dictionary given the output JSON structure: """
         return prompt
 
     #############################################################################################

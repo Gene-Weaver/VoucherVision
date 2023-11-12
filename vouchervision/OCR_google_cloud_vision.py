@@ -7,6 +7,8 @@ currentdir = os.path.dirname(os.path.abspath(
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
+BBOX_COLOR = "red" # green cyan
+
 def draw_boxes(image, bounds, color):
     if bounds:
         draw = ImageDraw.Draw(image)
@@ -63,7 +65,7 @@ def detect_text(path):
 def overlay_boxes_on_image(path, bounds,do_create_OCR_helper_image):
     if do_create_OCR_helper_image:
         image = Image.open(path)
-        draw_boxes(image, bounds, "green")
+        draw_boxes(image, bounds, BBOX_COLOR)
         return image
     else:
         image = Image.open(path)

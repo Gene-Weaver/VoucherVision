@@ -30,11 +30,22 @@ def get_cfg_from_full_path(path_cfg):
         cfg = yaml.full_load(ymlfile)
     return cfg
 
-def num_tokens_from_string(string: str, encoding_name: str) -> int:
-    encoding = tiktoken.get_encoding(encoding_name)
-    if isinstance(string, dict):
-        string = json.dumps(string, sort_keys=False)
-    num_tokens = len(encoding.encode(string))
+def num_tokens_from_string(string, encoding_name):
+    try:
+        # Ensure the encoding is obtained correctly.
+        encoding = tiktoken.get_encoding(encoding_name)
+        
+        # Convert dictionary to string if it is not already a string
+        if isinstance(string, dict):
+            string = json.dumps(string, ensure_ascii=False)
+        
+        # Encode the string and return the number of tokens.
+        num_tokens = len(encoding.encode(string))
+    except Exception as e:
+        # If there's any error, log it and return 0.
+        print(f"An error occurred: {e}")
+        num_tokens = 0
+
     return num_tokens
 
 def add_to_expense_report(dir_home, data):
