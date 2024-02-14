@@ -7,7 +7,7 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from InstructorEmbedding import INSTRUCTOR
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 ''' 
 If there is a transformers install error:
 pip install transformers==4.29.2

@@ -1,9 +1,9 @@
-import os, pathlib, sys, inspect
-from dataclasses import dataclass, field
-currentdir = os.path.dirname(os.path.dirname(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-sys.path.append(currentdir)
+import os, pathlib #, sys, inspect
+from dataclasses import dataclass
+# currentdir = os.path.dirname(os.path.dirname(inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.append(parentdir)
+# sys.path.append(currentdir)
 from vouchervision.general_utils import validate_dir, get_datetime
 
 @dataclass
@@ -91,6 +91,16 @@ class Dir_Structure():
         validate_dir(self.transcription_ind_OCR_bounds)
         self.transcription_ind_OCR_helper = os.path.join(self.dir_project,'Transcription','Individual_OCR_Helper') 
         validate_dir(self.transcription_ind_OCR_helper)
+
+        self.transcription_ind_wiki = os.path.join(self.dir_project,'Transcription','Individual_Wikipedia') 
+        validate_dir(self.transcription_ind_wiki)
+
+        self.transcription_ind_prompt = os.path.join(self.dir_project,'Transcription','Individual_Prompt') 
+        validate_dir(self.transcription_ind_prompt)
+        self.transcription_prompt = os.path.join(self.dir_project,'Transcription','Prompt_Template') 
+        validate_dir(self.transcription_prompt)
+
+        
 
         self.save_original = os.path.join(self.dir_project,'Original_Images') 
         validate_dir(self.save_original)

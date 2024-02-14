@@ -15,7 +15,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 from vouchervision.general_utils import get_cfg_from_full_path
 from prompts import PROMPT_UMICH_skeleton_all_asia
-from LLM_chatGPT_3_5 import num_tokens_from_string, OCR_to_dict
+from vouchervision.LLM_OpenAI import num_tokens_from_string, OCR_to_dict
 
 '''
 This generates OpenAI embedding. These are no longer used by VoucherVision.

@@ -1,9 +1,20 @@
 import logging, os, psutil, torch, platform, cpuinfo, yaml #py-cpuinfo
 from vouchervision.general_utils import get_datetime, print_main_warn, print_main_info
 
+class SanitizingFileHandler(logging.FileHandler):
+    def __init__(self, filename, mode='a', encoding=None, delay=False):
+        super().__init__(filename, mode, encoding, delay)
+
+    def emit(self, record):
+        try:
+            record.msg = record.msg.encode('utf-8', 'replace').decode('utf-8')
+        except Exception as e:
+            record.msg = f'[Error encoding text: {e}]'
+        super().emit(record)
+
 def start_logging(Dirs, cfg):
     run_name = cfg['leafmachine']['project']['run_name']
-    path_log = os.path.join(Dirs.path_log, '__'.join(['LM2-log',str(get_datetime()), run_name])+'.log')
+    path_log = os.path.join(Dirs.path_log, '__'.join(['LM2-log', str(get_datetime()), run_name]) + '.log')
 
     # Disable default StreamHandler
     logging.getLogger().handlers = []
@@ -12,9 +23,9 @@ def start_logging(Dirs, cfg):
     logger = logging.getLogger('Hardware Components')
     logger.setLevel(logging.DEBUG)
 
-    # create file handler and set level to debug
-    fh = logging.FileHandler(path_log)
-    fh.setLevel(logging.DEBUG)
+    # create custom sanitizing file handler and set level to debug
+    sanitizing_fh = SanitizingFileHandler(path_log, encoding='utf-8')
+    sanitizing_fh.setLevel(logging.DEBUG)
 
     # create console handler and set level to debug
     ch = logging.StreamHandler()
@@ -24,11 +35,11 @@ def start_logging(Dirs, cfg):
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
     # add formatter to handlers
-    fh.setFormatter(formatter)
+    sanitizing_fh.setFormatter(formatter)
     ch.setFormatter(formatter)
 
     # add handlers to logger
-    logger.addHandler(fh)
+    logger.addHandler(sanitizing_fh)
     logger.addHandler(ch)
 
     # Create a logger for the file handler

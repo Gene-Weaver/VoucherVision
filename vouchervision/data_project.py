@@ -12,6 +12,19 @@ from vouchervision.download_from_GBIF_all_images_in_file import download_all_ima
 from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
+import fitz
+
+def convert_pdf_to_jpg(source_pdf, destination_dir, dpi=100):
+    doc = fitz.open(source_pdf)
+    for page_num in range(len(doc)):
+        page = doc.load_page(page_num)  # Load the current page
+        pix = page.get_pixmap(dpi=dpi)  # Render page to an image
+        output_filename = f"{os.path.splitext(os.path.basename(source_pdf))[0]}__{10000 + page_num + 1}.jpg"
+        output_filepath = os.path.join(destination_dir, output_filename)
+        pix.save(output_filepath)  # Save the image
+    length_doc = len(doc)  
+    doc.close()
+    return length_doc
 
 @dataclass
 class Project_Info():
@@ -39,6 +52,7 @@ class Project_Info():
         self.Dirs = Dirs
         logger.name = 'Project Info'
         logger.info("Gathering Images and Image Metadata")
+        self.logger = logger
 
         self.batch_size = cfg['leafmachine']['project']['batch_size']
 
@@ -90,15 +104,28 @@ class Project_Info():
     def remove_non_numbers(self, s):
         return ''.join([char for char in s if char.isdigit()])
     
+    # def copy_images_to_project_dir(self, dir_images, Dirs):
+    #     n_total = len(os.listdir(dir_images))
+    #     for file in tqdm(os.listdir(dir_images), desc=f'{bcolors.HEADER}     Copying images to working directory{bcolors.ENDC}',colour="white",position=0,total = n_total):
+    #         # Copy og image to new dir
+    #         # Copied image will be used for all downstream applications
+    #         source = os.path.join(dir_images, file)
+    #         destination = os.path.join(Dirs.save_original, file)
+    #         shutil.copy(source, destination)
     def copy_images_to_project_dir(self, dir_images, Dirs):
         n_total = len(os.listdir(dir_images))
-        for file in tqdm(os.listdir(dir_images), desc=f'{bcolors.HEADER}     Copying images to working directory{bcolors.ENDC}',colour="white",position=0,total = n_total):
-            # Copy og image to new dir
-            # Copied image will be used for all downstream applications
+        for file in tqdm(os.listdir(dir_images), desc=f'{bcolors.HEADER}     Copying images to working directory{bcolors.ENDC}', colour="white", position=0, total=n_total):
             source = os.path.join(dir_images, file)
-            destination = os.path.join(Dirs.save_original, file)
-            shutil.copy(source, destination)
-    
+            # Check if file is a PDF
+            if file.lower().endswith('.pdf'):
+                # Convert PDF pages to JPG images
+                n_pages = convert_pdf_to_jpg(source, Dirs.save_original)
+                self.logger.info(f"Converted {n_pages} pages to JPG from PDF: {file}")
+            else:
+                # Copy non-PDF files directly
+                destination = os.path.join(Dirs.save_original, file)
+                shutil.copy(source, destination)
+        
     def make_file_names_custom(self, dir_images, cfg, Dirs): 
         n_total = len(os.listdir(dir_images))
         for file in tqdm(os.listdir(dir_images), desc=f'{bcolors.HEADER}     Creating Catalog Number from file name{bcolors.ENDC}',colour="green",position=0,total = n_total):

@@ -1,0 +1,3 @@
+[submodule "vouchervision/LLaVA"]
+	path = vouchervision/LLaVA
+	url = https://github.com/haotian-liu/LLaVA.git

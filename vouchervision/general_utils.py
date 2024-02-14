@@ -1,4 +1,5 @@
 import os, yaml, datetime, argparse, re, cv2, random, shutil, tiktoken, json, csv
+import streamlit as st
 from collections import Counter
 import pandas as pd
 from pathlib import Path
@@ -8,6 +9,8 @@ import numpy as np
 import concurrent.futures
 from time import perf_counter
 import torch
+
+from vouchervision.model_maps import ModelMaps
 
 '''
 TIFF --> DNG
@@ -67,44 +70,44 @@ def add_to_expense_report(dir_home, data):
         # Write the data row
         writer.writerow(data)
 
-def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, n_images):
-    version_mapping = {
-            "gpt-4-1106-preview":"GPT_4",
-            'GPT 4': 'GPT_4',
-            'GPT 3.5': 'GPT_3_5',
-            'Azure GPT 3.5': 'GPT_3_5',
-            'Azure GPT 4': 'GPT_4',
-            'PaLM 2': 'PALM2'
-        }
-    LLM_version = version_mapping[LLM_version0]
-    # Define the CSV file path
-    csv_file_path = os.path.join(Dirs.path_cost, Dirs.run_name + '.csv')
+def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, n_images, dir_home, logger):
+    if path_api_cost:
+        LLM_version = ModelMaps.get_version_mapping_cost(LLM_version0)
 
-    cost_in, cost_out, total_cost, rate_in, rate_out = calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out)
-    
-    # The data to be written to the CSV file
-    data = [Dirs.run_name, get_datetime(),LLM_version, total_cost, n_images, total_tokens_in, total_tokens_out, rate_in, rate_out, cost_in, cost_out,]
-    
-    # Open the file in write mode
-    with open(csv_file_path, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        
-        # Write the header
-        writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out',])
-        
-        # Write the data
-        writer.writerow(data)
-    # Create a summary string
-    cost_summary = (f"Cost Summary for {Dirs.run_name}:\n"
-                    f"     API Cost In: ${rate_in} per 1000 Tokens\n" 
-                    f"     API Cost Out: ${rate_out} per 1000 Tokens\n" 
-                    f"     Tokens In: {total_tokens_in} - Cost: ${cost_in:.4f}\n"
-                    f"     Tokens In: {total_tokens_in} - Cost: ${cost_in:.4f}\n"
-                    f"     Tokens Out: {total_tokens_out} - Cost: ${cost_out:.4f}\n"
-                    f"     Images Processed: {n_images}\n"
-                    f"     Total Cost: ${total_cost:.4f}")
-    return cost_summary, data, total_cost
+        # Define the CSV file path
+        csv_file_path = os.path.join(Dirs.path_cost, Dirs.run_name + '.csv')
 
+        cost_in, cost_out, total_cost, rate_in, rate_out = calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out)
+        
+        # The data to be written to the CSV file
+        data = [Dirs.run_name, get_datetime(),LLM_version, total_cost, n_images, total_tokens_in, total_tokens_out, rate_in, rate_out, cost_in, cost_out,]
+        
+        # Open the file in write mode
+        with open(csv_file_path, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            
+            # Write the header
+            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out',])
+            
+            # Write the data
+            writer.writerow(data)
+        # Create a summary string
+        cost_summary = (f"Cost Summary for {Dirs.run_name}:\n"
+                        f"     API Cost In: ${rate_in} per 1000 Tokens\n" 
+                        f"     API Cost Out: ${rate_out} per 1000 Tokens\n" 
+                        f"     Tokens In: {total_tokens_in} - Cost: ${cost_in:.4f}\n"
+                        f"     Tokens Out: {total_tokens_out} - Cost: ${cost_out:.4f}\n"
+                        f"     Images Processed: {n_images}\n"
+                        f"     Total Cost: ${total_cost:.4f}")
+        
+        add_to_expense_report(dir_home, data)
+        logger.info(cost_summary)
+        return total_cost
+
+    else:
+        return None           #TODO add config tests to expense_report
+
+@st.cache_data
 def summarize_expense_report(path_expense_report):
     # Initialize counters and sums
     run_count = 0
@@ -293,7 +296,7 @@ def test_GPU():
         success = True
     else:
         info.append("No GPU found!")
-        info.append("LeafMachine2 image cropping and embedding search will be slow or not possible.")
+        info.append("LeafMachine2 collages will run slowly, trOCR may not be available.")
 
     return success, info
 
@@ -436,6 +439,7 @@ def split_into_batches(Project, logger, cfg):
     return Project, n_batches, m 
 
 def make_images_in_dir_vertical(dir_images_unprocessed, cfg):
+    skip_vertical = cfg['leafmachine']['do']['skip_vertical']
     if cfg['leafmachine']['do']['check_for_corrupt_images_make_vertical']:
         n_rotate = 0
         n_corrupt = 0
@@ -444,10 +448,11 @@ def make_images_in_dir_vertical(dir_images_unprocessed, cfg):
             if image_name_jpg.endswith((".jpg",".JPG",".jpeg",".JPEG")):
                 try:
                     image = cv2.imread(os.path.join(dir_images_unprocessed, image_name_jpg))
-                    h, w, img_c = image.shape
-                    image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
-                    if did_rotate:
-                        n_rotate += 1
+                    if not skip_vertical:
+                        h, w, img_c = image.shape
+                        image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
+                        if did_rotate:
+                            n_rotate += 1
                     cv2.imwrite(os.path.join(dir_images_unprocessed,image_name_jpg), image)
                 except:
                     n_corrupt +=1
@@ -456,10 +461,11 @@ def make_images_in_dir_vertical(dir_images_unprocessed, cfg):
             elif image_name_jpg.endswith((".tiff",".tif",".png",".PNG",".TIFF",".TIF",".jp2",".JP2",".bmp",".BMP",".dib",".DIB")):
                 try:
                     image = cv2.imread(os.path.join(dir_images_unprocessed, image_name_jpg))
-                    h, w, img_c = image.shape
-                    image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
-                    if did_rotate:
-                        n_rotate += 1
+                    if not skip_vertical:
+                        h, w, img_c = image.shape
+                        image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
+                        if did_rotate:
+                            n_rotate += 1
                     image_name_jpg = '.'.join([image_name_jpg.split('.')[0], 'jpg'])
                     cv2.imwrite(os.path.join(dir_images_unprocessed,image_name_jpg), image)
                 except:

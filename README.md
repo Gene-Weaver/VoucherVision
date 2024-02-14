@@ -52,12 +52,12 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
 ## Roadmap and New Features List
 
 #### VoucherVision
-- [ ] Update to GPT 1106 builds
+- [X] Update to GPT 1106 builds
 - [ ] Option to zip output files for simpler import into VVE
 - [ ] Instead of saving a copy of the original image inplace of the OCR/collage images when they are not selected, just change the path to the original image.
 - [x] Expense tracking
     - [x] Dashboard
-    - [ ] More granular support for different GPT versions
+    - [X] More granular support for different GPT versions
     - [x] Project-based and cummulative tracking
 - [x] Hugging Face Spaces
     - [x] Working and refactored
@@ -72,6 +72,38 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
     - [ ] Assess whether order of column matters
     - [ ] Assess shorter prompt effectiveness
     - [ ] Restrict special columns to conform with VVE requirements (catalog_number, coordinates)
+- [ ] Option to load existing OCR into VoucherVision workflow
+#### Supported LLM APIs
+- [x] OpenAI 
+    - [x] GPT 4
+    - [x] GPT 4 Turbo 1106-preview
+    - [x] GPT 4 32k
+    - [x] GPT 3.5
+    - [x] GPT 3.5 Instruct
+- [x] OpenAI (Microsoft Azure Endpoints)
+    - [x] GPT 4
+    - [x] GPT 4 Turbo 1106-preview
+    - [x] GPT 4 32k
+    - [x] GPT 3.5
+    - [x] GPT 3.5 Instruct
+- [x] MistralAI
+    - [x] Mistral Tiny
+    - [x] Mistral Small
+    - [x] Mistral Medium
+- [x] Google PaLM2
+    - [x] text-bison@001
+    - [x] text-bison@002
+    - [x] text-unicorn@001
+- [x] Google Gemini
+    - [x] Gemini-Pro
+#### Supported Locally Hosted LLMs
+- [x] MistralAI (24GB+ VRAM GPU Required)
+    - [x] Mixtral 8x7B Instruct v0.1
+    - [x] Mixtral 7B Instruct v0.2
+- [x] MistralAI (CPU Inference) ((can run on almost computer!))
+    - [x] Mixtral 7B Instruct v0.2 GGUF via llama.cpp
+- [x] Meta-Llama2 7B
+    - [ ] Llama2 7B chat hf 
 
 #### VoucherVisionEditor
 - [ ] Streamline the startup procedure

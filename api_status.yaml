@@ -1,0 +1,13 @@
+date: January 28, 2024
+missing_keys: []
+present_keys:
+- Google OCR Print (Valid)
+- Google OCR Handwriting (Valid)
+- OpenAI (Valid)
+- Azure OpenAI (Valid)
+- Palm2 (Valid)
+- Palm2 LangChain (Valid)
+- Gemini (Valid)
+- Mistral (Valid)
+- HERE Geocode (Valid)
+- OpenCage Geocode (Valid)

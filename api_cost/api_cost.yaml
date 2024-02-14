@@ -1,9 +1,91 @@
+# OpenAI
+# https://openai.com/pricing
+
+GPT_4_32K:
+  in: 0.06
+  out: 0.12
+GPT_4:
+  in: 0.03
+  out: 0.06
+# GPT_4_TURBO: ###############
+#   in: 0.01
+#   out: 0.03
+GPT_4_TURBO_0125:
+  in: 0.01
+  out: 0.03
+GPT_4_TURBO_1106:
+  in: 0.01
+  out: 0.03
+GPT_3_5_INSTRUCT:
+  in: 0.0015
+  out: 0.0020
 GPT_3_5:
   in: 0.0010
   out: 0.0020
-GPT_4:
+
+# Azure
+AZURE_GPT_4_32K:
+  in: 0.06
+  out: 0.12
+AZURE_GPT_4:
+  in: 0.03
+  out: 0.06
+AZURE_GPT_4_TURBO_1106:
   in: 0.01
   out: 0.03
-PALM2:
+AZURE_GPT_4_TURBO_0125:
+  in: 0.01
+  out: 0.03
+AZURE_GPT_3_5_INSTRUCT:
+  in: 0.0015
+  out: 0.0020
+AZURE_GPT_3_5:
+  in: 0.0010
+  out: 0.0020
+
+
+# Google Gemini
+# https://ai.google.dev/pricing
+GEMINI_PRO:
+  in: 0.00025
+  out: 0.0005
+
+
+# Google PaLM 2 (text-bison, text-unicorn)
+# https://cloud.google.com/vertex-ai/docs/generative-ai/pricing
+PALM2_TU_1:
+  in: 0.00025
+  out: 0.00020
+PALM2_TB_1:
+  in: 0.00025
+  out: 0.0005
+PALM2_TB_2:
+  in: 0.00025
+  out: 0.0005
+
+
+# Mistral AI 
+# https://docs.mistral.ai/platform/pricing/
+MISTRAL_MEDIUM:
+  in: 0.00250
+  out: 0.00750
+MISTRAL_SMALL:
+  in: 0.00060
+  out: 0.00180
+MISTRAL_TINY:
+  in: 0.00014
+  out: 0.00042
+
+
+################
+# Local Models
+################
+LOCAL_MIXTRAL_8X7B_INSTRUCT_V01:
+  in: 0.0
+  out: 0.0
+LOCAL_MISTRAL_7B_INSTRUCT_V02: 
+  in: 0.0
+  out: 0.0
+LOCAL_CPU_MISTRAL_7B_INSTRUCT_V02_GGUF:
   in: 0.0
   out: 0.0

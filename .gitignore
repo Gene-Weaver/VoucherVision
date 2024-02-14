@@ -9,8 +9,11 @@ yolov8n.pt
 
 
 # Dirs
+custom_prompts_deprecated/
 demo/demo_output/*
 demo/demo_configs/*
+uploads/*
+uploads_small/*
 wandb/
 venv_LM2_linux/
 venv_LM2_l/
@@ -18,13 +21,18 @@ venv_LM2_310/
 venv_LM2_38/
 venv_LM2/
 venv_VV/
+venv*/
+.venv*/
 tests/
 .vscode/
 runs/
 KP_Test/
 
 # VV Specific
-.streamlit*/
+vouchervision/DEP_*
+SLTP_Demo/
+.streamlit/secrets.toml
+**/secrets.toml
 demo/demo_output/*
 demo/validation_configs/*
 /bin/*

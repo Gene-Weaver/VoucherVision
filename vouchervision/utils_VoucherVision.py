@@ -1,25 +1,25 @@
 import openai
-import os, sys, json, inspect, glob, tiktoken, shutil, yaml
+import os, json, glob, shutil, yaml, torch, logging
 import openpyxl
 from openpyxl import Workbook, load_workbook
-import google.generativeai as palm
-from langchain.chat_models import AzureChatOpenAI
+import vertexai
+from transformers import TrOCRProcessor, VisionEncoderDecoderModel
+from langchain_openai import AzureChatOpenAI
+from google.oauth2 import service_account
+from transformers import AutoTokenizer, AutoModel
 
-currentdir = os.path.dirname(os.path.abspath(
-    inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-parentdir = os.path.dirname(parentdir)
-sys.path.append(parentdir)
+from vouchervision.LLM_OpenAI import OpenAIHandler
+from vouchervision.LLM_GooglePalm2 import GooglePalm2Handler
+from vouchervision.LLM_GoogleGemini import GoogleGeminiHandler
+from vouchervision.LLM_MistralAI import MistralHandler
+from vouchervision.LLM_local_cpu_MistralAI import LocalCPUMistralHandler
+from vouchervision.LLM_local_MistralAI import LocalMistralHandler 
+from vouchervision.utils_LLM import remove_colons_and_double_apostrophes
+from vouchervision.prompt_catalog import PromptCatalog
+from vouchervision.model_maps import ModelMaps
+from vouchervision.general_utils import get_cfg_from_full_path
+from vouchervision.OCR_google_cloud_vision import OCREngine 
 
-from general_utils import get_cfg_from_full_path, num_tokens_from_string
-from embeddings_db import VoucherVisionEmbedding
-from OCR_google_cloud_vision import detect_text, overlay_boxes_on_image
-from LLM_chatGPT_3_5 import OCR_to_dict, OCR_to_dict_16k
-from LLM_PaLM import OCR_to_dict_PaLM
-# from LLM_Falcon import OCR_to_dict_Falcon
-from prompts import PROMPT_UMICH_skeleton_all_asia, PROMPT_OCR_Organized, PROMPT_UMICH_skeleton_all_asia_GPT4, PROMPT_OCR_Organized_GPT4, PROMPT_JSON
-from prompt_catalog import PromptCatalog
 '''
 * For the prefix_removal, the image names have 'MICH-V-' prior to the barcode, so that is used for matching
   but removed for output.
@@ -28,24 +28,11 @@ from prompt_catalog import PromptCatalog
         - Look for ####################### Catalog Number pre-defined
 '''
 
-'''
-Prior to StructuredOutputParser:
-    response = openai.ChatCompletion.create(
-            model=MODEL,
-            temperature = 0,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant acting as a transcription expert and your job is to transcribe herbarium specimen labels based on OCR data and reformat it to meet Darwin Core Archive Standards into a Python dictionary based on certain rules."},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=2048,
-        )
-        # print the model's response
-        return response.choices[0].message['content']
-'''
 
+    
 class VoucherVision():
 
-    def __init__(self, cfg, logger, dir_home, path_custom_prompts, Project, Dirs):
+    def __init__(self, cfg, logger, dir_home, path_custom_prompts, Project, Dirs, is_hf):
         self.cfg = cfg
         self.logger = logger
         self.dir_home = dir_home
@@ -54,6 +41,15 @@ class VoucherVision():
         self.Dirs = Dirs
         self.headers = None
         self.prompt_version = None
+        self.is_hf = is_hf
+
+        self.trOCR_model_version = "microsoft/trocr-large-handwritten"
+        # self.trOCR_model_version = "microsoft/trocr-base-handwritten"
+        # self.trOCR_model_version = "dh-unibe/trocr-medieval-escriptmask" # NOPE
+        # self.trOCR_model_version = "dh-unibe/trocr-kurrent" # NOPE
+        # self.trOCR_model_version = "DunnBC22/trocr-base-handwritten-OCR-handwriting_recognition_v2" # NOPE
+        self.trOCR_processor = None
+        self.trOCR_model = None
 
         self.set_API_keys()
         self.setup()
@@ -76,15 +72,36 @@ class VoucherVision():
         self.prompt_version0 = self.cfg['leafmachine']['project']['prompt_version']
         self.use_domain_knowledge = self.cfg['leafmachine']['project']['use_domain_knowledge']
 
-        self.catalog_name_options = ["Catalog Number", "catalog_number"]
+        self.catalog_name_options = ["Catalog Number", "catalog_number", "catalogNumber"]
 
-        self.utility_headers = ["tokens_in", "tokens_out", "path_to_crop","path_to_original","path_to_content","path_to_helper",]
+        self.geo_headers = ["GEO_override_OCR", "GEO_method", "GEO_formatted_full_string", "GEO_decimal_lat",
+                       "GEO_decimal_long","GEO_city", "GEO_county", "GEO_state",
+                       "GEO_state_code", "GEO_country", "GEO_country_code", "GEO_continent",]
+        
+        self.usage_headers = ["current_time", "inference_time_s", "tool_time_s","max_cpu", "max_ram_gb", "n_gpus", "max_gpu_load", "max_gpu_vram_gb","total_gpu_vram_gb","capability_score",]
+        
+        self.wfo_headers = ["WFO_override_OCR", "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"]
+        self.wfo_headers_no_lists = ["WFO_override_OCR", "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_placement"]
+        
+        self.utility_headers = ["filename"] + self.wfo_headers + self.geo_headers + self.usage_headers + ["run_name", "prompt", "LLM", "tokens_in", "tokens_out", "path_to_crop","path_to_original","path_to_content","path_to_helper",]
+                                # "WFO_override_OCR", "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement",
+                                
+                                # "GEO_override_OCR", "GEO_method", "GEO_formatted_full_string", "GEO_decimal_lat",
+                                # "GEO_decimal_long","GEO_city", "GEO_county", "GEO_state",
+                                # "GEO_state_code", "GEO_country", "GEO_country_code", "GEO_continent",
+                                
+                                # "tokens_in", "tokens_out", "path_to_crop","path_to_original","path_to_content","path_to_helper",]
+        
+        # WFO_candidate_names is separate, bc it may be type --> list
+
+        self.do_create_OCR_helper_image = self.cfg['leafmachine']['do_create_OCR_helper_image']
 
         self.map_prompt_versions()
         self.map_dir_labels()
         self.map_API_options()
-        self.init_embeddings()
+        # self.init_embeddings()
         self.init_transcription_xlsx()
+        self.init_trOCR_model()
 
         '''Logging'''
         self.logger.info(f'Transcribing dataset --- {self.dir_labels}')
@@ -96,44 +113,46 @@ class VoucherVision():
         self.logger.info(f'     Model name passed to API --> {self.model_name}')
         self.logger.info(f'     API access token is found in PRIVATE_DATA.yaml --> {self.has_key}')
 
+
+    def init_trOCR_model(self):
+        lgr = logging.getLogger('transformers')
+        lgr.setLevel(logging.ERROR)
+        
+        self.trOCR_processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten") # usually just the "microsoft/trocr-base-handwritten"
+        self.trOCR_model = VisionEncoderDecoderModel.from_pretrained(self.trOCR_model_version) # This matches the model
+        
+        # Check for GPU availability
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.trOCR_model.to(self.device)
+
+
     def map_API_options(self):
         self.chat_version = self.cfg['leafmachine']['LLM_version']
-        version_mapping = {
-            'gpt-4-1106-preview':  ('OpenAI gpt-4-1106-preview', False, 'gpt-4-1106-preview', self.has_key_openai),
-            'GPT 4': ('OpenAI GPT 4', False, 'GPT_4', self.has_key_openai),
-            'GPT 3.5': ('OpenAI GPT 3.5', False, 'GPT_3_5', self.has_key_openai),
-            'Azure GPT 3.5': ('(Azure) OpenAI GPT 3.5', True, 'Azure_GPT_3_5', self.has_key_azure_openai),
-            'Azure GPT 4': ('(Azure) OpenAI GPT 4', True, 'Azure_GPT_4', self.has_key_azure_openai),
-            'PaLM 2': ('Google PaLM 2', None, None, self.has_key_palm2)
-        }
-        if self.chat_version not in version_mapping:
-            supported_LLMs = ", ".join(version_mapping.keys())
+
+        # Get the required values from ModelMaps
+        self.model_name = ModelMaps.get_version_mapping_cost(self.chat_version)
+        self.is_azure = ModelMaps.get_version_mapping_is_azure(self.chat_version)
+        self.has_key = ModelMaps.get_version_has_key(self.chat_version, self.has_key_openai, self.has_key_azure_openai, self.has_key_google_application_credentials, self.has_key_mistral)
+
+        # Check if the version is supported
+        if self.model_name is None:
+            supported_LLMs = ", ".join(ModelMaps.get_models_gui_list())
             raise Exception(f"Unsupported LLM: {self.chat_version}. Requires one of: {supported_LLMs}")
 
-        self.version_name, self.is_azure, self.model_name, self.has_key = version_mapping[self.chat_version]
+        self.version_name = self.chat_version
+
 
     def map_prompt_versions(self):
         self.prompt_version_map = {
             "Version 1": "prompt_v1_verbose",
-            "Version 1 No Domain Knowledge": "prompt_v1_verbose_noDomainKnowledge",
-            "Version 2": "prompt_v2_json_rules",
-            "Version 1 PaLM 2": 'prompt_v1_palm2',
-            "Version 1 PaLM 2 No Domain Knowledge": 'prompt_v1_palm2_noDomainKnowledge', 
-            "Version 2 PaLM 2": 'prompt_v2_palm2',
         }
         self.prompt_version = self.prompt_version_map.get(self.prompt_version0, self.path_custom_prompts)
         self.is_predefined_prompt = self.is_in_prompt_version_map(self.prompt_version)
 
+
     def is_in_prompt_version_map(self, value):
         return value in self.prompt_version_map.values()
 
-    def init_embeddings(self):
-        if self.use_domain_knowledge:
-            self.logger.info(f'*** USING DOMAIN KNOWLEDGE ***')
-            self.logger.info(f'*** Initializing vector embeddings database ***')
-            self.initialize_embeddings()
-        else:
-            self.Voucher_Vision_Embedding = None
 
     def map_dir_labels(self):
         if self.cfg['leafmachine']['use_RGB_label_images']:
@@ -144,6 +163,7 @@ class VoucherVision():
         # Use glob to get all image paths in the directory
         self.img_paths = glob.glob(os.path.join(self.dir_labels, "*"))
 
+
     def load_rules_config(self):
         with open(self.path_custom_prompts, 'r') as stream:
             try:
@@ -152,59 +172,33 @@ class VoucherVision():
                 print(exc)
                 return None
             
+
     def generate_xlsx_headers(self):
         # Extract headers from the 'Dictionary' keys in the JSON template rules
-        xlsx_headers = list(self.rules_config_json['rules']["Dictionary"].keys())
+        # xlsx_headers = list(self.rules_config_json['rules']["Dictionary"].keys())
+        xlsx_headers = list(self.rules_config_json['rules'].keys())
         xlsx_headers = xlsx_headers + self.utility_headers
         return xlsx_headers
 
+
     def init_transcription_xlsx(self):
-        self.HEADERS_v1_n22 = ["Catalog Number","Genus","Species","subspecies","variety","forma","Country","State","County","Locality Name","Min Elevation","Max Elevation","Elevation Units","Verbatim Coordinates","Datum","Cultivated","Habitat","Collectors","Collector Number","Verbatim Date","Date","End Date"] 
-        self.HEADERS_v2_n26 = ["catalog_number","genus","species","subspecies","variety","forma","country","state","county","locality_name","min_elevation","max_elevation","elevation_units","verbatim_coordinates","decimal_coordinates","datum","cultivated","habitat","plant_description","collectors","collector_number","determined_by","multiple_names","verbatim_date","date","end_date"]
-        self.HEADERS_v1_n22 = self.HEADERS_v1_n22 + self.utility_headers
-        self.HEADERS_v2_n26 = self.HEADERS_v2_n26 + self.utility_headers
         # Initialize output file
         self.path_transcription = os.path.join(self.Dirs.transcription,"transcribed.xlsx")
-
-        if self.prompt_version in ['prompt_v2_json_rules','prompt_v2_palm2']:
-            self.headers = self.HEADERS_v2_n26
-            self.headers_used = 'HEADERS_v2_n26'
         
-        elif self.prompt_version in ['prompt_v1_verbose', 'prompt_v1_verbose_noDomainKnowledge','prompt_v1_palm2', 'prompt_v1_palm2_noDomainKnowledge']:
-            self.headers = self.HEADERS_v1_n22
-            self.headers_used = 'HEADERS_v1_n22'
-        
+        # else:
+        if not self.is_predefined_prompt:
+            # Load the rules configuration
+            self.rules_config_json = self.load_rules_config()
+            # Generate the headers from the configuration
+            self.headers = self.generate_xlsx_headers()
+            # Set the headers used to the dynamically generated headers
+            self.headers_used = 'CUSTOM'
         else:
-            if not self.is_predefined_prompt:
-                # Load the rules configuration
-                self.rules_config_json = self.load_rules_config()
-                # Generate the headers from the configuration
-                self.headers = self.generate_xlsx_headers()
-                # Set the headers used to the dynamically generated headers
-                self.headers_used = 'CUSTOM'
-            else:
-                # If it's a predefined prompt, raise an exception as we don't have further instructions
-                raise ValueError("Predefined prompt is not handled in this context.")
+            # If it's a predefined prompt, raise an exception as we don't have further instructions
+            raise ValueError("Predefined prompt is not handled in this context.")
 
         self.create_or_load_excel_with_headers(os.path.join(self.Dirs.transcription,"transcribed.xlsx"), self.headers)
 
-
-    def pick_model(self, vendor, nt):
-        if vendor == 'GPT_3_5':
-            if nt > 6000:
-                return "gpt-3.5-turbo-16k-0613", True
-            else:
-                return "gpt-3.5-turbo", False
-        if vendor == 'GPT_4':
-            return "gpt-4", False
-        if vendor == "gpt-4-1106-preview":
-            return "gpt-4-1106-preview", False
-        
-        if vendor == 'Azure_GPT_3_5':
-            return "gpt-35-turbo", False
-        if vendor == 'Azure_GPT_4':
-            return "gpt-4", False
-        
            
     def create_or_load_excel_with_headers(self, file_path, headers, show_head=False):
         output_dir_names = ['Archival_Components', 'Config_File', 'Cropped_Images', 'Logs', 'Original_Images', 'Transcription']
@@ -225,7 +219,6 @@ class VoucherVision():
             except ValueError:
                 print("'path_to_crop' not found in the header row.")
 
-            
             path_to_crop = list(sheet.iter_cols(min_col=path_to_crop_col, max_col=path_to_crop_col, values_only=True, min_row=2))
             path_to_original = list(sheet.iter_cols(min_col=path_to_original_col, max_col=path_to_original_col, values_only=True, min_row=2))
             path_to_content = list(sheet.iter_cols(min_col=path_to_content_col, max_col=path_to_content_col, values_only=True, min_row=2))
@@ -305,8 +298,9 @@ class VoucherVision():
                     break
 
 
+    def add_data_to_excel_from_response(self, Dirs, path_transcription, response, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, path_to_content, path_to_helper, nt_in, nt_out):
+        
 
-    def add_data_to_excel_from_response(self, path_transcription, response, filename_without_extension, path_to_crop, path_to_content, path_to_helper, nt_in, nt_out):
         wb = openpyxl.load_workbook(path_transcription)
         sheet = wb.active
 
@@ -367,10 +361,46 @@ class VoucherVision():
                 sheet.cell(row=next_row, column=i, value=nt_in)
             elif header.value == "tokens_out":
                 sheet.cell(row=next_row, column=i, value=nt_out)
+            elif header.value == "filename":
+                sheet.cell(row=next_row, column=i, value=filename_without_extension)
+            elif header.value == "prompt":
+                sheet.cell(row=next_row, column=i, value=os.path.basename(self.path_custom_prompts))
+            elif header.value == "run_name":
+                sheet.cell(row=next_row, column=i, value=Dirs.run_name)
+
+            # "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"
+            elif header.value in self.wfo_headers_no_lists:
+                sheet.cell(row=next_row, column=i, value=WFO_record.get(header.value, ''))
+            # elif header.value == "WFO_exact_match":
+            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_exact_match",''))
+            # elif header.value == "WFO_exact_match_name":
+            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_exact_match_name",''))
+            # elif header.value == "WFO_best_match":
+            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_best_match",''))
+            # elif header.value == "WFO_placement":
+            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_placement",''))
+            elif header.value == "WFO_candidate_names":
+                candidate_names = WFO_record.get("WFO_candidate_names", '')
+                # Check if candidate_names is a list and convert to a string if it is
+                if isinstance(candidate_names, list):
+                    candidate_names_str = '|'.join(candidate_names)
+                else:
+                    candidate_names_str = candidate_names
+                sheet.cell(row=next_row, column=i, value=candidate_names_str)
+            
+            # "GEO_method", "GEO_formatted_full_string", "GEO_decimal_lat", "GEO_decimal_long",
+            # "GEO_city", "GEO_county", "GEO_state", "GEO_state_code", "GEO_country", "GEO_country_code", "GEO_continent"
+            elif header.value in self.geo_headers:
+                sheet.cell(row=next_row, column=i, value=GEO_record.get(header.value, ''))
+
+            elif header.value in self.usage_headers:
+                sheet.cell(row=next_row, column=i, value=usage_report.get(header.value, ''))
+
+            elif header.value == "LLM":
+                sheet.cell(row=next_row, column=i, value=MODEL_NAME_FORMATTED)
+
         # save the workbook
         wb.save(path_transcription)
-
-
     
 
     def has_API_key(self, val):
@@ -378,48 +408,135 @@ class VoucherVision():
             return True
         else:
             return False
+        
+
+    def get_google_credentials(self): # Also used for google drive
+        if self.is_hf:
+            creds_json_str = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+            credentials = service_account.Credentials.from_service_account_info(json.loads(creds_json_str))
+            return credentials
+        else:
+            with open(self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS'], 'r') as file:
+                data = json.load(file)
+                creds_json_str = json.dumps(data)
+                credentials = service_account.Credentials.from_service_account_info(json.loads(creds_json_str))
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_json_str
+                return credentials
+        
 
     def set_API_keys(self):
-        self.dir_home = os.path.dirname(os.path.dirname(__file__))
-        self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
-        self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
+        if self.is_hf:
+            self.dir_home = os.path.dirname(os.path.dirname(__file__))
+            self.path_cfg_private = None
+            self.cfg_private = None
 
-        self.has_key_openai = self.has_API_key(self.cfg_private['openai']['OPENAI_API_KEY'])
+            k_openai = os.getenv('OPENAI_API_KEY')
+            k_openai_azure = os.getenv('AZURE_API_VERSION')
 
-        self.has_key_azure_openai = self.has_API_key(self.cfg_private['openai_azure']['api_version'])
-        
-        self.has_key_palm2 = self.has_API_key(self.cfg_private['google_palm']['google_palm_api'])
+            k_google_project_id = os.getenv('GOOGLE_PROJECT_ID')
+            k_google_location = os.getenv('GOOGLE_LOCATION')
+            k_google_application_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
-        self.has_key_google_OCR = self.has_API_key(self.cfg_private['google_cloud']['path_json_file'])
+            k_mistral = os.getenv('MISTRAL_API_KEY')
+            k_here = os.getenv('HERE_API_KEY')
+            k_opencage = os.getenv('open_cage_geocode')
+        else:
+            self.dir_home = os.path.dirname(os.path.dirname(__file__))
+            self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
+            self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
 
-        if self.has_key_openai:
-            openai.api_key = self.cfg_private['openai']['OPENAI_API_KEY']
-            os.environ["OPENAI_API_KEY"] = self.cfg_private['openai']['OPENAI_API_KEY']
+            k_openai = self.cfg_private['openai']['OPENAI_API_KEY']
+            k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
+
+            k_google_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
+            k_google_location = self.cfg_private['google']['GOOGLE_LOCATION']
+            k_google_application_credentials = self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS']
+            
+            k_mistral = self.cfg_private['mistral']['MISTRAL_API_KEY']
+            k_here = self.cfg_private['here']['API_KEY']
+            k_opencage = self.cfg_private['open_cage_geocode']['API_KEY']
             
 
-        if self.has_key_azure_openai:
-            # os.environ["OPENAI_API_KEY"] = self.cfg_private['openai_azure']['openai_api_key']
-            self.llm = AzureChatOpenAI(
-                deployment_name='gpt-35-turbo',
-                openai_api_version=self.cfg_private['openai_azure']['api_version'],
-                openai_api_key=self.cfg_private['openai_azure']['openai_api_key'],
-                openai_api_base=self.cfg_private['openai_azure']['openai_api_base'],
-                openai_organization=self.cfg_private['openai_azure']['openai_organization'],
-                openai_api_type=self.cfg_private['openai_azure']['openai_api_type']
-            )
 
-        if self.has_key_google_OCR:
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.cfg_private['google_cloud']['path_json_file']
+        self.has_key_openai = self.has_API_key(k_openai)
+        self.has_key_azure_openai = self.has_API_key(k_openai_azure)
+        
+        self.has_key_google_project_id = self.has_API_key(k_google_project_id)
+        self.has_key_google_location = self.has_API_key(k_google_location)
+        self.has_key_google_application_credentials = self.has_API_key(k_google_application_credentials)
 
-        if self.has_key_palm2:
-            os.environ['PALM'] = self.cfg_private['google_palm']['google_palm_api']
-            palm.configure(api_key=os.environ['PALM'])
+        self.has_key_mistral = self.has_API_key(k_mistral)
+        self.has_key_here = self.has_API_key(k_here)
+        self.has_key_open_cage_geocode = self.has_API_key(k_opencage)
 
         
-    def initialize_embeddings(self):
-        '''Loading embedding search       __init__(self, db_name, path_domain_knowledge, logger, build_new_db=False, model_name="hkunlp/instructor-xl", device="cuda")'''
-        self.Voucher_Vision_Embedding = VoucherVisionEmbedding(self.db_name, self.path_domain_knowledge, logger=self.logger, build_new_db=self.build_new_db)
+        ### Google - OCR, Palm2, Gemini
+        if self.has_key_google_application_credentials and self.has_key_google_project_id and self.has_key_google_location:
+            if self.is_hf:
+                vertexai.init(project=os.getenv('GOOGLE_PROJECT_ID'), location=os.getenv('GOOGLE_LOCATION'), credentials=self.get_google_credentials())
+            else:
+                vertexai.init(project=k_google_project_id, location=k_google_location, credentials=self.get_google_credentials())
 
+        ### OpenAI
+        if self.has_key_openai:
+            if self.is_hf:
+                openai.api_key = os.getenv('OPENAI_API_KEY')
+            else:
+                openai.api_key = self.cfg_private['openai']['OPENAI_API_KEY']
+                os.environ["OPENAI_API_KEY"] = self.cfg_private['openai']['OPENAI_API_KEY']
+
+
+        ### OpenAI - Azure
+        if self.has_key_azure_openai:
+            if self.is_hf:
+                # Initialize the Azure OpenAI client
+                self.llm = AzureChatOpenAI(
+                    deployment_name = 'gpt-35-turbo',#'gpt-35-turbo',
+                    openai_api_version = os.getenv('AZURE_API_VERSION'),
+                    openai_api_key = os.getenv('AZURE_API_KEY'),
+                    azure_endpoint = os.getenv('AZURE_API_BASE'),
+                    openai_organization = os.getenv('AZURE_ORGANIZATION'),
+                )
+                self.has_key_azure_openai = True
+                
+            else:
+                # Initialize the Azure OpenAI client
+                self.llm = AzureChatOpenAI(
+                    deployment_name = 'gpt-35-turbo',#'gpt-35-turbo',
+                    openai_api_version = self.cfg_private['openai_azure']['OPENAI_API_VERSION'],
+                    openai_api_key = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE'],
+                    azure_endpoint = self.cfg_private['openai_azure']['OPENAI_API_BASE'],
+                    openai_organization = self.cfg_private['openai_azure']['OPENAI_ORGANIZATION'],
+                )
+                self.has_key_azure_openai = True
+                
+
+        ### Mistral
+        if self.has_key_mistral:
+            if self.is_hf:
+                pass # Already set
+            else:
+                os.environ['MISTRAL_API_KEY'] = self.cfg_private['mistral']['MISTRAL_API_KEY']
+
+
+        ### HERE
+        if self.has_key_here:
+            if self.is_hf:
+                pass # Already set
+            else:
+                os.environ['HERE_APP_ID'] = self.cfg_private['here']['APP_ID']
+                os.environ['HERE_API_KEY'] = self.cfg_private['here']['API_KEY']
+
+
+        ### HERE
+        if self.has_key_open_cage_geocode:
+            if self.is_hf:
+                pass # Already set
+            else:
+                os.environ['OPENCAGE_API_KEY'] = self.cfg_private['open_cage_geocode']['API_KEY']
+                
+
+        
     def clean_catalog_number(self, data, filename_without_extension):
         #Cleans up the catalog number in data if it's a dict
         
@@ -442,7 +559,7 @@ class VoucherVision():
             if self.headers_used == 'HEADERS_v1_n22':
                 return modify_catalog_key("Catalog Number", filename_without_extension, data)
             elif self.headers_used in ['HEADERS_v2_n26', 'CUSTOM']:
-                return modify_catalog_key("catalog_number", filename_without_extension, data)
+                return modify_catalog_key("filename", filename_without_extension, data)
             else:
                 raise ValueError("Invalid headers used.")
         else:
@@ -456,23 +573,19 @@ class VoucherVision():
                 data = json.dumps(data, indent=4, sort_keys=False)
             txt_file.write(data)
 
-    def create_null_json(self):
-        return {}
+
+    # def create_null_json(self):
+    #     return {}
     
+
     def remove_non_numbers(self, s):
         return ''.join([char for char in s if char.isdigit()])
     
+
     def create_null_row(self, filename_without_extension, path_to_crop, path_to_content, path_to_helper):
         json_dict = {header: '' for header in self.headers} 
         for header, value in json_dict.items():
-            if header in self.catalog_name_options:
-                if self.prefix_removal:
-                    json_dict[header] = filename_without_extension.replace(self.prefix_removal, "")
-                if self.suffix_removal:
-                    json_dict[header] = filename_without_extension.replace(self.suffix_removal, "")
-                if self.catalog_numerical_only:
-                    json_dict[header] = self.remove_non_numbers(json_dict[header])
-            elif header == "path_to_crop":
+            if header == "path_to_crop":
                 json_dict[header] = path_to_crop
             elif header == "path_to_original":
                 fname = os.path.basename(path_to_crop)
@@ -483,231 +596,234 @@ class VoucherVision():
                 json_dict[header] = path_to_content
             elif header == "path_to_helper":
                 json_dict[header] = path_to_helper
+            elif header == "filename":
+                json_dict[header] = filename_without_extension
+
+            # "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"
+            elif header == "WFO_exact_match":
+                json_dict[header] =''
+            elif header == "WFO_exact_match_name":
+                json_dict[header] = ''
+            elif header == "WFO_best_match":
+                json_dict[header] = ''
+            elif header == "WFO_candidate_names":
+                json_dict[header] = ''
+            elif header == "WFO_placement":
+                json_dict[header] = ''
         return json_dict
+    
 
+    ##################################################################################################################################
+    ##################################################     OCR      ##################################################################
+    ##################################################################################################################################
+    def perform_OCR_and_save_results(self, image_index, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds):
+        self.logger.info(f'Working on {image_index + 1}/{len(self.img_paths)} --- Starting OCR')
+        # self.OCR - None
 
-    def setup_GPT(self, prompt_version, gpt):
-        Catalog = PromptCatalog()
-        self.logger.info(f'Length of OCR raw -- {len(self.OCR)}')
+        ### Process_image() runs the OCR for text, handwriting, trOCR AND creates the overlay image
+        ocr_google = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, self.path_to_crop, self.cfg, self.trOCR_model_version, self.trOCR_model, self.trOCR_processor, self.device)  
+        ocr_google.process_image(self.do_create_OCR_helper_image, self.logger)
+        self.OCR = ocr_google.OCR
 
-        # if prompt_version == 'prompt_v1_verbose':
-        if self.is_predefined_prompt:
-            if self.use_domain_knowledge:
-                # Find a similar example from the domain knowledge
-                domain_knowledge_example = self.Voucher_Vision_Embedding.query_db(self.OCR, 1)
-                similarity= self.Voucher_Vision_Embedding.get_similarity()
+        self.write_json_to_file(txt_file_path_OCR, ocr_google.OCR_JSON_to_file)
+        
+        self.logger.info(f'Working on {image_index + 1}/{len(self.img_paths)} --- Finished OCR')
 
-                if prompt_version == 'prompt_v1_verbose':
-                    prompt, n_fields, xlsx_headers = Catalog.prompt_v1_verbose(OCR=self.OCR,domain_knowledge_example=domain_knowledge_example,similarity=similarity)
+        if len(self.OCR) > 0:
+            ocr_google.overlay_image.save(jpg_file_path_OCR_helper)
 
-            else:
-                if prompt_version == 'prompt_v1_verbose_noDomainKnowledge':
-                    prompt, n_fields, xlsx_headers = Catalog.prompt_v1_verbose_noDomainKnowledge(OCR=self.OCR)
+            OCR_bounds = {}
+            if ocr_google.hand_text_to_box_mapping is not None:
+                OCR_bounds['OCR_bounds_handwritten'] = ocr_google.hand_text_to_box_mapping
 
-                elif prompt_version ==  'prompt_v2_json_rules':
-                    prompt, n_fields, xlsx_headers = Catalog.prompt_v2_json_rules(OCR=self.OCR)
+            if ocr_google.normal_text_to_box_mapping is not None:
+                OCR_bounds['OCR_bounds_printed'] = ocr_google.normal_text_to_box_mapping
+
+            if ocr_google.trOCR_text_to_box_mapping is not None:
+                OCR_bounds['OCR_bounds_trOCR'] = ocr_google.trOCR_text_to_box_mapping
+
+            self.write_json_to_file(txt_file_path_OCR_bounds, OCR_bounds)
+            self.logger.info(f'Working on {image_index + 1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
         else:
-            prompt, n_fields, xlsx_headers = Catalog.prompt_v2_custom(self.path_custom_prompts, OCR=self.OCR)
-            
+            pass ########################################################################################################################### fix logic for no OCR
 
+    ##################################################################################################################################
+    #######################################################  LLM Switchboard  ########################################################
+    ##################################################################################################################################
+    def send_to_LLM(self, is_azure, progress_report, json_report, model_name):
+        self.n_failed_LLM_calls = 0
+        self.n_failed_OCR = 0
 
-        nt = num_tokens_from_string(prompt, "cl100k_base")
-        self.logger.info(f'Prompt token length --- {nt}')
-
-        MODEL, use_long_form = self.pick_model(gpt, nt)
-        self.logger.info(f'Waiting for {gpt} API call --- Using {MODEL}')
-
-        return MODEL, prompt, use_long_form, n_fields, xlsx_headers, nt
-
-        
-    # def setup_GPT(self, opt, gpt):
-    #     if opt == 'dict':
-    #         # Find a similar example from the domain knowledge
-    #         domain_knowledge_example = self.Voucher_Vision_Embedding.query_db(self.OCR, 1)
-    #         similarity= self.Voucher_Vision_Embedding.get_similarity()
-
-    #         self.logger.info(f'Length of OCR raw -- {len(self.OCR)}')
-
-    #         # prompt = PROMPT_UMICH_skeleton_all_asia_GPT4(self.OCR, domain_knowledge_example, similarity)
-    #         prompt, n_fields, xlsx_headers = 
-
-    #         nt = num_tokens_from_string(prompt, "cl100k_base")
-    #         self.logger.info(f'Prompt token length --- {nt}')
-
-    #         MODEL, use_long_form = self.pick_model(gpt, nt)
-
-    #         ### Direct GPT ###
-    #         self.logger.info(f'Waiting for {MODEL} API call --- Using chatGPT --- Content')
-
-    #         return MODEL, prompt, use_long_form
-        
-    #     elif opt == 'helper':
-    #         prompt = PROMPT_OCR_Organized_GPT4(self.OCR)
-    #         nt = num_tokens_from_string(prompt, "cl100k_base")
-
-    #         MODEL, use_long_form = self.pick_model(gpt, nt)
-
-    #         self.logger.info(f'Length of OCR raw -- {len(self.OCR)}')
-    #         self.logger.info(f'Prompt token length --- {nt}')
-    #         self.logger.info(f'Waiting for {MODEL} API call --- Using chatGPT --- Helper')
-
-    #         return MODEL, prompt, use_long_form
-
-
-    def use_chatGPT(self, is_azure, progress_report, gpt):
-        total_tokens_in = 0
-        total_tokens_out = 0
         final_JSON_response = None
+        final_WFO_record = None
+        final_GEO_record = None
+
+        self.initialize_token_counters()
+        self.update_progress_report_initial(progress_report)
+
+        MODEL_NAME_FORMATTED = ModelMaps.get_API_name(model_name)
+        name_parts = model_name.split("_")
+        
+        self.setup_JSON_dict_structure()
+
+        Copy_Prompt = PromptCatalog()
+        Copy_Prompt.copy_prompt_template_to_new_dir(self.Dirs.transcription_prompt, self.path_custom_prompts)
+        
+        json_report.set_text(text_main=f'Loading {MODEL_NAME_FORMATTED}')
+        json_report.set_JSON({}, {}, {})
+        llm_model = self.initialize_llm_model(self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm)
+
+        for i, path_to_crop in enumerate(self.img_paths):
+            self.update_progress_report_batch(progress_report, i)
+
+            if self.should_skip_specimen(path_to_crop):
+                self.log_skipping_specimen(path_to_crop)
+                continue
+
+            paths = self.generate_paths(path_to_crop, i)
+            self.path_to_crop = path_to_crop
+
+            filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt = paths
+            json_report.set_text(text_main='Starting OCR')
+            self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds)
+            json_report.set_text(text_main='Finished OCR')
+
+            if not self.OCR:
+                self.n_failed_OCR += 1
+                response_candidate = None
+                nt_in = 0
+                nt_out = 0
+            else:
+                ### Format prompt
+                prompt = self.setup_prompt()
+                prompt = remove_colons_and_double_apostrophes(prompt)
+
+                ### Send prompt to chosen LLM
+                self.logger.info(f'Waiting for {model_name} API call --- Using {MODEL_NAME_FORMATTED}')
+
+                if 'PALM2' in name_parts:
+                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GooglePalm2(prompt, json_report, paths)
+                
+                elif 'GEMINI' in name_parts:
+                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GoogleGemini(prompt, json_report, paths)
+                
+                elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
+                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_MistralAI(prompt, json_report, paths)
+                
+                elif 'LOCAL' in name_parts: 
+                    if 'MISTRAL' in name_parts or 'MIXTRAL' in name_parts:
+                        if 'CPU' in name_parts:     
+                            response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_cpu_MistralAI(prompt, json_report, paths) 
+                        else:
+                            response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_MistralAI(prompt, json_report, paths) 
+                else:
+                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_OpenAI(prompt, json_report, paths)
+
+            self.n_failed_LLM_calls += 1 if response_candidate is None else 0
+                
+            ### Estimate n tokens returned
+            self.logger.info(f'Prompt tokens IN --- {nt_in}')
+            self.logger.info(f'Prompt tokens OUT --- {nt_out}')
+                
+            self.update_token_counters(nt_in, nt_out)
+
+            final_JSON_response, final_WFO_record, final_GEO_record = self.update_final_response(response_candidate, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, paths, path_to_crop, nt_in, nt_out)
+
+            self.log_completion_info(final_JSON_response)
+
+            json_report.set_JSON(final_JSON_response, final_WFO_record, final_GEO_record)
+
+        self.update_progress_report_final(progress_report)
+        final_JSON_response = self.parse_final_json_response(final_JSON_response)
+        return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out
+    
+
+    ##################################################################################################################################
+    ################################################## LLM Helper Funcs ##############################################################
+    ##################################################################################################################################
+    def initialize_llm_model(self, logger, model_name, JSON_dict_structure, name_parts, is_azure=None, llm_object=None):
+        if 'LOCAL'in name_parts:
+            if ('MIXTRAL' in name_parts) or ('MISTRAL' in name_parts):
+                if 'CPU' in name_parts:
+                    return LocalCPUMistralHandler(logger, model_name, JSON_dict_structure)
+                else:
+                    return LocalMistralHandler(logger, model_name, JSON_dict_structure)
+        else:
+            if 'PALM2' in name_parts:
+                return GooglePalm2Handler(logger, model_name, JSON_dict_structure)
+            elif 'GEMINI' in name_parts:
+                return GoogleGeminiHandler(logger, model_name, JSON_dict_structure)
+            elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
+                return MistralHandler(logger, model_name, JSON_dict_structure)
+            else:
+                return OpenAIHandler(logger, model_name, JSON_dict_structure, is_azure, llm_object)
+
+    def setup_prompt(self):
+        Catalog = PromptCatalog()
+        prompt, _ = Catalog.prompt_SLTP(self.path_custom_prompts, OCR=self.OCR)
+        return prompt
+    
+    def setup_JSON_dict_structure(self):
+        Catalog = PromptCatalog()
+        _, self.JSON_dict_structure = Catalog.prompt_SLTP(self.path_custom_prompts, OCR='Text')
+    
+
+    def initialize_token_counters(self):
+        self.total_tokens_in = 0
+        self.total_tokens_out = 0
+
+
+    def update_progress_report_initial(self, progress_report):
         if progress_report is not None:
             progress_report.set_n_batches(len(self.img_paths))
-        for i, path_to_crop in enumerate(self.img_paths):
-            if progress_report is not None:
-                progress_report.update_batch(f"Working on image {i+1} of {len(self.img_paths)}")
 
-            if os.path.basename(path_to_crop) in self.completed_specimens:
-                self.logger.info(f'[Skipping] specimen {os.path.basename(path_to_crop)} already processed')
-            else:
-                filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper = self.generate_paths(path_to_crop, i)
 
-                # Use Google Vision API to get OCR
-                # self.OCR = detect_text(path_to_crop) 
-                self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Starting OCR')
-                self.OCR, self.bounds, self.text_to_box_mapping = detect_text(path_to_crop)
-                self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Finished OCR')
-                if len(self.OCR) > 0:
-                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Creating OCR Overlay Image')
-                    self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds, self.cfg['leafmachine']['do_create_OCR_helper_image'])
-                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
-
-                    self.write_json_to_file(txt_file_path_OCR, {"OCR":self.OCR})
-                    self.write_json_to_file(txt_file_path_OCR_bounds, {"OCR_Bounds":self.bounds})
-                    self.overlay_image.save(jpg_file_path_OCR_helper)
-
-                    # Setup Dict
-                    MODEL, prompt, use_long_form, n_fields, xlsx_headers, nt_in = self.setup_GPT(self.prompt_version, gpt)
-
-                    if is_azure:
-                        self.llm.deployment_name = MODEL
-                    else:
-                        self.llm = None
-
-                    # Send OCR to chatGPT and return formatted dictonary
-                    if use_long_form:
-                        response_candidate = OCR_to_dict_16k(is_azure, self.logger, MODEL, prompt, self.llm, self.prompt_version) 
-                        nt_out = num_tokens_from_string(response_candidate, "cl100k_base")
-                    else:
-                        response_candidate = OCR_to_dict(is_azure, self.logger, MODEL, prompt, self.llm, self.prompt_version)
-                        nt_out = num_tokens_from_string(response_candidate, "cl100k_base")
-                else: 
-                    response_candidate = None
-                    nt_out = 0
-
-                total_tokens_in += nt_in
-                total_tokens_out += nt_out
-
-                final_JSON_response0 = self.save_json_and_xlsx(response_candidate, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
-                if response_candidate is not None:
-                    final_JSON_response = final_JSON_response0
-
-                self.logger.info(f'Formatted JSON\n{final_JSON_response}')
-                self.logger.info(f'Finished {MODEL} API calls\n')
-        
+    def update_progress_report_batch(self, progress_report, batch_index):
         if progress_report is not None:
-            progress_report.reset_batch(f"Batch Complete")
+            progress_report.update_batch(f"Working on image {batch_index + 1} of {len(self.img_paths)}")
+
+
+    def should_skip_specimen(self, path_to_crop):
+        return os.path.basename(path_to_crop) in self.completed_specimens
+
+
+    def log_skipping_specimen(self, path_to_crop):
+        self.logger.info(f'[Skipping] specimen {os.path.basename(path_to_crop)} already processed')
+
+    
+    def update_token_counters(self, nt_in, nt_out):
+        self.total_tokens_in += nt_in
+        self.total_tokens_out += nt_out
+
+
+    def update_final_response(self, response_candidate, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, paths, path_to_crop, nt_in, nt_out):
+        filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt = paths
+        # Saving the JSON and XLSX files with the response and updating the final JSON response
+        if response_candidate is not None:
+            final_JSON_response_updated = self.save_json_and_xlsx(self.Dirs, response_candidate, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
+            return final_JSON_response_updated, WFO_record, GEO_record
+        else:
+            final_JSON_response_updated = self.save_json_and_xlsx(self.Dirs, response_candidate, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
+            return final_JSON_response_updated, WFO_record, GEO_record
+
+
+    def log_completion_info(self, final_JSON_response):
+        self.logger.info(f'Formatted JSON\n{final_JSON_response}')
+        self.logger.info(f'Finished API calls\n')
+
+
+    def update_progress_report_final(self, progress_report):
+        if progress_report is not None:
+            progress_report.reset_batch("Batch Complete")
+
+
+    def parse_final_json_response(self, final_JSON_response):
         try:
-            final_JSON_response = json.loads(final_JSON_response.strip('```').replace('json\n', '', 1).replace('json', '', 1))
+            return json.loads(final_JSON_response.strip('```').replace('json\n', '', 1).replace('json', '', 1))
         except:
-            pass
-        return final_JSON_response, total_tokens_in, total_tokens_out
-
-                    
-
-    def use_PaLM(self, progress_report):
-        total_tokens_in = 0
-        total_tokens_out = 0
-        final_JSON_response = None
-        if progress_report is not None:
-            progress_report.set_n_batches(len(self.img_paths))
-        for i, path_to_crop in enumerate(self.img_paths):
-            if progress_report is not None:
-                progress_report.update_batch(f"Working on image {i+1} of {len(self.img_paths)}")
-            if os.path.basename(path_to_crop) in self.completed_specimens:
-                self.logger.info(f'[Skipping] specimen {os.path.basename(path_to_crop)} already processed')
-            else:
-                filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper = self.generate_paths(path_to_crop, i)
-                
-                # Use Google Vision API to get OCR
-                self.OCR, self.bounds, self.text_to_box_mapping = detect_text(path_to_crop)
-                if len(self.OCR) > 0:
-                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Starting OCR')
-                    self.OCR = self.OCR.replace("\'", "Minutes").replace('\"', "Seconds")
-                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Finished OCR')
-
-                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Creating OCR Overlay Image')
-                    self.overlay_image = overlay_boxes_on_image(path_to_crop, self.bounds, self.cfg['leafmachine']['do_create_OCR_helper_image'])
-                    self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
-                
-                    self.write_json_to_file(txt_file_path_OCR, {"OCR":self.OCR})
-                    self.write_json_to_file(txt_file_path_OCR_bounds, {"OCR_Bounds":self.bounds})
-                    self.overlay_image.save(jpg_file_path_OCR_helper)
-
-                    # Send OCR to chatGPT and return formatted dictonary
-                    response_candidate, nt_in = OCR_to_dict_PaLM(self.logger, self.OCR, self.prompt_version, self.Voucher_Vision_Embedding)
-                    nt_out = num_tokens_from_string(response_candidate, "cl100k_base")
-                    
-                else:
-                    response_candidate = None
-                    nt_out = 0
-
-                total_tokens_in += nt_in
-                total_tokens_out += nt_out
-
-                final_JSON_response0 = self.save_json_and_xlsx(response_candidate, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
-                if response_candidate is not None:
-                    final_JSON_response = final_JSON_response0
-                self.logger.info(f'Formatted JSON\n{final_JSON_response}')
-                self.logger.info(f'Finished PaLM 2 API calls\n')
-
-        if progress_report is not None:
-            progress_report.reset_batch(f"Batch Complete")
-        return final_JSON_response, total_tokens_in, total_tokens_out
-
-
-    '''
-    def use_falcon(self, progress_report):
-        for i, path_to_crop in enumerate(self.img_paths):
-            progress_report.update_batch(f"Working on image {i+1} of {len(self.img_paths)}")
-            if os.path.basename(path_to_crop) in self.completed_specimens:
-                self.logger.info(f'[Skipping] specimen {os.path.basename(path_to_crop)} already processed')
-            else:
-                filename_without_extension = os.path.splitext(os.path.basename(path_to_crop))[0]
-                txt_file_path = os.path.join(self.Dirs.transcription_ind, filename_without_extension + '.json')
-                txt_file_path_helper = os.path.join(self.Dirs.transcription_ind_helper, filename_without_extension + '.json')
-                self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- {filename_without_extension}')
-
-                # Use Google Vision API to get OCR
-                self.OCR, self.bounds, self.text_to_box_mapping = detect_text(path_to_crop)
-                if len(self.OCR) > 0:
-                    self.OCR = self.OCR.replace("\'", "Minutes").replace('\"', "Seconds")
-
-                    # Send OCR to Falcon and return formatted dictionary
-                    response = OCR_to_dict_Falcon(self.logger, self.OCR, self.Voucher_Vision_Embedding)
-                    # response_helper = OCR_to_helper_Falcon(self.logger, OCR) # Assuming you have a similar helper function for Falcon
-                    response_helper = None
-                    
-                    self.logger.info(f'Finished Falcon API calls\n')
-                else:
-                    response = None
-
-                if (response is not None) and (response_helper is not None):
-                    # Save transcriptions to json files
-                    self.write_json_to_file(txt_file_path, response)
-                    # self.write_json_to_file(txt_file_path_helper, response_helper)
-
-                    # add to the xlsx file
-                    self.add_data_to_excel_from_response(self.path_transcription, response, filename_without_extension, path_to_crop, txt_file_path, txt_file_path_helper)
-        progress_report.reset_batch()
-    '''
+            return final_JSON_response
+    
+    
 
     def generate_paths(self, path_to_crop, i):
         filename_without_extension = os.path.splitext(os.path.basename(path_to_crop))[0]
@@ -715,54 +831,65 @@ class VoucherVision():
         txt_file_path_OCR = os.path.join(self.Dirs.transcription_ind_OCR, filename_without_extension + '.json')
         txt_file_path_OCR_bounds = os.path.join(self.Dirs.transcription_ind_OCR_bounds, filename_without_extension + '.json')
         jpg_file_path_OCR_helper = os.path.join(self.Dirs.transcription_ind_OCR_helper, filename_without_extension + '.jpg')
+        json_file_path_wiki = os.path.join(self.Dirs.transcription_ind_wiki, filename_without_extension + '.json')
+        txt_file_path_ind_prompt = os.path.join(self.Dirs.transcription_ind_prompt, filename_without_extension + '.txt')
 
         self.logger.info(f'Working on {i+1}/{len(self.img_paths)} --- {filename_without_extension}')
 
-        return filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper
+        return filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt
 
-    def save_json_and_xlsx(self, response, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out):
+
+    def save_json_and_xlsx(self, Dirs, response, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out):
         if response is None:
-            response = self.create_null_json()
+            response = self.JSON_dict_structure
+            # Insert 'filename' as the first key
+            response = {'filename': filename_without_extension, **{k: v for k, v in response.items() if k != 'filename'}}
             self.write_json_to_file(txt_file_path, response)
 
             # Then add the null info to the spreadsheet
             response_null = self.create_null_row(filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper)
-            self.add_data_to_excel_from_response(self.path_transcription, response_null, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in=0, nt_out=0)
+            self.add_data_to_excel_from_response(Dirs, self.path_transcription, response_null, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in=0, nt_out=0)
         
         ### Set completed JSON
         else:
             response = self.clean_catalog_number(response, filename_without_extension)
             self.write_json_to_file(txt_file_path, response)
             # add to the xlsx file
-            self.add_data_to_excel_from_response(self.path_transcription, response, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
+            self.add_data_to_excel_from_response(Dirs, self.path_transcription, response, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
         return response
     
-    def process_specimen_batch(self, progress_report, is_real_run=False):
-        if is_real_run:
-            progress_report.update_overall(f"Transcribing Labels")
+
+    def process_specimen_batch(self, progress_report, json_report, is_real_run=False):
+        if not self.has_key:
+            self.logger.error(f'No API key found for {self.version_name}')
+            raise Exception(f"No API key found for {self.version_name}")
+
         try:
-            if self.has_key:
-                if self.model_name:
-                    final_json_response, total_tokens_in, total_tokens_out = self.use_chatGPT(self.is_azure, progress_report, self.model_name)
-                else:
-                    final_json_response, total_tokens_in, total_tokens_out = self.use_PaLM(progress_report)
-                return final_json_response, total_tokens_in, total_tokens_out
-            else:
-                self.logger.info(f'No API key found for {self.version_name}')
-                raise Exception(f"No API key found for {self.version_name}")
-        except:
+            if is_real_run:
+                progress_report.update_overall(f"Transcribing Labels")
+
+            final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out = self.send_to_LLM(self.is_azure, progress_report, json_report, self.model_name)
+            
+            return final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out
+
+        except Exception as e:
+            self.logger.error(f"LLM call failed in process_specimen_batch: {e}")
             if progress_report is not None:
                 progress_report.reset_batch(f"Batch Failed")
-            self.logger.error("LLM call failed. Ending batch. process_specimen_batch()")
-            for handler in self.logger.handlers[:]:
-                handler.close()
-                self.logger.removeHandler(handler)
+            self.close_logger_handlers()
             raise
 
-    def process_specimen_batch_OCR_test(self, path_to_crop):
-        for img_filename in os.listdir(path_to_crop):
-            img_path = os.path.join(path_to_crop, img_filename)
-        self.OCR, self.bounds, self.text_to_box_mapping = detect_text(img_path)
+
+    def close_logger_handlers(self):
+        for handler in self.logger.handlers[:]:
+            handler.close()
+            self.logger.removeHandler(handler)
+
+
+    # def process_specimen_batch_OCR_test(self, path_to_crop):
+    #     for img_filename in os.listdir(path_to_crop):
+    #         img_path = os.path.join(path_to_crop, img_filename)
+    #     self.OCR, self.bounds, self.text_to_box_mapping = detect_text(img_path)
 
 
 

@@ -1,25 +1,22 @@
 '''
 VoucherVision - based on LeafMachine2 Processes
 '''
-import os, inspect, sys, logging, subprocess
+import os, inspect, sys, shutil
 from time import perf_counter
-currentdir = os.path.dirname(os.path.dirname(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-sys.path.append(currentdir)
+# currentdir = os.path.dirname(os.path.dirname(inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.append(parentdir)
+# sys.path.append(currentdir)
 from vouchervision.component_detector.component_detector import detect_plant_components, detect_archival_components
-from general_utils import add_to_expense_report, save_token_info_as_csv, print_main_start, check_for_subdirs_VV, load_config_file, load_config_file_testing, report_config, save_config_file, subset_dir_images, crop_detections_from_images_VV
-from directory_structure_VV import Dir_Structure
-from data_project import Project_Info
-from LM2_logger import start_logging
-from fetch_data import fetch_data
-from utils_VoucherVision import VoucherVision, space_saver
+from vouchervision.general_utils import save_token_info_as_csv, print_main_start, check_for_subdirs_VV, load_config_file, load_config_file_testing, report_config, save_config_file, crop_detections_from_images_VV
+from vouchervision.directory_structure_VV import Dir_Structure
+from vouchervision.data_project import Project_Info
+from vouchervision.LM2_logger import start_logging
+from vouchervision.fetch_data import fetch_data
+from vouchervision.utils_VoucherVision import VoucherVision, space_saver
+from vouchervision.utils_hf import upload_to_drive
 
-
-def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progress_report, path_api_cost=None, test_ind = None, is_real_run=False):
-    # get_n_overall = progress_report.get_n_overall()
-    # progress_report.update_overall(f"Working on {test_ind+1} of {get_n_overall}")
-
+def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progress_report, json_report, path_api_cost=None, test_ind = None, is_hf = True, is_real_run=False):
     t_overall = perf_counter()
 
     # Load config file
@@ -29,18 +26,11 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
         cfg = load_config_file(dir_home, cfg_file_path, system='VoucherVision')  # For VoucherVision
     else:
         cfg = cfg_test 
-    # user_cfg = load_config_file(dir_home, cfg_file_path)
-    # cfg = Config(user_cfg)
 
     # Check to see if there are subdirs
     # Yes --> use the names of the subsirs as run_name
     run_name, dirs_list, has_subdirs = check_for_subdirs_VV(cfg)
     print(f"run_name {run_name} dirs_list{dirs_list} has_subdirs{has_subdirs}")
-
-    # for dir_ind, dir_in in enumerate(dirs_list):
-    #     if has_subdirs:
-    #         cfg['leafmachine']['project']['dir_images_local'] = dir_in
-    #         cfg['leafmachine']['project']['run_name'] = run_name[dir_ind]
 
     # Dir structure
     if is_real_run:
@@ -72,16 +62,11 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     crop_detections_from_images_VV(cfg, logger, dir_home, Project, Dirs)
 
     # Process labels
-    Voucher_Vision = VoucherVision(cfg, logger, dir_home, path_custom_prompts, Project, Dirs)
+    Voucher_Vision = VoucherVision(cfg, logger, dir_home, path_custom_prompts, Project, Dirs, is_hf)
     n_images = len(Voucher_Vision.img_paths)
-    last_JSON_response, total_tokens_in, total_tokens_out = Voucher_Vision.process_specimen_batch(progress_report, is_real_run)
-    
-    if path_api_cost:
-        cost_summary, data, total_cost = save_token_info_as_csv(Dirs, cfg['leafmachine']['LLM_version'], path_api_cost, total_tokens_in, total_tokens_out, n_images)
-        add_to_expense_report(dir_home, data)
-        logger.info(cost_summary)
-    else:
-        total_cost = None #TODO add config tests to expense_report
+    last_JSON_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out = Voucher_Vision.process_specimen_batch(progress_report, json_report, is_real_run)
+
+    total_cost = save_token_info_as_csv(Dirs, cfg['leafmachine']['LLM_version'], path_api_cost, total_tokens_in, total_tokens_out, n_images, dir_home, logger)
 
     t_overall_s = perf_counter()
     logger.name = 'Run Complete! :)'
@@ -89,13 +74,40 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     space_saver(cfg, Dirs, logger)
 
     if is_real_run:
-        progress_report.update_overall(f"Run Complete! :sunglasses:")
+        progress_report.update_overall(f"Run Complete!")
 
-    for handler in logger.handlers[:]:
-        handler.close()
-        logger.removeHandler(handler)
+    Voucher_Vision.close_logger_handlers()
 
-    return last_JSON_response, total_cost
+    zip_filepath = None
+    # Create Higging Face zip file
+    dir_to_zip = os.path.join(Dirs.dir_home, Dirs.run_name)  
+    zip_filename = Dirs.run_name
+
+    # Creating a zip file
+    zip_filepath = make_zipfile(dir_to_zip, zip_filename) ####################################################################################################### TODO Make this configurable
+    if is_hf:
+        upload_to_drive(zip_filepath, zip_filename, is_hf, cfg_private=Voucher_Vision.cfg_private, do_upload=True) ###################################### TODO Make this configurable
+    else:
+        upload_to_drive(zip_filepath, zip_filename, is_hf, cfg_private=Voucher_Vision.cfg_private, do_upload=False) ##################################### TODO Make this configurable
+
+    return {'last_JSON_response': last_JSON_response, 
+            'final_WFO_record': final_WFO_record, 
+            'final_GEO_record': final_GEO_record, 
+            'total_cost': total_cost, 
+            'n_failed_OCR': Voucher_Vision.n_failed_OCR, 
+            'n_failed_LLM_calls': Voucher_Vision.n_failed_LLM_calls, 
+            'zip_filepath': zip_filepath,
+            }
+
+def make_zipfile(base_dir, output_filename):
+    # Determine the directory where the zip file should be saved
+    # Construct the full path for the zip file
+    full_output_path = os.path.join(base_dir, output_filename)
+    # Create the zip archive
+    shutil.make_archive(full_output_path, 'zip', base_dir)
+    # Return the full path of the created zip file
+    return os.path.join(base_dir, output_filename + '.zip')
+
 
 def voucher_vision_OCR_test(cfg_file_path, dir_home, cfg_test, path_to_crop):
     # get_n_overall = progress_report.get_n_overall()
