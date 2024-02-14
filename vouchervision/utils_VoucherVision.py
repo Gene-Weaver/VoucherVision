@@ -371,7 +371,10 @@ class VoucherVision():
             elif header.value == "LM2_collage":
                 sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['use_RGB_label_images'])
             elif header.value == "OCR_method":
-                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['OCR_option'])
+                value_to_insert = self.cfg['leafmachine']['project']['OCR_option']
+                if isinstance(value_to_insert, list):
+                    value_to_insert = '|'.join(map(str, value_to_insert))
+                sheet.cell(row=next_row, column=i, value=value_to_insert)
             elif header.value == "OCR_double":
                 sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['double_OCR'])
             elif header.value == "OCR_trOCR":
