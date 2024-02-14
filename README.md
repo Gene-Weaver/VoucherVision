@@ -17,7 +17,8 @@ Table of Contents
       * [Virtual Environment](#virtual-environment-1)
       * [Installing Packages](#installing-packages-1)
    * [Troubleshooting CUDA](#troubleshooting-cuda)
-* [Create a Desktop Shortcut to Launch VoucherVision GUI](#create-a-desktop-shortcut-to-launch-vouchervision-gui)
+* [Create a Desktop Shortcut to Launch VoucherVision GUI (MacOS)](#create-a-desktop-shortcut-to-launch-vouchervision-gui)
+* [Create a Desktop Shortcut to Launch VoucherVision GUI (Windows)](#create-a-desktop-shortcut-to-launch-vouchervision-gui-windows)
 * [Run VoucherVision](#run-vouchervision)
     * [Setting up API key](#setting-up-api-key)
     * [Check GPU](#check-gpu)
@@ -122,21 +123,21 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
     - [ ] Llama2 7B chat hf 
 
 #### VoucherVisionEditor
-- [ ] Streamline the startup procedure
+- [X] Streamline the startup procedure
 - [ ] Add configurable dropdown menus for certain fields
-- [ ] Make sure that VVE can accomodate arbitrary column names
-- [ ] Remove legacy support (version 1 prompts)
-- [ ] Taxonomy validation helper
+- [X] Make sure that VVE can accomodate arbitrary column names
+- [X] Remove legacy support (version 1 prompts)
+- [X] Taxonomy validation helper
 - [x] Visualize locations on a map (verbatim and decimal)
-- [ ] More support for datum and verbatim coordinates
+- [x] More support for datum and verbatim coordinates
 - [ ] Compare raw OCR to values in form to flag hallucinations/generated content
-- [ ] Accept zipped folders as input
+- [x] Accept zipped folders as input
 - [ ] Flag user when multiple people/names/determinations are present
 
 ### **Package Information:**  
 The main VoucherVision tool and the VoucherVisionEditor are packaged separately. This separation ensures that lower-performance computers can still install and utilize the editor. While VoucherVision is optimized to function smoothly on virtually any modern system, maximizing its capabilities (like using LeafMachine2 label collages or running Retrieval Augmented Generation (RAG) prompts) mandates a GPU.
 
-> ***NOTE:*** You can absolutely run VoucherVision on non-GPU systems, but RAG will not be possible (luckily the apparent best prompts 'Version2+' does not use RAG). 
+> ***NOTE:*** You can absolutely run VoucherVision on computers that do not have a GPU, but the LeafMachine2 collage will run slower. 
 
 ---
 
@@ -195,7 +196,11 @@ Installation should basically be the same for Linux.
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 ### Installing Packages
+1. Install the required dependencies to use VoucherVision  
+<pre><code class="language-python">pip install -r requirements</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
 
+<!-->
 1. Install the required dependencies to use VoucherVision  
     - Option A - If you are using Windows PowerShell:
     <pre><code class="language-python">pip install wheel streamlit streamlit-extras plotly pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade numpy scikit-learnstreamlit google-generativeai google-cloud-storage google-cloud-vision azureml-sdk azure-identity openai langchain }</code></pre>
@@ -218,7 +223,7 @@ Installation should basically be the same for Linux.
     - WITHOUT GPU, CPU ONLY
     <pre><code class="language-python">pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cpu</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-    
+<-->
 
 > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 
@@ -233,7 +238,7 @@ Installation should basically be the same for Linux.
 
 ---
 
-# Create a Desktop Shortcut to Launch VoucherVision GUI
+# Create a Desktop Shortcut to Launch VoucherVision GUI (Windows)
 We can create a desktop shortcut to launch VoucherVision. In the `../VoucherVision/` directory is a file called `create_desktop_shortcut.py`. In the terminal, move into the `../VoucherVision/` directory and type:
 <pre><code class="language-python">python create_desktop_shortcut.py</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
@@ -242,7 +247,24 @@ Or...
 <button class="btn" data-clipboard-target="#code-snippet"></button>
 Follow the instructions, select where you want the shortcut to be created, then where the virtual environment is located. 
 
+***Note*** If you ever see an error that says that a "port is not available", open `run.py` in a plain text editor and change the `--port` value to something different but close, like 8502. Sometimes the connection may not close properly. Also make sure that the previous terminal is closed before re-launching.
+
 ---
+# Create a Desktop Shortcut to Launch VoucherVision GUI (MacOS)
+We can create a desktop shortcut to launch VoucherVision. In the `../VoucherVision/` directory is a file called `create_desktop_shortcut_mac.py`. In the terminal, `cd` into the `../VoucherVision/` directory and type:
+<pre><code class="language-python">python create_desktop_shortcut_mac.py</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+Or...
+<pre><code class="language-python">python3 create_desktop_shortcut_mac.py</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+Now go look in the `../VoucherVision/` directory. You will see a new file called `VoucherVision.app`. Drag this file into the `Applications` folder so that you can open VoucherVisionEditor just like any other app. 
+
+***Note*** If you ever see an error that says that a "port is not available", open `run.py` in a plain text editor and change the `--port` value to something different but close, like 8502. Sometimes the connection may not close properly. Also make sure that the previous terminal is closed before re-launching.
+
+
+---
+
+> NOTE: The instructions below have not been updated to reflect the new code as of Feb. 14, 2024. Stay tuned for updated instructions
 
 # Run VoucherVision
 1. In the terminal, make sure that you `cd` into the `VoucherVision` directory and that your virtual environment is active (you should see venv_VV on the command line). 
