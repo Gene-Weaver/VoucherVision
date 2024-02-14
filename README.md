@@ -52,37 +52,49 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
 ## Roadmap and New Features List
 
 #### VoucherVision
-- [X] Update to GPT 1106 builds
-- [ ] Option to zip output files for simpler import into VVE
-- [ ] Instead of saving a copy of the original image inplace of the OCR/collage images when they are not selected, just change the path to the original image.
+- [X] Update all GPT models
+- [X] Option to zip output files for simpler import into VVE
 - [x] Expense tracking
     - [x] Dashboard
     - [X] More granular support for different GPT versions
     - [x] Project-based and cummulative tracking
 - [x] Hugging Face Spaces
     - [x] Working and refactored
-    - [ ] Visualize locations on a map (verbatim and decimal)
+    - [x] Unified with local version
+    - [X] Visualize locations on a map (verbatim and decimal)
     - [x] Tested with batch of 300 images
-        - [x] GPT 3.5
-        - [ ] GPT 4
-        - [ ] PaLM 2
-    - [ ] Optimize for +300 images at a time
+    - [ ] Optimize for +300 images at a time (not recommended unless paying for HF persistent storage)
 - [x] Modular Prompt Builder
     - [x] Build, save, load, submit to VV library
-    - [ ] Assess whether order of column matters
-    - [ ] Assess shorter prompt effectiveness
-    - [ ] Restrict special columns to conform with VVE requirements (catalog_number, coordinates)
+    - [ ] Test whether order of column matters
+    - [X] Provide 3 standard prompts: long, medium, short
+    - [ ] Test shorter prompt effectiveness
+- [X] API Availability Test/Visualization
+    - [ ] Lock-out unsupported methods
 - [ ] Option to load existing OCR into VoucherVision workflow
+- [X] Save/load VV settings
+- [X] LLM Cost Calculator
+- [ ] FAQs page
+- [X] Detect and display system hardware
+- [ ] Filename Prefix Handling (works, but needs more options and a GUI test)
+- [ ] Validation Tools
+    - [X] JSON formatting
+    - [X] World Flora Online
+    - [X] Wikipedia links
+    - [X] USDA GRIN links
+    - [X] Plants of the World Online links
 #### Supported LLM APIs
 - [x] OpenAI 
     - [x] GPT 4
     - [x] GPT 4 Turbo 1106-preview
+    - [x] GPT 4 Turbo 0125-preview
     - [x] GPT 4 32k
     - [x] GPT 3.5
     - [x] GPT 3.5 Instruct
 - [x] OpenAI (Microsoft Azure Endpoints)
     - [x] GPT 4
     - [x] GPT 4 Turbo 1106-preview
+    - [x] GPT 4 Turbo 0125-preview
     - [x] GPT 4 32k
     - [x] GPT 3.5
     - [x] GPT 3.5 Instruct
@@ -96,6 +108,10 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
     - [x] text-unicorn@001
 - [x] Google Gemini
     - [x] Gemini-Pro
+- [x] LOCAL LLMs
+    - [x] GPU -- Mixtral 8x7B Instruct v0.1
+    - [x] GPU -- Mistral 7B Instruct v0.2
+    - [x] CPU -- Mistral 7B Instruct v0.2 GGUF
 #### Supported Locally Hosted LLMs
 - [x] MistralAI (24GB+ VRAM GPU Required)
     - [x] Mixtral 8x7B Instruct v0.1

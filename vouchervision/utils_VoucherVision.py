@@ -83,7 +83,7 @@ class VoucherVision():
         self.wfo_headers = ["WFO_override_OCR", "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"]
         self.wfo_headers_no_lists = ["WFO_override_OCR", "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_placement"]
         
-        self.utility_headers = ["filename"] + self.wfo_headers + self.geo_headers + self.usage_headers + ["run_name", "prompt", "LLM", "tokens_in", "tokens_out", "path_to_crop","path_to_original","path_to_content","path_to_helper",]
+        self.utility_headers = ["filename"] + self.wfo_headers + self.geo_headers + self.usage_headers + ["run_name", "prompt", "LLM", "tokens_in", "tokens_out", "LM2_collage", "OCR_method", "OCR_double", "OCR_trOCR", "path_to_crop","path_to_original","path_to_content","path_to_helper",]
                                 # "WFO_override_OCR", "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement",
                                 
                                 # "GEO_override_OCR", "GEO_method", "GEO_formatted_full_string", "GEO_decimal_lat",
@@ -298,7 +298,8 @@ class VoucherVision():
                     break
 
 
-    def add_data_to_excel_from_response(self, Dirs, path_transcription, response, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, path_to_content, path_to_helper, nt_in, nt_out):
+    def add_data_to_excel_from_response(self, Dirs, path_transcription, response, WFO_record, GEO_record, usage_report, 
+                                        MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, path_to_content, path_to_helper, nt_in, nt_out):
         
 
         wb = openpyxl.load_workbook(path_transcription)
@@ -367,7 +368,14 @@ class VoucherVision():
                 sheet.cell(row=next_row, column=i, value=os.path.basename(self.path_custom_prompts))
             elif header.value == "run_name":
                 sheet.cell(row=next_row, column=i, value=Dirs.run_name)
-
+            elif header.value == "LM2_collage":
+                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['use_RGB_label_images'])
+            elif header.value == "OCR_method":
+                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['OCR_option'])
+            elif header.value == "OCR_double":
+                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['double_OCR'])
+            elif header.value == "OCR_trOCR":
+                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['do_use_trOCR'])
             # "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"
             elif header.value in self.wfo_headers_no_lists:
                 sheet.cell(row=next_row, column=i, value=WFO_record.get(header.value, ''))
@@ -839,7 +847,8 @@ class VoucherVision():
         return filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt
 
 
-    def save_json_and_xlsx(self, Dirs, response, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out):
+    def save_json_and_xlsx(self, Dirs, response, WFO_record, GEO_record, usage_report, 
+                           MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out):
         if response is None:
             response = self.JSON_dict_structure
             # Insert 'filename' as the first key

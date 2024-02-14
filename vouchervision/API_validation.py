@@ -192,10 +192,6 @@ class APIvalidation:
             print(f"palm2 fail2")
 
         try:
-            # https://python.langchain.com/docs/integrations/llms/google_vertex_ai_palm
-            # os.environ['GOOGLE_API_KEY'] = "AIzaSyAHOH1w1qV7C3jS4W7QFyoaTGUwZIgS5ig"
-            # genai.configure(api_key='AIzaSyC8xvu6t9fb5dTah3hpgg_rwwR5G5kianI')
-            # model = ChatGoogleGenerativeAI(model="text-bison@001")
             model = VertexAI(model="text-bison@001", max_output_tokens=10)
             response = model.predict("Hello")
             test_response_palm2 = response
