@@ -197,10 +197,11 @@ Installation should basically be the same for Linux.
 
 ### Installing Packages
 1. Install the required dependencies to use VoucherVision  
-<pre><code class="language-python">pip install -r requirements</code></pre>
+`cd` into `VoucherVision`
+<pre><code class="language-python">pip install -r requirements.txt</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-<!-->
+<!--
 1. Install the required dependencies to use VoucherVision  
     - Option A - If you are using Windows PowerShell:
     <pre><code class="language-python">pip install wheel streamlit streamlit-extras plotly pyyaml Pillow pandas matplotlib matplotlib-inline tqdm openai langchain tiktoken openpyxl google-generativeai google-cloud-storage google-cloud-vision opencv-python chromadb chroma-migrate InstructorEmbedding transformers sentence-transformers seaborn dask psutil py-cpuinfo azureml-sdk azure-identity ; if ($?) { pip install numpy -U } ; if ($?) { pip install -U scikit-learn } ; if ($?) { pip install --upgrade numpy scikit-learnstreamlit google-generativeai google-cloud-storage google-cloud-vision azureml-sdk azure-identity openai langchain }</code></pre>
@@ -223,7 +224,7 @@ Installation should basically be the same for Linux.
     - WITHOUT GPU, CPU ONLY
     <pre><code class="language-python">pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cpu</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-<-->
+-->
 
 > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 
@@ -265,6 +266,8 @@ Now go look in the `../VoucherVision/` directory. You will see a new file called
 ---
 
 > NOTE: The instructions below have not been updated to reflect the new code as of Feb. 14, 2024. Stay tuned for updated instructions
+
+---
 
 # Run VoucherVision
 1. In the terminal, make sure that you `cd` into the `VoucherVision` directory and that your virtual environment is active (you should see venv_VV on the command line). 
