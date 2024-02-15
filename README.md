@@ -211,10 +211,10 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">conda update conda</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 4. Create a new Conda environment
-    <pre><code class="language-python">conda create --name voucher_vision python=3.10.4</code></pre>
+    <pre><code class="language-python">conda create --name vouchervision python=3.10.4</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 5. Activate the Conda environment
-    <pre><code class="language-python">conda activate voucher_vision</code></pre>
+    <pre><code class="language-python">conda activate vouchervision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 6. Use `cd` to move to the directory where you want VoucherVision to live
 7. Install `git` so that we can clone the repo
@@ -227,8 +227,8 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">cd VoucherVision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-9. Then we need to install some packages using pip
-    <pre><code class="language-python">pip install -r requirements.txt</code></pre>
+9. Then we need to install some packages 
+    <pre><code class="language-python">conda env update --file environment.yaml --prune</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 10. Upgrade some troublesome packages
     <pre><code class="language-python">pip install --upgrade tensorflow</code></pre>
