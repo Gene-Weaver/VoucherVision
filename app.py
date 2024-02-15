@@ -1188,7 +1188,7 @@ def save_changes_to_API_keys(cfg_private,
     cfg_private['here']['API_KEY'] = here_API_KEY
     # Call the function to write the updated configuration to the YAML file
     write_config_file(cfg_private, st.session_state.dir_home, filename="PRIVATE_DATA.yaml")
-    st.success(f"API Keys saved to {os.path.joins(st.session_state.dir_home, 'PRIVATE_DATA.yaml')}")
+    st.success(f"API Keys saved to {os.path.join(st.session_state.dir_home, 'PRIVATE_DATA.yaml')}")
     # st.session_state.private_file = does_private_file_exist()
 
 # Function to load a YAML file and update session_state

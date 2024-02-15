@@ -229,6 +229,9 @@ Installation should basically be the same for Linux.
 9. Then we need to install some packages using pip
     <pre><code class="language-python">pip install -r requirements.txt</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+10. Upgrade some troublesome packages
+    <pre><code class="language-python">pip install --upgrade tensorflow</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
 10. Install the NVIDIA GPU + CUDA toolkit [(see help page)](https://anaconda.org/anaconda/cudnn)
     <pre><code class="language-python">conda install -c anaconda cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
