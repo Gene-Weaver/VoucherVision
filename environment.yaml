@@ -1,4 +1,4 @@
-name: voucher_vision
+name: vouchervision
 channels:
   - defaults
   - conda-forge
