@@ -1,0 +1,55 @@
+name: voucher_vision
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - wheel
+  - numpy==1.24.0
+  - streamlit
+  - streamlit-extras
+  - opencv-python
+  - plotly
+  - pyyaml
+  - Pillow
+  - pandas
+  - matplotlib
+  - matplotlib-inline
+  - tqdm
+  - google-api-python-client
+  - google-cloud-aiplatform
+  - google-cloud-storage
+  - google-cloud-vision
+  - google-generativeai
+  - vertexai
+  - transformers
+  - sentence-transformers
+  - seaborn
+  - dask
+  - psutil
+  - py-cpuinfo
+  - openpyxl
+  - langchain
+  - langchain-community
+  - langchain-core
+  - langchain_mistralai
+  - langchain_openai
+  - langchain_google_genai
+  - langchain_experimental
+  - langchain-google-vertexai
+  - chromadb
+  - gputil
+  - geocoder
+  - bitsandbytes
+  - accelerate
+  - tiktoken
+  - wikipedia
+  - InstructorEmbedding
+  - Levenshtein
+  - fuzzywuzzy
+  - pycountry_convert
+  - pymupdf
+  - mapboxgl
+  - openai
+
+  - pip:
+    - -r file:requirements_conda.txt

@@ -260,7 +260,7 @@ Installation should basically be the same for Linux.
     - Go to [https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/), search for `11.7` (or your CUDA version) and find the `conda` installation version
     - We need a PyTorch version greater than 2.X.X. If none exists, then your CUDA version may be too old.
     - When I searched for `11.7`, I found this: `conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia`
-    - Install your matching version
+    - Install your matching version (conda install can be very slow)
     - Verify the installation 
     <pre><code class="language-python">conda list cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
