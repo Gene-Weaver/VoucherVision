@@ -206,33 +206,35 @@ Installation should basically be the same for Linux.
 # Installing VoucherVision (using conda)
 1. First, install Anaconda using default settings
     - [Anaconda](https://www.anaconda.com/products/individual)
-2. Open the Anaconda Powershell (Windows) or the terminal (macOS/Linux)
-3. Create a new Conda environment
+2 Make sure it's up to date
+    <pre><code class="language-python">conda update --force conda</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    <pre><code class="language-python">conda update conda</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+3. Open the Anaconda Powershell (Windows) or the terminal (macOS/Linux)
+4. Create a new Conda environment
     <pre><code class="language-python">conda create --name voucher_vision python=3.10.4</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-4. Activate the Conda environment
+5. Activate the Conda environment
     <pre><code class="language-python">conda activate voucher_vision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-5. Use `cd` to move to the directory where you want VoucherVision to live
-6. Install `git` so that we can clone the repo
+6. Use `cd` to move to the directory where you want VoucherVision to live
+7. Install `git` so that we can clone the repo
     <pre><code class="language-python">conda install git</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-6. Clone the VoucherVision repository
+8. Clone the VoucherVision repository
     <pre><code class="language-python">git clone https://github.com/Gene-Weaver/VoucherVision.git</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     Move into the VoucherVision home directory
     <pre><code class="language-python">cd VoucherVision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-7. Then we need to install some packages using pip
+9. Then we need to install some packages using pip
     <pre><code class="language-python">pip install -r requirements.txt</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-8. Install the NVIDIA GPU + CUDA toolkit [(see help page)](https://anaconda.org/anaconda/cudnn)
-    <pre><code class="language-python">conda update --force conda</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-    <pre><code class="language-python">conda update conda</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
+10. Install the NVIDIA GPU + CUDA toolkit [(see help page)](https://anaconda.org/anaconda/cudnn)
     <pre><code class="language-python">conda install -c anaconda cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+    View the installed version (useful for troubleshooting)
     <pre><code class="language-python">conda list cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     OR...
