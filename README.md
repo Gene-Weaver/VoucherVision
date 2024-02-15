@@ -206,12 +206,10 @@ Installation should basically be the same for Linux.
 # Installing VoucherVision (using conda)
 1. First, install Anaconda using default settings
     - [Anaconda](https://www.anaconda.com/products/individual)
-2 Make sure it's up to date
-    <pre><code class="language-python">conda update --force conda</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
+2. Open the Anaconda Powershell (Windows) or the terminal (macOS/Linux)
+3. Make sure it's up to date
     <pre><code class="language-python">conda update conda</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-3. Open the Anaconda Powershell (Windows) or the terminal (macOS/Linux)
 4. Create a new Conda environment
     <pre><code class="language-python">conda create --name voucher_vision python=3.10.4</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
