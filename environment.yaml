@@ -3,11 +3,12 @@ channels:
   - defaults
   - conda-forge
 dependencies:
+  - pip
   - wheel
   - numpy==1.24.0
+  - opencv
   - streamlit
   - streamlit-extras
-  - opencv-python
   - plotly
   - pyyaml
   - Pillow
@@ -20,7 +21,6 @@ dependencies:
   - google-cloud-storage
   - google-cloud-vision
   - google-generativeai
-  - vertexai
   - transformers
   - sentence-transformers
   - seaborn
@@ -31,23 +31,22 @@ dependencies:
   - langchain
   - langchain-community
   - langchain-core
-  - langchain_mistralai
-  - langchain_openai
-  - langchain_google_genai
-  - langchain_experimental
+  - langchain-mistralai
+  - langchain-openai
+  - langchain-google-genai
+  - langchain-experimental
   - langchain-google-vertexai
+  - 
   - chromadb
   - gputil
   - geocoder
-  - bitsandbytes
   - accelerate
   - tiktoken
   - wikipedia
   - InstructorEmbedding
   - Levenshtein
   - fuzzywuzzy
-  - pycountry_convert
-  - pymupdf
+  - pycountry-convert
   - mapboxgl
   - openai
 
