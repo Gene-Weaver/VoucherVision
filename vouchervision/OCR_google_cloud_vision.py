@@ -84,9 +84,7 @@ class OCREngine:
 
         self.multimodal_prompt = """I need you to transcribe all of the text in this image. 
         Place the transcribed text into a JSON dictionary with this form {"Transcription_Printed_Text": "text","Transcription_Handwritten_Text": "text"}"""
-
-        if 'LLaVA' in self.OCR_option:
-            self.init_llava()
+        self.init_llava()
 
         
     def set_client(self):
@@ -104,9 +102,9 @@ class OCREngine:
         return credentials
     
     def init_craft(self):
-        from craft_text_detector import load_craftnet_model, load_refinenet_model
-
         if 'CRAFT' in self.OCR_option:
+            from craft_text_detector import load_craftnet_model, load_refinenet_model
+
             try:
                 self.refine_net = load_refinenet_model(cuda=True)
                 self.use_cuda = True
@@ -120,22 +118,23 @@ class OCREngine:
                 self.craft_net = load_craftnet_model(weight_path=os.path.join(self.dir_home,'vouchervision','craft','craft_mlt_25k.pth'), cuda=False)
 
     def init_llava(self):
-        from vouchervision.OCR_llava import OCRllava
+        if 'LLaVA' in self.OCR_option:
+            from vouchervision.OCR_llava import OCRllava
 
-        self.model_path = "liuhaotian/" + self.cfg['leafmachine']['project']['OCR_option_llava']
-        self.model_quant = self.cfg['leafmachine']['project']['OCR_option_llava_bit']
+            self.model_path = "liuhaotian/" + self.cfg['leafmachine']['project']['OCR_option_llava']
+            self.model_quant = self.cfg['leafmachine']['project']['OCR_option_llava_bit']
 
-        self.json_report.set_text(text_main=f'Loading LLaVA model: {self.model_path} Quantization: {self.model_quant}')
+            self.json_report.set_text(text_main=f'Loading LLaVA model: {self.model_path} Quantization: {self.model_quant}')
 
-        if self.model_quant == '4bit':
-            use_4bit = True
-        elif self.model_quant == 'full':
-            use_4bit = False
-        else:
-            self.logger.info(f"Provided model quantization invlid. Using 4bit.")
-            use_4bit = True
+            if self.model_quant == '4bit':
+                use_4bit = True
+            elif self.model_quant == 'full':
+                use_4bit = False
+            else:
+                self.logger.info(f"Provided model quantization invlid. Using 4bit.")
+                use_4bit = True
 
-        self.Llava = OCRllava(self.logger, model_path=self.model_path, load_in_4bit=use_4bit, load_in_8bit=False)
+            self.Llava = OCRllava(self.logger, model_path=self.model_path, load_in_4bit=use_4bit, load_in_8bit=False)
 
     def init_gemini_vision(self):
         pass
