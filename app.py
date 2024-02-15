@@ -7,6 +7,7 @@ import pandas as pd
 from io import BytesIO
 from streamlit_extras.let_it_rain import rain
 from annotated_text import annotated_text
+from transformers import AutoConfig
 
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
 from vouchervision.VoucherVision_Config_Builder import build_VV_config, TestOptionsGPT, TestOptionsPalm, check_if_usable
@@ -1568,6 +1569,25 @@ def content_project_settings(col):
             st.session_state.config['leafmachine']['project']['dir_output'] = st.text_input("Output directory", st.session_state.config['leafmachine']['project'].get('dir_output', ''))
         
 
+def content_tools():
+    st.write("---")
+    st.header('Validation Tools')    
+    
+    tool_WFO = st.session_state.config['leafmachine']['project']['tool_WFO']
+    st.session_state.config['leafmachine']['project']['tool_WFO'] = st.checkbox(label="Enable World Flora Online taxonomy verification",
+                                                                                      help="",
+                                                                                      value=tool_WFO)
+    
+    tool_GEO = st.session_state.config['leafmachine']['project']['tool_GEO']
+    st.session_state.config['leafmachine']['project']['tool_GEO'] = st.checkbox(label="Enable HERE geolocation hints",
+                                                                                      help="",
+                                                                                      value=tool_GEO)
+
+    tool_wikipedia = st.session_state.config['leafmachine']['project']['tool_wikipedia']
+    st.session_state.config['leafmachine']['project']['tool_wikipedia'] = st.checkbox(label="Enable Wikipedia verification",
+                                                                                      help="",
+                                                                                      value=tool_wikipedia)
+
 def content_llm_cost():
     st.write("---")
     st.header('LLM Cost Calculator')
@@ -1855,6 +1875,17 @@ def content_ocr_method():
         do_use_trOCR = st.checkbox("Enable trOCR", value=st.session_state.config['leafmachine']['project']['do_use_trOCR'],key="Enable trOCR2")#,disabled=st.session_state['lacks_GPU'])
         st.session_state.config['leafmachine']['project']['do_use_trOCR'] = do_use_trOCR
 
+    if do_use_trOCR:
+        # st.session_state.config['leafmachine']['project']['trOCR_model_path'] = "microsoft/trocr-large-handwritten"
+        default_trOCR_model_path = st.session_state.config['leafmachine']['project']['trOCR_model_path']
+        user_input_trOCR_model_path = st.text_input("trOCR Hugging Face model path. MUST be a fine-tuned version of 'microsoft/trocr-base-handwritten' or 'microsoft/trocr-large-handwritten', or a microsoft trOCR model.", value=default_trOCR_model_path)
+        if st.session_state.config['leafmachine']['project']['trOCR_model_path'] != user_input_trOCR_model_path:
+            is_valid_mp = is_valid_huggingface_model_path(user_input_trOCR_model_path)
+            if not is_valid_mp:
+                st.error(f"The Hugging Face model path {user_input_trOCR_model_path} is not valid. Please revise.")
+            else:
+                st.session_state.config['leafmachine']['project']['trOCR_model_path'] = user_input_trOCR_model_path
+
     if 'LLaVA' in selected_OCR_options:
         OCR_option_llava = st.radio(
             "Select the LLaVA version",
@@ -1888,6 +1919,15 @@ def content_ocr_method():
     # elif (OCR_option == 'hand') and do_use_trOCR:
     #     st.text_area(label='Handwritten/Printed + trOCR',placeholder=demo_text_trh,disabled=True, label_visibility='visible', height=150)
 
+def is_valid_huggingface_model_path(model_path):
+    try:
+        # Attempt to load the model configuration from Hugging Face Model Hub
+        config = AutoConfig.from_pretrained(model_path)
+        return True  # If the configuration loads successfully, the model path is valid
+    except Exception as e:
+        # If loading the model configuration fails, the model path is not valid
+        return False
+    
 @st.cache_data
 def show_collage():
     # Load the image only if it's not already in the session state
@@ -2247,6 +2287,7 @@ def main():
     content_ocr_method()
 
     content_collage_overlay()
+    content_tools()
     content_llm_cost()
     content_processing_options()
     content_less_used()

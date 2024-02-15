@@ -43,7 +43,7 @@ class VoucherVision():
         self.prompt_version = None
         self.is_hf = is_hf
 
-        self.trOCR_model_version = "microsoft/trocr-large-handwritten"
+        # self.trOCR_model_version = "microsoft/trocr-large-handwritten"
         # self.trOCR_model_version = "microsoft/trocr-base-handwritten"
         # self.trOCR_model_version = "dh-unibe/trocr-medieval-escriptmask" # NOPE
         # self.trOCR_model_version = "dh-unibe/trocr-kurrent" # NOPE
@@ -58,6 +58,8 @@ class VoucherVision():
     def setup(self):
         self.logger.name = f'[Transcription]'
         self.logger.info(f'Setting up OCR and LLM')
+
+        self.trOCR_model_version = self.cfg['leafmachine']['project']['trOCR_model_path']
 
         self.db_name = self.cfg['leafmachine']['project']['embeddings_database_name']
         self.path_domain_knowledge = self.cfg['leafmachine']['project']['path_to_domain_knowledge_xlsx']
@@ -471,6 +473,7 @@ class VoucherVision():
 
         self.has_key_openai = self.has_API_key(k_openai)
         self.has_key_azure_openai = self.has_API_key(k_openai_azure)
+        self.llm = None
         
         self.has_key_google_project_id = self.has_API_key(k_google_project_id)
         self.has_key_google_location = self.has_API_key(k_google_location)
@@ -481,6 +484,7 @@ class VoucherVision():
         self.has_key_open_cage_geocode = self.has_API_key(k_opencage)
 
         
+
         ### Google - OCR, Palm2, Gemini
         if self.has_key_google_application_credentials and self.has_key_google_project_id and self.has_key_google_location:
             if self.is_hf:
@@ -635,6 +639,7 @@ class VoucherVision():
         ocr_google = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, self.path_to_crop, self.cfg, self.trOCR_model_version, self.trOCR_model, self.trOCR_processor, self.device)  
         ocr_google.process_image(self.do_create_OCR_helper_image, self.logger)
         self.OCR = ocr_google.OCR
+        self.logger.info(f"Complete OCR text for LLM prompt:\n\n{self.OCR}\n\n")
 
         self.write_json_to_file(txt_file_path_OCR, ocr_google.OCR_JSON_to_file)
         
@@ -682,7 +687,7 @@ class VoucherVision():
         
         json_report.set_text(text_main=f'Loading {MODEL_NAME_FORMATTED}')
         json_report.set_JSON({}, {}, {})
-        llm_model = self.initialize_llm_model(self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm)
+        llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm)
 
         for i, path_to_crop in enumerate(self.img_paths):
             self.update_progress_report_batch(progress_report, i)
@@ -740,7 +745,7 @@ class VoucherVision():
 
             final_JSON_response, final_WFO_record, final_GEO_record = self.update_final_response(response_candidate, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, paths, path_to_crop, nt_in, nt_out)
 
-            self.log_completion_info(final_JSON_response)
+            self.logger.info(f'Finished LLM call')
 
             json_report.set_JSON(final_JSON_response, final_WFO_record, final_GEO_record)
 
@@ -752,22 +757,22 @@ class VoucherVision():
     ##################################################################################################################################
     ################################################## LLM Helper Funcs ##############################################################
     ##################################################################################################################################
-    def initialize_llm_model(self, logger, model_name, JSON_dict_structure, name_parts, is_azure=None, llm_object=None):
+    def initialize_llm_model(self, cfg, logger, model_name, JSON_dict_structure, name_parts, is_azure=None, llm_object=None):
         if 'LOCAL'in name_parts:
             if ('MIXTRAL' in name_parts) or ('MISTRAL' in name_parts):
                 if 'CPU' in name_parts:
-                    return LocalCPUMistralHandler(logger, model_name, JSON_dict_structure)
+                    return LocalCPUMistralHandler(cfg, logger, model_name, JSON_dict_structure)
                 else:
-                    return LocalMistralHandler(logger, model_name, JSON_dict_structure)
+                    return LocalMistralHandler(cfg, logger, model_name, JSON_dict_structure)
         else:
             if 'PALM2' in name_parts:
-                return GooglePalm2Handler(logger, model_name, JSON_dict_structure)
+                return GooglePalm2Handler(cfg, logger, model_name, JSON_dict_structure)
             elif 'GEMINI' in name_parts:
-                return GoogleGeminiHandler(logger, model_name, JSON_dict_structure)
+                return GoogleGeminiHandler(cfg, logger, model_name, JSON_dict_structure)
             elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
-                return MistralHandler(logger, model_name, JSON_dict_structure)
+                return MistralHandler(cfg, logger, model_name, JSON_dict_structure)
             else:
-                return OpenAIHandler(logger, model_name, JSON_dict_structure, is_azure, llm_object)
+                return OpenAIHandler(cfg, logger, model_name, JSON_dict_structure, is_azure, llm_object)
 
     def setup_prompt(self):
         Catalog = PromptCatalog()
@@ -816,11 +821,6 @@ class VoucherVision():
         else:
             final_JSON_response_updated = self.save_json_and_xlsx(self.Dirs, response_candidate, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out)
             return final_JSON_response_updated, WFO_record, GEO_record
-
-
-    def log_completion_info(self, final_JSON_response):
-        self.logger.info(f'Formatted JSON\n{final_JSON_response}')
-        self.logger.info(f'Finished API calls\n')
 
 
     def update_progress_report_final(self, progress_report):

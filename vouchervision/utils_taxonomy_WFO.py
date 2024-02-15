@@ -4,7 +4,7 @@ from Levenshtein import ratio
 from fuzzywuzzy import fuzz
 
 class WFONameMatcher:
-    def __init__(self):
+    def __init__(self, tool_WFO):
         self.base_url = "https://list.worldfloraonline.org/matching_rest.php?"
         self.N_BEST_CANDIDATES = 10
         self.NULL_DICT = {
@@ -16,6 +16,7 @@ class WFONameMatcher:
                         "WFO_override_OCR": False,
                     }
         self.SEP = '|'
+        self.is_enabled = tool_WFO
 
     def extract_input_string(self, record):
         primary_input = f"{record.get('scientificName', '').strip()} {record.get('scientificNameAuthorship', '').strip()}".strip()
@@ -173,40 +174,44 @@ class WFONameMatcher:
         return cleaned_candidates, ranked_candidates
     
     def check_WFO(self, record, replace_if_success_wfo):
-        self.replace_if_success_wfo = replace_if_success_wfo
+        if not self.is_enabled:
+            return record, self.NULL_DICT
 
-        # "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"
-        simplified_response = self.query_and_process(record)
-        simplified_response['WFO_override_OCR'] = False
-
-        # best_match
-        if simplified_response.get('WFO_exact_match'):
-            simplified_response['WFO_exact_match_name'] = simplified_response.get('WFO_best_match')
         else:
-            simplified_response['WFO_exact_match_name'] = ''
+            self.replace_if_success_wfo = replace_if_success_wfo
 
-        # placement
-        wfo_placement = simplified_response.get('WFO_placement', '')
-        if wfo_placement:
-            parts = wfo_placement.split('/')[1:]
-            simplified_response['WFO_placement'] = self.SEP.join(parts)
-        else:
-            simplified_response['WFO_placement'] = ''
+            # "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"
+            simplified_response = self.query_and_process(record)
+            simplified_response['WFO_override_OCR'] = False
 
-        if simplified_response.get('WFO_exact_match') and replace_if_success_wfo:
-            simplified_response['WFO_override_OCR'] = True
-            name_parts = simplified_response.get('WFO_placement').split('$')[0]
-            name_parts = name_parts.split(self.SEP)
-            record['order'] = name_parts[3]
-            record['family'] = name_parts[4]
-            record['genus'] = name_parts[5]
-            record['specificEpithet'] = name_parts[6]
-            record['scientificName'] = simplified_response.get('WFO_exact_match_name')
+            # best_match
+            if simplified_response.get('WFO_exact_match'):
+                simplified_response['WFO_exact_match_name'] = simplified_response.get('WFO_best_match')
+            else:
+                simplified_response['WFO_exact_match_name'] = ''
 
-        return record, simplified_response
+            # placement
+            wfo_placement = simplified_response.get('WFO_placement', '')
+            if wfo_placement:
+                parts = wfo_placement.split('/')[1:]
+                simplified_response['WFO_placement'] = self.SEP.join(parts)
+            else:
+                simplified_response['WFO_placement'] = ''
+
+            if simplified_response.get('WFO_exact_match') and replace_if_success_wfo:
+                simplified_response['WFO_override_OCR'] = True
+                name_parts = simplified_response.get('WFO_placement').split('$')[0]
+                name_parts = name_parts.split(self.SEP)
+                record['order'] = name_parts[3]
+                record['family'] = name_parts[4]
+                record['genus'] = name_parts[5]
+                record['specificEpithet'] = name_parts[6]
+                record['scientificName'] = simplified_response.get('WFO_exact_match_name')
+
+            return record, simplified_response
     
-def validate_taxonomy_WFO(record_dict, replace_if_success_wfo=False):
-    Matcher = WFONameMatcher()
+def validate_taxonomy_WFO(tool_WFO, record_dict, replace_if_success_wfo=False):
+    Matcher = WFONameMatcher(tool_WFO)
     try:    
         record_dict, WFO_dict = Matcher.check_WFO(record_dict, replace_if_success_wfo)
         return record_dict, WFO_dict

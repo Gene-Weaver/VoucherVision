@@ -8,7 +8,8 @@ import pstats
 class WikipediaLinks():
 
 
-    def __init__(self, json_file_path_wiki) -> None:
+    def __init__(self, tool_wikipedia, json_file_path_wiki) -> None:
+        self.is_enabled = tool_wikipedia
         self.json_file_path_wiki = json_file_path_wiki
         self.wiki_wiki = wikipediaapi.Wikipedia(
             user_agent='VoucherVision (merlin@example.com)',
@@ -466,54 +467,56 @@ class WikipediaLinks():
         self.info_packet['WIKI_GEO'] = {}
         self.info_packet['WIKI_LOCALITY'] = {}
 
-        municipality = output.get('municipality','')
-        county = output.get('county','')
-        stateProvince = output.get('stateProvince','')
-        country = output.get('country','')
+        if self.is_enabled:
 
-        locality = output.get('locality','')
+            municipality = output.get('municipality','')
+            county = output.get('county','')
+            stateProvince = output.get('stateProvince','')
+            country = output.get('country','')
 
-        order = output.get('order','')
-        family = output.get('family','')
-        scientificName = output.get('scientificName','')
-        genus = output.get('genus','')
-        specificEpithet = output.get('specificEpithet','')
+            locality = output.get('locality','')
+
+            order = output.get('order','')
+            family = output.get('family','')
+            scientificName = output.get('scientificName','')
+            genus = output.get('genus','')
+            specificEpithet = output.get('specificEpithet','')
 
 
-        query_geo = ' '.join([municipality, county, stateProvince, country]).strip()
-        query_locality = locality.strip()
-        query_taxa_primary = scientificName.strip()
-        query_taxa_secondary = ' '.join([genus, specificEpithet]).strip()
-        query_taxa_tertiary = ' '.join([order, family, genus, specificEpithet]).strip()
+            query_geo = ' '.join([municipality, county, stateProvince, country]).strip()
+            query_locality = locality.strip()
+            query_taxa_primary = scientificName.strip()
+            query_taxa_secondary = ' '.join([genus, specificEpithet]).strip()
+            query_taxa_tertiary = ' '.join([order, family, genus, specificEpithet]).strip()
 
-        # query_taxa = "Tracaulon sagittatum Tracaulon sagittatum"
-        # query_geo = "Indiana Porter Co."
-        # query_locality = "Mical Springs edge"
-        
-        if query_geo:
-            try:
-                self.gather_geo(query_geo)
-            except:
-                pass
-        
-        if query_locality:
-            try:
-                self.gather_geo(query_locality,'locality')
-            except:
-                pass
-        
-        queries_taxa = [query_taxa_primary, query_taxa_secondary, query_taxa_tertiary]
-        for q in queries_taxa:
-            if q:
+            # query_taxa = "Tracaulon sagittatum Tracaulon sagittatum"
+            # query_geo = "Indiana Porter Co."
+            # query_locality = "Mical Springs edge"
+            
+            if query_geo:
                 try:
-                    self.gather_taxonomy(q)
-                    break
+                    self.gather_geo(query_geo)
                 except:
                     pass
+            
+            if query_locality:
+                try:
+                    self.gather_geo(query_locality,'locality')
+                except:
+                    pass
+            
+            queries_taxa = [query_taxa_primary, query_taxa_secondary, query_taxa_tertiary]
+            for q in queries_taxa:
+                if q:
+                    try:
+                        self.gather_taxonomy(q)
+                        break
+                    except:
+                        pass
 
-        # print(self.info_packet)
-        # return self.info_packet
-        # self.gather_geo(query_geo)
+            # print(self.info_packet)
+            # return self.info_packet
+            # self.gather_geo(query_geo)
         try:
             with open(self.json_file_path_wiki, 'w', encoding='utf-8') as file:
                 json.dump(self.info_packet, file, indent=4)
@@ -547,6 +550,13 @@ class WikipediaLinks():
         return clean_text
 
 
+        
+def validate_wikipedia(tool_wikipedia, json_file_path_wiki, output):
+    Wiki = WikipediaLinks(tool_wikipedia, json_file_path_wiki)
+    Wiki.gather_wikipedia_results(output)
+    
+  
+    
 if __name__ == '__main__':
     test_output = {
     "filename": "MICH_7375774_Polygonaceae_Persicaria_",

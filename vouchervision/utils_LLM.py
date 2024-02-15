@@ -19,6 +19,16 @@ def remove_colons_and_double_apostrophes(text):
     return text.replace(":", "").replace("\"", "")
 
 
+def sanitize_prompt(data):
+    if isinstance(data, dict):
+        return {sanitize_prompt(key): sanitize_prompt(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_prompt(element) for element in data]
+    elif isinstance(data, str):
+        return data.encode('utf-8', 'ignore').decode('utf-8')
+    else:
+        return data
+    
 
 def count_tokens(string, vendor, model_name):
     full_string = string + JSON_FORMAT_INSTRUCTIONS

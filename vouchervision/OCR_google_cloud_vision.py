@@ -247,13 +247,13 @@ class OCREngine:
         if not do_use_trOCR:
             if 'normal' in self.OCR_option:
                 self.OCR_JSON_to_file['OCR_printed'] = self.normal_organized_text
-                logger.info(f"Google_OCR_Standard:\n{self.normal_organized_text}")
+                # logger.info(f"Google_OCR_Standard:\n{self.normal_organized_text}")
                 # ocr_parts = ocr_parts + f"Google_OCR_Standard:\n{self.normal_organized_text}"
                 ocr_parts = self.normal_organized_text
             
             if 'hand' in self.OCR_option:
                 self.OCR_JSON_to_file['OCR_handwritten'] = self.hand_organized_text
-                logger.info(f"Google_OCR_Handwriting:\n{self.hand_organized_text}")
+                # logger.info(f"Google_OCR_Handwriting:\n{self.hand_organized_text}")
                 # ocr_parts = ocr_parts +  f"Google_OCR_Handwriting:\n{self.hand_organized_text}"
                 ocr_parts = self.hand_organized_text
 
@@ -337,13 +337,13 @@ class OCREngine:
             if 'normal' in self.OCR_option:
                 self.OCR_JSON_to_file['OCR_printed'] = self.normal_organized_text
                 self.OCR_JSON_to_file['OCR_trOCR'] = self.trOCR_texts
-                logger.info(f"Google_OCR_Standard:\n{self.normal_organized_text}\n\ntrOCR:\n{self.trOCR_texts}")
+                # logger.info(f"Google_OCR_Standard:\n{self.normal_organized_text}\n\ntrOCR:\n{self.trOCR_texts}")
                 # ocr_parts = ocr_parts +  f"\nGoogle_OCR_Standard:\n{self.normal_organized_text}\n\ntrOCR:\n{self.trOCR_texts}"
                 ocr_parts = self.trOCR_texts
             if 'hand' in self.OCR_option:
                 self.OCR_JSON_to_file['OCR_handwritten'] = self.hand_organized_text
                 self.OCR_JSON_to_file['OCR_trOCR'] = self.trOCR_texts
-                logger.info(f"Google_OCR_Handwriting:\n{self.hand_organized_text}\n\ntrOCR:\n{self.trOCR_texts}")
+                # logger.info(f"Google_OCR_Handwriting:\n{self.hand_organized_text}\n\ntrOCR:\n{self.trOCR_texts}")
                 # ocr_parts = ocr_parts +  f"\nGoogle_OCR_Handwriting:\n{self.hand_organized_text}\n\ntrOCR:\n{self.trOCR_texts}"
                 ocr_parts = self.trOCR_texts
             # if self.OCR_option in ['both',]:
@@ -355,7 +355,7 @@ class OCREngine:
             if 'CRAFT' in self.OCR_option:
                 # self.OCR_JSON_to_file['OCR_printed'] = self.normal_organized_text
                 self.OCR_JSON_to_file['OCR_CRAFT_trOCR'] = self.trOCR_texts
-                logger.info(f"CRAFT_trOCR:\n{self.trOCR_texts}")
+                # logger.info(f"CRAFT_trOCR:\n{self.trOCR_texts}")
                 # ocr_parts = ocr_parts +  f"\nCRAFT_trOCR:\n{self.trOCR_texts}"
                 ocr_parts = self.trOCR_texts
             return ocr_parts
@@ -683,7 +683,7 @@ class OCREngine:
                 self.OCR = self.OCR + part_OCR + part_OCR
             else:
                 self.OCR = self.OCR + "\CRAFT trOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
-            logger.info(f"CRAFT trOCR:\n{self.OCR}")
+            # logger.info(f"CRAFT trOCR:\n{self.OCR}")
 
         if 'LLaVA' in self.OCR_option: # This option does not produce an OCR helper image
             self.json_report.set_text(text_main=f'Working on LLaVA {self.Llava.model_path} transcription :construction:')
@@ -701,7 +701,7 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nLLaVA OCR:\n{str_output}" + f"\nLLaVA OCR:\n{str_output}"
             else:
                 self.OCR = self.OCR + f"\nLLaVA OCR:\n{str_output}"
-            logger.info(f"LLaVA OCR:\n{self.OCR}")
+            # logger.info(f"LLaVA OCR:\n{self.OCR}")
 
         if 'normal' in self.OCR_option or 'hand' in self.OCR_option:
             if 'normal' in self.OCR_option:
@@ -719,7 +719,7 @@ class OCREngine:
                 self.OCR = self.OCR + part_OCR + part_OCR
             else:
                 self.OCR = self.OCR + "\ntrOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
-            logger.info(f"OCR:\n{self.OCR}")
+            # logger.info(f"OCR:\n{self.OCR}")
 
         if do_create_OCR_helper_image and ('LLaVA' not in self.OCR_option):
             self.image = Image.open(self.path)
@@ -740,8 +740,6 @@ class OCREngine:
             if 'CRAFT' in self.OCR_option:
                 image_with_boxes_normal = self.draw_boxes('normal')
                 self.merged_image_normal = self.merge_images(image_with_boxes_normal, text_image_trOCR)
-
-            
 
             ### Merge final overlay image
             ### [original, normal bboxes, normal text]
@@ -774,238 +772,3 @@ class OCREngine:
             empty_cuda_cache()
         except:
             pass
-
-
-
-'''
-BBOX_COLOR = "black" # green cyan
-
-def render_text_on_black_image(image_path, handwritten_char_bounds_flat, handwritten_char_confidences, handwritten_char_heights, characters):
-    # Load the original image to get its dimensions
-    original_image = Image.open(image_path)
-    width, height = original_image.size
-
-    # Create a black image of the same size
-    black_image = Image.new("RGB", (width, height), "black")
-    draw = ImageDraw.Draw(black_image)
-
-    # Loop through each character
-    for bound, confidence, char_height, character in zip(handwritten_char_bounds_flat, handwritten_char_confidences, handwritten_char_heights, characters):
-        # Determine the font size based on the height of the character
-        font_size = int(char_height)
-        font = ImageFont.load_default().font_variant(size=font_size)
-
-        # Color of the character
-        color = confidence_to_color(confidence)
-
-        # Position of the text (using the bottom-left corner of the bounding box)
-        position = (bound["vertices"][0]["x"], bound["vertices"][0]["y"] - char_height)
-
-        # Draw the character
-        draw.text(position, character, fill=color, font=font)
-
-    return black_image
-
-def merge_images(image1, image2):
-    # Assuming both images are of the same size
-    width, height = image1.size
-    merged_image = Image.new("RGB", (width * 2, height))
-    merged_image.paste(image1, (0, 0))
-    merged_image.paste(image2, (width, 0))
-    return merged_image
-
-def draw_boxes(image, bounds, color):
-    if bounds:
-        draw = ImageDraw.Draw(image)
-        width, height = image.size
-        line_width = int((width + height) / 2 * 0.001)  # This sets the line width as 0.5% of the average dimension
-
-        for bound in bounds:
-            draw.polygon(
-                [
-                    bound["vertices"][0]["x"], bound["vertices"][0]["y"],
-                    bound["vertices"][1]["x"], bound["vertices"][1]["y"],
-                    bound["vertices"][2]["x"], bound["vertices"][2]["y"],
-                    bound["vertices"][3]["x"], bound["vertices"][3]["y"],
-                ],
-                outline=color,
-                width=line_width
-            )
-    return image
-
-def detect_text(path):
-    client = vision.ImageAnnotatorClient()
-    with io.open(path, 'rb') as image_file:
-        content = image_file.read()
-    image = vision.Image(content=content)
-    response = client.document_text_detection(image=image)
-    texts = response.text_annotations
-
-    if response.error.message:
-        raise Exception(
-            '{}\nFor more info on error messages, check: '
-            'https://cloud.google.com/apis/design/errors'.format(
-                response.error.message))
-
-    # Extract bounding boxes
-    bounds = []
-    text_to_box_mapping = {}
-    for text in texts[1:]:  # Skip the first entry, as it represents the entire detected text
-        # Convert BoundingPoly to dictionary
-        bound_dict = {
-            "vertices": [
-                {"x": vertex.x, "y": vertex.y} for vertex in text.bounding_poly.vertices
-            ]
-        }
-        bounds.append(bound_dict)
-        text_to_box_mapping[str(bound_dict)] = text.description
-
-    if texts:
-        # cleaned_text = texts[0].description.replace("\n", " ").replace("\t", " ").replace("|", " ")
-        cleaned_text = texts[0].description
-        return cleaned_text, bounds, text_to_box_mapping
-    else:
-        return '', None, None
-    
-def confidence_to_color(confidence):
-    """Convert confidence level to a color ranging from red (low confidence) to green (high confidence)."""
-    # Using HSL color space, where Hue varies from red to green
-    hue = (confidence - 0.5) * 120 / 0.5  # Scale confidence to range 0-120 (red to green in HSL)
-    r, g, b = colorsys.hls_to_rgb(hue/360, 0.5, 1)  # Convert to RGB
-    return (int(r*255), int(g*255), int(b*255))
-
-def overlay_boxes_on_image(path, typed_bounds, handwritten_char_bounds, handwritten_char_confidences, do_create_OCR_helper_image):
-    if do_create_OCR_helper_image:
-        image = Image.open(path)
-        draw = ImageDraw.Draw(image)
-        width, height = image.size
-        line_width = int((width + height) / 2 * 0.005)  # Adjust line width for character level
-
-        # Draw boxes for typed text
-        for bound in typed_bounds:
-            draw.polygon(
-                [
-                    bound["vertices"][0]["x"], bound["vertices"][0]["y"],
-                    bound["vertices"][1]["x"], bound["vertices"][1]["y"],
-                    bound["vertices"][2]["x"], bound["vertices"][2]["y"],
-                    bound["vertices"][3]["x"], bound["vertices"][3]["y"],
-                ],
-                outline=BBOX_COLOR,
-                width=1
-            )
-
-        # Draw a line segment at the bottom of each handwritten character
-        for bound, confidence in zip(handwritten_char_bounds, handwritten_char_confidences):
-            color = confidence_to_color(confidence)
-            # Use the bottom two vertices of the bounding box for the line
-            bottom_left = (bound["vertices"][3]["x"], bound["vertices"][3]["y"] + line_width)
-            bottom_right = (bound["vertices"][2]["x"], bound["vertices"][2]["y"] + line_width)
-            draw.line([bottom_left, bottom_right], fill=color, width=line_width)
-
-        text_image = render_text_on_black_image(path, handwritten_char_bounds, handwritten_char_confidences)
-        merged_image = merge_images(image, text_image)  # Assuming 'overlayed_image' is the image with lines
-
-
-        return merged_image
-    else:
-        return Image.open(path)
-    
-def detect_handwritten_ocr(path):
-    """Detects handwritten characters in a local image and returns their bounding boxes and confidence levels.
-
-    Args:
-    path: The path to the local file.
-
-    Returns:
-    A tuple of (text, bounding_boxes, confidences)
-    """
-    client = vision_beta.ImageAnnotatorClient()
-
-    with open(path, "rb") as image_file:
-        content = image_file.read()
-
-    image = vision_beta.Image(content=content)
-    image_context = vision_beta.ImageContext(language_hints=["en-t-i0-handwrit"])
-    response = client.document_text_detection(image=image, image_context=image_context)
-
-    if response.error.message:
-        raise Exception(
-            "{}\nFor more info on error messages, check: "
-            "https://cloud.google.com/apis/design/errors".format(response.error.message)
-        )
-
-    bounds = []
-    bounds_flat = []
-    height_flat = []
-    confidences = []
-    character = []
-    for page in response.full_text_annotation.pages:
-        for block in page.blocks:
-            for paragraph in block.paragraphs:
-                for word in paragraph.words:
-                    # Get the bottom Y-location (max Y) for the whole word
-                    Y = max(vertex.y for vertex in word.bounding_box.vertices)
-
-                    # Get the height of the word's bounding box
-                    H = Y - min(vertex.y for vertex in word.bounding_box.vertices)
-
-                    for symbol in word.symbols:
-                        # Collecting bounding box for each symbol
-                        bound_dict = {
-                            "vertices": [
-                                {"x": vertex.x, "y": vertex.y} for vertex in symbol.bounding_box.vertices
-                            ]
-                        }
-                        bounds.append(bound_dict)
-
-                        # Bounds with same bottom y height
-                        bounds_flat_dict = {
-                            "vertices": [
-                                {"x": vertex.x, "y": Y} for vertex in symbol.bounding_box.vertices
-                            ]
-                        }
-                        bounds_flat.append(bounds_flat_dict)
-                        
-                        # Add the word's height
-                        height_flat.append(H)
-
-                        # Collecting confidence for each symbol
-                        symbol_confidence = round(symbol.confidence, 4)
-                        confidences.append(symbol_confidence)
-                        character.append(symbol.text)
-
-    cleaned_text = response.full_text_annotation.text
-
-    return cleaned_text, bounds, bounds_flat, height_flat, confidences, character
-
-
-
-def process_image(path, do_create_OCR_helper_image):
-    typed_text, typed_bounds, _ = detect_text(path)
-    handwritten_text, handwritten_bounds, _ = detect_handwritten_ocr(path)
-
-    overlayed_image = overlay_boxes_on_image(path, typed_bounds, handwritten_bounds, do_create_OCR_helper_image)
-    return typed_text, handwritten_text, overlayed_image
-
-'''
-
-# ''' Google Vision'''
-# def detect_text(path):
-#     """Detects text in the file located in the local filesystem."""
-#     client = vision.ImageAnnotatorClient()
-
-#     with io.open(path, 'rb') as image_file:
-#         content = image_file.read()
-
-#     image = vision.Image(content=content)
-
-#     response = client.document_text_detection(image=image)
-#     texts = response.text_annotations
-
-#     if response.error.message:
-#         raise Exception(
-#             '{}\nFor more info on error messages, check: '
-#             'https://cloud.google.com/apis/design/errors'.format(
-#                 response.error.message))
-
-#     return texts[0].description if texts else ''
