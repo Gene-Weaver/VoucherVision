@@ -213,18 +213,20 @@ Installation should basically be the same for Linux.
 4. Activate the Conda environment
     <pre><code class="language-python">conda activate voucher_vision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-5. Clone the VoucherVision repository
+5. Use `cd` to move to the directory where you want VoucherVision to live
+6. Install `git` so that we can clone the repo
+    <pre><code class="language-python">conda install git</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+6. Clone the VoucherVision repository
     <pre><code class="language-python">git clone https://github.com/Gene-Weaver/VoucherVision.git</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+    Move into the VoucherVision home directory
     <pre><code class="language-python">cd VoucherVision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-6. Install required packages
-    <pre><code class="language-python">conda install numpy pandas</code></pre>
+7. Then we need to install some packages using pip
+    <pre><code class="language-python">pip install -r requirements.txt</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-Then we need to install some packages using pip
-    <pre><code class="language-python">pip install -r requirements_not_in_conda.txt</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-7. Install the NVIDIA GPU + CUDA toolkit [(see help page)](https://anaconda.org/anaconda/cudnn)
+8. Install the NVIDIA GPU + CUDA toolkit [(see help page)](https://anaconda.org/anaconda/cudnn)
     <pre><code class="language-python">conda update --force conda</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     <pre><code class="language-python">conda update conda</code></pre>

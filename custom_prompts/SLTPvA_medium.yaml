@@ -1,0 +1,87 @@
+prompt_author: Will Weaver          
+prompt_author_institution: University of Michigan    
+prompt_name: SLTPvA_medium
+prompt_version: v-1-0      
+prompt_description: Prompt developed by the University of Michigan. 
+  SLTPvA prompts all have standardized column headers (fields) that were chosen due to their reliability and prevalence in herbarium records.
+  All field descriptions are based on the official Darwin Core guidelines.     
+  SLTPvA_long - The most verbose prompt option. Descriptions closely follow DwC guides. Detailed rules for the LLM to follow. Works best with double or triple OCR to increase attention back to the OCR (select 'use both OCR models' or 'handwritten + printed' along with trOCR).
+  SLTPvA_medium - Shorter verion of _long. 
+  SLTPvA_short - The least verbose possible prompt while still providing rules and DwC descriptions.    
+LLM: General Purpose
+instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+  2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
+  3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
+  4. Duplicate dictionary fields are not allowed.
+  5. Ensure all JSON keys are in camel case.
+  6. Ensure new JSON field values follow sentence case capitalization.
+  7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  9. Only return a JSON dictionary represented as a string. You should not explain your answer.
+json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key.
+rules:
+  catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.
+  order: The full scientific name of the order in which the taxon is classified. Order must be capitalized. 
+  family: The full scientific name of the family in which the taxon is classified. Family must be capitalized. 
+  scientificName: The scientific name of the taxon including genus, specific epithet, 
+      and any lower classifications.
+  scientificNameAuthorship: The authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclaturalCode.
+  genus: Taxonomic determination to genus. Genus must be capitalized. 
+  subgenus: The full scientific name of the subgenus in which the taxon is classified. 
+  specificEpithet: The name of the first or species epithet of the scientificName. Only include the species epithet.
+  infraspecificEpithet: The name of the lowest or terminal infraspecific epithet of the scientificName, excluding any rank designation.
+  identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon to the subject organism. This is not the specimen collector. 
+  recordedBy: A comma separated list of names of people, groups, or organizations
+  recordNumber: An identifier given to the specimen at the time it was recorded. 
+  verbatimEventDate: The verbatim original representation of the date and time information for when the specimen was collected.
+  eventDate: Date the specimen was collected formatted as year-month-day YYYY-MM-DD. 
+  habitat: A category or description of the habitat in which the specimen collection event occurred.
+  occurrenceRemarks: Text describing the specimen's geographic location, appearance of the specimen, presence or absence of a taxon at a the collection location, the significance of the specimen, such as a specific expedition or notable collection, plant features and descriptions.
+  country: The name of the country or major administrative unit in which the specimen was originally collected.
+  stateProvince: The name of the next smaller administrative region than country (state, province, canton, department, region, etc.) in which the specimen was originally collected.
+  county: The full, unabbreviated name of the next smaller administrative region than stateProvince (county, shire, department, parish etc.) in which the specimen was originally collected.
+  municipality: The full, unabbreviated name of the next smaller administrative region than county (city, municipality, etc.) in which the specimen was originally collected.
+  locality: Description of geographic location, landscape, landmarks, regional
+      features, nearby places, or any contextual information aiding in pinpointing
+      the exact origin or location of the specimen.
+  degreeOfEstablishment: Cultivated plants are intentionally grown by humans. In text descriptions,
+      look for planting dates, garden locations, ornamental, cultivar names, garden,
+      or farm to indicate cultivated plant. Use either - unknown or cultivated.
+  decimalLatitude: Latitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
+  decimalLongitude: Longitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
+  verbatimCoordinates: Verbatim location coordinates as they appear on the label.
+  minimumElevationInMeters: Minimum elevation or altitude in meters. Only if units are explicit then convert from feet ("ft" or "ft."" or "feet") to meters ("m" or "m." or "meters"). Round to integer.
+  maximumElevationInMeters: Maximum elevation or altitude in meters. If only one elevation is present, then max_elevation should be set to the null_value. Only if units are explicit then convert from feet ("ft" or "ft." or "feet") to meters ("m" or "m." or "meters"). Round to integer.
+mapping:
+  TAXONOMY:
+  - catalogNumber
+  - order
+  - family
+  - scientificName
+  - scientificNameAuthorship
+  - genus
+  - subgenus
+  - specificEpithet
+  - infraspecificEpithet
+  GEOGRAPHY:
+  - country
+  - stateProvince
+  - county
+  - municipality
+  - decimalLatitude
+  - decimalLongitude
+  - verbatimCoordinates
+  LOCALITY:
+  - locality
+  - habitat
+  - minimumElevationInMeters
+  - maximumElevationInMeters
+  COLLECTING:
+  - identifiedBy
+  - recordedBy
+  - recordNumber
+  - verbatimEventDate
+  - eventDate
+  - degreeOfEstablishment
+  - occurrenceRemarks
+  MISC: 

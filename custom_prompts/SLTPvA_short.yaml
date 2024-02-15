@@ -1,0 +1,82 @@
+prompt_author: Will Weaver          
+prompt_author_institution: University of Michigan    
+prompt_name: SLTPvA_short
+prompt_version: v-1-0
+prompt_description: Prompt developed by the University of Michigan. 
+  SLTPvA prompts all have standardized column headers (fields) that were chosen due to their reliability and prevalence in herbarium records.
+  All field descriptions are based on the official Darwin Core guidelines.     
+  SLTPvA_long - The most verbose prompt option. Descriptions closely follow DwC guides. Detailed rules for the LLM to follow. Works best with double or triple OCR to increase attention back to the OCR (select 'use both OCR models' or 'handwritten + printed' along with trOCR).
+  SLTPvA_medium - Shorter verion of _long. 
+  SLTPvA_short - The least verbose possible prompt while still providing rules and DwC descriptions.   
+LLM: General Purpose
+instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+  2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
+  3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
+  4. Duplicate dictionary fields are not allowed.
+  5. Ensure all JSON keys are in camel case.
+  6. Ensure new JSON field values follow sentence case capitalization.
+  7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  9. Only return a JSON dictionary represented as a string. You should not explain your answer.
+json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key.
+rules:
+  catalogNumber: barcode identifier, at least 6 digits, fewer than 30 digits.
+  order: full scientific name of the Order in which the taxon is classified. Order must be capitalized. 
+  family: full scientific name of the Family in which the taxon is classified. Family must be capitalized. 
+  scientificName: scientific name of the taxon including Genus, specific epithet, and any lower classifications.
+  scientificNameAuthorship: authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclaturalCode.
+  genus: taxonomic determination to Genus, Genus must be capitalized. 
+  subgenus: name of the subgenus.
+  specificEpithet: The name of the first or species epithet of the scientificName. Only include the species epithet.
+  infraspecificEpithet: lowest or terminal infraspecific epithet of the scientificName.
+  identifiedBy: list of names of people, doctors, professors, groups, or organizations who identified, determined the taxon name to the subject organism. This is not the specimen collector. 
+  recordedBy: list of names of people, doctors, professors, groups, or organizations.
+  recordNumber: identifier given to the specimen at the time it was recorded. 
+  verbatimEventDate: The verbatim original representation of the date and time information for when the specimen was collected.
+  eventDate: collection date formatted as year-month-day YYYY-MM-DD. 
+  habitat: habitat.
+  occurrenceRemarks: all descriptive text in the OCR rearranged into sensible sentences or sentence fragments.
+  country: country or major administrative unit.
+  stateProvince: state, province, canton, department, region, etc.
+  county: county, shire, department, parish etc.
+  municipality: city, municipality, etc.
+  locality: description of geographic information aiding in pinpointing the exact origin or location of the specimen.
+  degreeOfEstablishment: cultivated plants are intentionally grown by humans. Use either - unknown or cultivated.
+  decimalLatitude: latitude decimal coordinate.
+  decimalLongitude: longitude decimal coordinate.
+  verbatimCoordinates: verbatim location coordinates.
+  minimumElevationInMeters: minimum elevation or altitude in meters.
+  maximumElevationInMeters: maximum elevation or altitude in meters.
+mapping:
+  TAXONOMY:
+  - catalogNumber
+  - order
+  - family
+  - scientificName
+  - scientificNameAuthorship
+  - genus
+  - subgenus
+  - specificEpithet
+  - infraspecificEpithet
+  GEOGRAPHY:
+  - country
+  - stateProvince
+  - county
+  - municipality
+  - decimalLatitude
+  - decimalLongitude
+  - verbatimCoordinates
+  LOCALITY:
+  - locality
+  - habitat
+  - minimumElevationInMeters
+  - maximumElevationInMeters
+  COLLECTING:
+  - identifiedBy
+  - recordedBy
+  - recordNumber
+  - verbatimEventDate
+  - eventDate
+  - degreeOfEstablishment
+  - occurrenceRemarks
+  MISC: 

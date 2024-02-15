@@ -1000,7 +1000,8 @@ def create_private_file():
         st.write("API keys are stored in `../VoucherVision/PRIVATE_DATA.yaml`.")
         st.write("Deleting this file will allow you to reset API keys. Alternatively, you can edit the keys in the user interface or by manually editing the `.yaml` file in a text editor.")
         st.write("Leave keys blank if you do not intend to use that service.")
-        
+        st.info("Note: You can manually edit these API keys later by opening the /PRIVATE_DATA.yaml file in a plain text editor.")
+
         st.write("---")
         st.subheader("Google Vision  (*Required*) / Google PaLM 2 / Google Gemini")
         st.markdown("VoucherVision currently uses [Google Vision API](https://cloud.google.com/vision/docs/ocr) for OCR. Generating an API key for this is more involved than the others. [Please carefully follow the instructions outlined here to create and setup your account.](https://cloud.google.com/vision/docs/setup) ")
@@ -1136,21 +1137,24 @@ def create_private_file():
         st.write("---")
         st.subheader("HERE Geocoding")
         st.markdown('Follow these [instructions](https://platform.here.com/sign-up?step=verify-identity) to generate an API key for HERE.')
-        hre_APP_ID = st.text_input("HERE Geocoding App ID", cfg_private['here'].get('APP_ID', ''),
+        here_APP_ID = st.text_input("HERE Geocoding App ID", cfg_private['here'].get('APP_ID', ''),
                                                  help='e.g. a 32-character string',
                                                  placeholder='e.g. SATgthsykuE64FgrrrrEervr3S4455t_geyDeGq',
                                                  type='password')
-        hre_API_KEY = st.text_input("HERE Geocoding API Key", cfg_private['here'].get('API_KEY', ''),
+        here_API_KEY = st.text_input("HERE Geocoding API Key", cfg_private['here'].get('API_KEY', ''),
                                                  help='e.g. a 32-character string',
                                                  placeholder='e.g. SATgthsykuE64FgrrrrEervr3S4455t_geyDeGq',
                                                  type='password')
 
 
 
-        st.button("Set API Keys",type='primary', on_click=save_changes_to_API_keys, args=[cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
-                                                                    azure_openai_api_base,azure_openai_organization,azure_openai_api_type,
-                                                                    google_application_credentials, google_project_location, google_project_id,
-                                                                    mistral_API_KEY, hre_APP_ID, hre_API_KEY])
+        st.button("Set API Keys",type='primary', on_click=save_changes_to_API_keys, 
+                    args=[cfg_private,
+                        openai_api_key,
+                        azure_openai_api_version, azure_openai_api_key, azure_openai_api_base, azure_openai_organization, azure_openai_api_type,
+                        google_application_credentials, google_project_location, google_project_id,
+                        mistral_API_KEY, 
+                        here_APP_ID, here_API_KEY])
         if st.button('Proceed to VoucherVision'):
             st.session_state.private_file = does_private_file_exist()
             st.session_state.proceed_to_private = False
@@ -1158,10 +1162,12 @@ def create_private_file():
             st.rerun()
        
 
-def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version,azure_openai_api_key,
-                            azure_openai_api_base,azure_openai_organization,azure_openai_api_type,
-                            google_application_credentials, google_project_location, google_project_id,
-                            mistral_API_KEY, hre_APP_ID, hre_API_KEY): 
+def save_changes_to_API_keys(cfg_private,
+                        openai_api_key,
+                        azure_openai_api_version, azure_openai_api_key, azure_openai_api_base, azure_openai_organization, azure_openai_api_type,
+                        google_application_credentials, google_project_location, google_project_id,
+                        mistral_API_KEY, 
+                        here_APP_ID, here_API_KEY): 
     
     # Update the configuration dictionary with the new values
     cfg_private['openai']['OPENAI_API_KEY'] = openai_api_key 
@@ -1173,15 +1179,16 @@ def save_changes_to_API_keys(cfg_private,openai_api_key,azure_openai_api_version
     cfg_private['openai_azure']['OPENAI_API_TYPE'] = azure_openai_api_type
 
     cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS'] = google_application_credentials
-    cfg_private['google']['GOOGLE_PROJECT_ID'] = google_project_location
-    cfg_private['google']['GOOGLE_LOCATION'] = google_project_id
+    cfg_private['google']['GOOGLE_PROJECT_ID'] = google_project_id
+    cfg_private['google']['GOOGLE_LOCATION'] = google_project_location 
 
     cfg_private['mistral']['MISTRAL_API_KEY'] = mistral_API_KEY
 
-    cfg_private['here']['APP_ID'] = hre_APP_ID
-    cfg_private['here']['API_KEY'] = hre_API_KEY
+    cfg_private['here']['APP_ID'] = here_APP_ID
+    cfg_private['here']['API_KEY'] = here_API_KEY
     # Call the function to write the updated configuration to the YAML file
     write_config_file(cfg_private, st.session_state.dir_home, filename="PRIVATE_DATA.yaml")
+    st.success(f"API Keys saved to {os.path.joins(st.session_state.dir_home, 'PRIVATE_DATA.yaml')}")
     # st.session_state.private_file = does_private_file_exist()
 
 # Function to load a YAML file and update session_state

@@ -7,6 +7,11 @@ yolov8x-pose.pt
 yolov8n.pt
 *PRIVATE_DATA*
 
+# Prompts
+/custom_prompts/*
+!/custom_prompts/SLTPvA_long.yaml
+!/custom_prompts/SLTPvA_medium.yaml
+!/custom_prompts/SLTPvA_short.yaml
 
 # Dirs
 custom_prompts_deprecated/
@@ -39,10 +44,7 @@ demo/validation_configs/*
 !/bin/version.yml
 release*
 expense_report/*
-/custom_prompts/*
-!/custom_prompts/required_structure.yaml
-!/custom_prompts/version_2.yaml
-!/custom_prompts/version_2_OSU.yaml
+
 leafmachine2/*/.gitignore
 
 /bin/*
