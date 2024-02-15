@@ -240,6 +240,10 @@ Installation should basically be the same for Linux.
     OR...
     <pre><code class="language-python">conda install -c conda-forge cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+11. Install correct protobuf
+    <pre><code class="language-python">pip install protobuf==3.20.0</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+
 
 <!--
 1. Install the required dependencies to use VoucherVision  
