@@ -226,24 +226,45 @@ Installation should basically be the same for Linux.
     Move into the VoucherVision home directory
     <pre><code class="language-python">cd VoucherVision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+
 9. Then we need to install some packages using pip
     <pre><code class="language-python">pip install -r requirements.txt</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 10. Upgrade some troublesome packages
     <pre><code class="language-python">pip install --upgrade tensorflow</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-10. Install the NVIDIA GPU + CUDA toolkit [(see help page)](https://anaconda.org/anaconda/cudnn)
-    <pre><code class="language-python">conda install -c anaconda cudnn</code></pre>
+    <pre><code class="language-python">pip install --upgrade torch torchaudio torchvision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-    View the installed version (useful for troubleshooting)
+
+    
+11. Make sure that your GPU can be recognized. While in the terminal/powershell, type
+    <pre><code class="language-python">python</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    This opens a Python script. Import torch
+    <pre><code class="language-python">import torch</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    Make sure the GPU is found
+    <pre><code class="language-python">torch.cuda.is_available()</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    Exit the Python instance
+    <pre><code class="language-python">exit()</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+
+12. If `torch.cuda.is_available()` returned `True`, then you should be set. Otherwise, you need to make sure that your CUDA version is compatible with the PyTorch version. It's usually a good idea to leave the CUDA drivers alone and find the right PyTorch version since installing/updating CUDA can be non-trivial.
+    - Example: If `torch.cuda.is_available()` returned `False`, I would first check my CUDA version. In a terminal, type
+    <pre><code class="language-python">nvidia-smi</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    - If this throws an error, then you do not have CUDA installed. Please see the troubleshooting steps below. 
+    - Otherwise, look for `CUDA Version: XX.X`. In this example, we saw `CUDA Version: 11.7`
+    - Go to [https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/), search for `11.7` (or your CUDA version) and find the `conda` installation version
+    - We need a PyTorch version greater than 2.X.X. If none exists, then your CUDA version may be too old.
+    - When I searched for `11.7`, I found this: `conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia`
+    - Install your matching version
+    - Verify the installation 
     <pre><code class="language-python">conda list cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-    OR...
-    <pre><code class="language-python">conda install -c conda-forge cudnn</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-11. Install correct protobuf
-    <pre><code class="language-python">pip install protobuf==3.20.0</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    - Now we should have the right PyTorch version. Check to see if `torch.cuda.is_available()` returns `True` by following the same procedure as above
+    - Check `torch.cuda.is_available()` one more time just to be sure. 
 
 
 <!--
