@@ -36,10 +36,11 @@ class APIvalidation:
 
 
     def has_API_key(self, val):
-        if val:
-            return True
-        else:
-            return False
+        return isinstance(val, str) and bool(val.strip())
+        # if val:
+        #     return True
+        # else:
+        #     return False
             
     def check_openai_api_key(self):
         if self.is_hf:

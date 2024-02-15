@@ -417,10 +417,11 @@ class VoucherVision():
     
 
     def has_API_key(self, val):
-        if val != '':
-            return True
-        else:
-            return False
+        return isinstance(val, str) and bool(val.strip())
+        # if val != '':
+        #     return True
+        # else:
+        #     return False
         
 
     def get_google_credentials(self): # Also used for google drive
@@ -512,7 +513,6 @@ class VoucherVision():
                     azure_endpoint = os.getenv('AZURE_API_BASE'),
                     openai_organization = os.getenv('AZURE_ORGANIZATION'),
                 )
-                self.has_key_azure_openai = True
                 
             else:
                 # Initialize the Azure OpenAI client
@@ -523,7 +523,6 @@ class VoucherVision():
                     azure_endpoint = self.cfg_private['openai_azure']['OPENAI_API_BASE'],
                     openai_organization = self.cfg_private['openai_azure']['OPENAI_ORGANIZATION'],
                 )
-                self.has_key_azure_openai = True
                 
 
         ### Mistral
