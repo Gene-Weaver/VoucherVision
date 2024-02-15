@@ -147,10 +147,10 @@ Our public demo, while lacking several quality control and reliability features 
 
 ---
 
-# Installing VoucherVision
+# Installing VoucherVision (using PIP)
 
 ## Prerequisites
-- Python 3.10 or later 
+- Python 3.10.4 or later 
 - Optional: an Nvidia GPU + CUDA for running LeafMachine2
 
 ## Installation - Cloning the VoucherVision Repository
@@ -200,6 +200,42 @@ Installation should basically be the same for Linux.
 `cd` into `VoucherVision`
 <pre><code class="language-python">pip install -r requirements.txt</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
+
+---
+
+# Installing VoucherVision (using conda)
+1. First, install Anaconda using default settings
+    - [Anaconda](https://www.anaconda.com/products/individual)
+2. Open the Anaconda Powershell (Windows) or the terminal (macOS/Linux)
+3. Create a new Conda environment
+    <pre><code class="language-python">conda create --name voucher_vision python=3.10.4</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+4. Activate the Conda environment
+    <pre><code class="language-python">conda activate voucher_vision</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+5. Clone the VoucherVision repository
+    <pre><code class="language-python">git clone https://github.com/Gene-Weaver/VoucherVision.git</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    <pre><code class="language-python">cd VoucherVision</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+6. Install required packages
+    <pre><code class="language-python">conda install numpy pandas</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+Then we need to install some packages using pip
+    <pre><code class="language-python">pip install -r requirements_not_in_conda.txt</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+7. Install the NVIDIA GPU + CUDA toolkit [(see help page)](https://anaconda.org/anaconda/cudnn)
+    <pre><code class="language-python">conda update --force conda</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    <pre><code class="language-python">conda update conda</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    <pre><code class="language-python">conda install -c anaconda cudnn</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    <pre><code class="language-python">conda list cudnn</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    OR...
+    <pre><code class="language-python">conda install -c conda-forge cudnn</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 <!--
 1. Install the required dependencies to use VoucherVision  
