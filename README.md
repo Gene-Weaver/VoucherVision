@@ -211,15 +211,12 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">conda update conda</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 4. Create a new Conda environment
-    <pre><code class="language-python">conda create --name vouchervision python=3.10.4</code></pre>
+    <pre><code class="language-python">conda create --name vouchervision python=3.10.4 git</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 5. Activate the Conda environment
     <pre><code class="language-python">conda activate vouchervision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 6. Use `cd` to move to the directory where you want VoucherVision to live
-7. Install `git` so that we can clone the repo
-    <pre><code class="language-python">conda install git</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
 8. Clone the VoucherVision repository
     <pre><code class="language-python">git clone https://github.com/Gene-Weaver/VoucherVision.git</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
@@ -227,16 +224,15 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">cd VoucherVision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-9. Then we need to install some packages 
+9. Then we need to install some packages using our `environment.yaml`.
     <pre><code class="language-python">conda env update --file environment.yaml --prune</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+
 10. Upgrade some troublesome packages
-    <pre><code class="language-python">pip install --upgrade tensorflow</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-    <pre><code class="language-python">pip install --upgrade torch torchaudio torchvision</code></pre>
+    <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-> If you do NOT have a GPU, then you are all set. Otherwise...
+> If you do *NOT* have a GPU, then you are all set. Otherwise...
     
 11. Make sure that your GPU can be recognized. While in the terminal/powershell, type
     <pre><code class="language-python">python</code></pre>
