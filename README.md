@@ -236,6 +236,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">pip install --upgrade torch torchaudio torchvision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
+> If you do NOT have a GPU, then you are all set. Otherwise...
     
 11. Make sure that your GPU can be recognized. While in the terminal/powershell, type
     <pre><code class="language-python">python</code></pre>
