@@ -41,7 +41,7 @@ if __name__ == "__main__":
             # resolve_path(os.path.join(dir_home,"vouchervision", "VoucherVision_GUI.py")),
             "--global.developmentMode=false",
             # "--server.port=8545",
-            "--server.port=8546",
+            f"--server.port={free_port}",
             # Toggle below for HF vs Local
             # "--is_hf=1",
             # "--is_hf=0",
