@@ -8,7 +8,7 @@ import psutil
 import threading
 import torch
 from datetime import datetime
-from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO
+from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
 from vouchervision.tool_geolocate_HERE import validate_coordinates_here
 from vouchervision.tool_wikipedia import validate_wikipedia
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -42,8 +42,23 @@ def run_tools(output, tool_WFO, tool_GEO, tool_wikipedia, json_file_path_wiki):
 
     # Here, all threads have completed
     # Extracting results
-    output_WFO, WFO_record = results.get('validate_taxonomy_WFO', (None, None))
-    output_GEO, GEO_record = results.get('validate_coordinates_here', (None, None))
+    Matcher = WFONameMatcher(tool_WFO)
+    GEO_dict_null = {
+        'GEO_override_OCR': False,
+        'GEO_method': '',
+        'GEO_formatted_full_string': '',
+        'GEO_decimal_lat': '',
+        'GEO_decimal_long': '',
+        'GEO_city': '',
+        'GEO_county': '',
+        'GEO_state': '',
+        'GEO_state_code': '',
+        'GEO_country': '',
+        'GEO_country_code': '',
+        'GEO_continent': '',
+    }
+    output_WFO, WFO_record = results.get('validate_taxonomy_WFO', (output, Matcher.NULL_DICT))
+    output_GEO, GEO_record = results.get('validate_coordinates_here', (output, GEO_dict_null))
 
     return output_WFO, WFO_record, output_GEO, GEO_record
 
