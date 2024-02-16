@@ -223,7 +223,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">mamba create --name vouchervision python=3.10 git -c conda-forge</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 5. Activate the Conda environment
-    <pre><code class="language-python">mamba activate vouchervision</code></pre>
+    <pre><code class="language-python">conda activate vouchervision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 6. Use `cd` to move to the directory where you want VoucherVision to live
 8. Clone the VoucherVision repository
