@@ -13,7 +13,8 @@ Table of Contents
    * [Prerequisites](#prerequisites)
    * [Installation - Cloning the VoucherVision Repository](#installation---cloning-the-VoucherVision-repository)
    * [About Python Virtual Environments](#about-python-virtual-environments)
-   * [Installation - Windows 10+](#installation---windows-10)
+   * [Installation - Windows 10+ (using pip)](#installing-vouchervision-using-pip)
+   * [Installation - Windows 10+ (using conda)](#installing-vouchervision-using-conda)
       * [Virtual Environment](#virtual-environment-1)
       * [Installing Packages](#installing-packages-1)
    * [Troubleshooting CUDA](#troubleshooting-cuda)
@@ -201,6 +202,44 @@ Installation should basically be the same for Linux.
 <pre><code class="language-python">pip install -r requirements.txt</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
 
+> If you do *NOT* have a GPU, then you are all set. Otherwise...
+    
+2. Make sure that your GPU can be recognized. While in the terminal/powershell, type
+    <pre><code class="language-python">python</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    This opens a Python script. Import torch
+    <pre><code class="language-python">import torch</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    Make sure the GPU is found
+    <pre><code class="language-python">torch.cuda.is_available()</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    Exit the Python instance
+    <pre><code class="language-python">exit()</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+
+3. If `torch.cuda.is_available()` returned `True`, then you should be set. Otherwise, you need to make sure that your CUDA version is compatible with the PyTorch version. It's usually a good idea to leave the CUDA drivers alone and find the right PyTorch version since installing/updating CUDA can be non-trivial.
+    - Example: If `torch.cuda.is_available()` returned `False`, I would first check my CUDA version. In a terminal, type
+    <pre><code class="language-python">nvidia-smi</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    - If this throws an error, then you do not have CUDA installed. Please see the troubleshooting steps below. 
+    - Otherwise, look for `CUDA Version: XX.X`. In this example, we saw `CUDA Version: 12.1`
+    - Go to [https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/), search for `12.1` (or your CUDA version) and find the `conda` installation version. There are MacOS options too. 
+    - We need a PyTorch version greater than 2.X.X. If none exists, then your CUDA version may be too old.
+    - When I searched for `12.1`, I found this: `pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu121`
+    - Install your matching version 
+    - Cheat sheet:
+        - CUDA 11.8
+        <pre><code class="language-python">pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118</code></pre>
+        <button class="btn" data-clipboard-target="#code-snippet"></button>
+        - CUDA 12.1
+        <pre><code class="language-python">pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu121</code></pre>
+        <button class="btn" data-clipboard-target="#code-snippet"></button>
+
+    - Verify the installation 
+    - Now we should have the right PyTorch version. Check to see if `torch.cuda.is_available()` returns `True` by following the same procedure as above
+
+> If your CUDA version < 11.8, then you should probably upgrade to 12.1
+> If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 ---
 
 # Installing VoucherVision (using conda)
@@ -232,18 +271,20 @@ Installation should basically be the same for Linux.
     Move into the VoucherVision home directory
     <pre><code class="language-python">cd VoucherVision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-
+<!--
 9. Then we need to install some packages using our `environment.yaml`. Use Mamba for a faster installation process.
     <pre><code class="language-python">mamba env update --file environment.yaml</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-
-10. Then pip packages
-    <pre><code class="language-python">pip install -r requirements_conda.txt</code></pre>
+-->
+10. Then we need to install some packages
+    <pre><code class="language-python">pip install -r requirements.txt</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+<!--
 
 10. Upgrade some troublesome packages using pip
     <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision tqdm labelbox pydantic transformers pydantic</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+-->
 
 > If you do *NOT* have a GPU, then you are all set. Otherwise...
     
@@ -287,6 +328,7 @@ Installation should basically be the same for Linux.
     - Now we should have the right PyTorch version. Check to see if `torch.cuda.is_available()` returns `True` by following the same procedure as above
     - Check `torch.cuda.is_available()` one more time just to be sure. 
 
+> If your CUDA version < 11.8, then you should probably upgrade to 12.1
 > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 
 <!--
