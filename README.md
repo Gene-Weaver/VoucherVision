@@ -237,6 +237,10 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">mamba env update --file environment.yaml</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
+10. Then pip packages
+    <pre><code class="language-python">pip install -r requirements_conda.txt</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+
 10. Upgrade some troublesome packages using pip
     <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision tqdm labelbox</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
