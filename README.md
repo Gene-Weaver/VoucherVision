@@ -213,7 +213,11 @@ Installation should basically be the same for Linux.
 3. Make sure Conda and Mamba are up to date
     <pre><code class="language-python">conda update conda</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-    <pre><code class="language-python">mamba update mamba</code></pre>
+    <pre><code class="language-python">conda update mamba -c conda-forge</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    <pre><code class="language-python">mamba update --all</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    <pre><code class="language-python">mamba clean --all</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 4. Create a new Conda environment using Mamba
     <pre><code class="language-python">mamba create --name vouchervision python=3.10.4 git -c conda-forge</code></pre>
