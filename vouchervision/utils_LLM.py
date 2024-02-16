@@ -8,6 +8,45 @@ import psutil
 import threading
 import torch
 from datetime import datetime
+from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO
+from vouchervision.tool_geolocate_HERE import validate_coordinates_here
+from vouchervision.tool_wikipedia import validate_wikipedia
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+
+def run_tools(output, tool_WFO, tool_GEO, tool_wikipedia, json_file_path_wiki):
+    # Define a function that will catch and return the results of your functions
+    def task(func, *args, **kwargs):
+        return func(*args, **kwargs)
+
+    # List of tasks to run in separate threads
+    tasks = [
+        (validate_taxonomy_WFO, (tool_WFO, output, False)),
+        (validate_coordinates_here, (tool_GEO, output, False)),
+        (validate_wikipedia, (tool_wikipedia, json_file_path_wiki, output)),
+    ]
+
+    # Results storage
+    results = {}
+
+    # Use ThreadPoolExecutor to execute each function in its own thread
+    with ThreadPoolExecutor() as executor:
+        future_to_func = {executor.submit(task, func, *args): func.__name__ for func, args in tasks}
+        for future in as_completed(future_to_func):
+            func_name = future_to_func[future]
+            try:
+                # Collecting results
+                results[func_name] = future.result()
+            except Exception as exc:
+                print(f'{func_name} generated an exception: {exc}')
+
+    # Here, all threads have completed
+    # Extracting results
+    output_WFO, WFO_record = results.get('validate_taxonomy_WFO', (None, None))
+    output_GEO, GEO_record = results.get('validate_coordinates_here', (None, None))
+
+    return output_WFO, WFO_record, output_GEO, GEO_record
+
 
 def save_individual_prompt(prompt_template, txt_file_path_ind_prompt):
     with open(txt_file_path_ind_prompt, 'w',encoding='utf-8') as file:

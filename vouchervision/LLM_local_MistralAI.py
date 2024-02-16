@@ -6,11 +6,8 @@ from langchain_core.output_parsers import JsonOutputParser
 from huggingface_hub import hf_hub_download
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 
-from vouchervision.utils_LLM import SystemLoadMonitor, count_tokens, save_individual_prompt, sanitize_prompt
+from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
-from vouchervision.utils_taxonomy_WFO import validate_taxonomy_WFO
-from vouchervision.utils_geolocate_HERE import validate_coordinates_here
-from vouchervision.tool_wikipedia import validate_wikipedia
 
 '''
 Local Pipielines:
@@ -193,9 +190,7 @@ class LocalMistralHandler:
                         self.monitor.stop_inference_timer() # Starts tool timer too
 
                         json_report.set_text(text_main=f'Working on WFO, Geolocation, Links')
-                        output, WFO_record = validate_taxonomy_WFO(self.tool_WFO, output, replace_if_success_wfo=False) 
-                        output, GEO_record = validate_coordinates_here(self.tool_GEO, output, replace_if_success_geo=False) 
-                        validate_wikipedia(self.tool_wikipedia, json_file_path_wiki, output)
+                        output_WFO, WFO_record, output_GEO, GEO_record = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
 
                         save_individual_prompt(sanitize_prompt(prompt_template), txt_file_path_ind_prompt)
 

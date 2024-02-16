@@ -50,8 +50,8 @@ def build_VV_config(loaded_cfg=None):
         check_for_illegal_filenames = False
 
         LLM_version_user = 'Azure GPT 3.5 Instruct' #'Azure GPT 4 Turbo 1106-preview'
-        prompt_version = 'version_5.yaml' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
-        use_LeafMachine2_collage_images = False # Use LeafMachine2 collage images
+        prompt_version = 'SLTPvA_long.yaml' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
+        use_LeafMachine2_collage_images = True # Use LeafMachine2 collage images
         do_create_OCR_helper_image = True
 
         batch_size = 500
@@ -60,8 +60,8 @@ def build_VV_config(loaded_cfg=None):
         skip_vertical = False
         pdf_conversion_dpi = 100
 
-        path_domain_knowledge = os.path.join(dir_home,'domain_knowledge','SLTP_UM_AllAsiaMinimalInRegion.xlsx')
-        embeddings_database_name = os.path.splitext(os.path.basename(path_domain_knowledge))[0]
+        path_domain_knowledge = '' #os.path.join(dir_home,'domain_knowledge','SLTP_UM_AllAsiaMinimalInRegion.xlsx')
+        embeddings_database_name = '' #os.path.splitext(os.path.basename(path_domain_knowledge))[0]
 
         #############################################
         #############################################

@@ -206,12 +206,17 @@ Installation should basically be the same for Linux.
 # Installing VoucherVision (using conda)
 1. First, install Anaconda using default settings
     - [Anaconda](https://www.anaconda.com/products/individual)
-2. Open the Anaconda Powershell (Windows) or the terminal (macOS/Linux)
-3. Make sure it's up to date
+2. Open the Anaconda Powershell Prompt (Windows) or the terminal (macOS/Linux)
+3. Install Mamba in the base environment. We will use Mamba because it it *much* faster!
+    <pre><code class="language-python">conda install mamba -n base -c conda-forge</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+3. Make sure Conda and Mamba are up to date
     <pre><code class="language-python">conda update conda</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-4. Create a new Conda environment
-    <pre><code class="language-python">conda create --name vouchervision python=3.10.4 git</code></pre>
+    <pre><code class="language-python">mamba update mamba</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+4. Create a new Conda environment using Mamba
+    <pre><code class="language-python">mamba create --name vouchervision python=3.10.4 git -c conda-forge</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 5. Activate the Conda environment
     <pre><code class="language-python">conda activate vouchervision</code></pre>
@@ -224,11 +229,11 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">cd VoucherVision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-9. Then we need to install some packages using our `environment.yaml`.
-    <pre><code class="language-python">conda env update --file environment.yaml --prune</code></pre>
+9. Then we need to install some packages using our `environment.yaml`. Use Mamba for a faster installation process.
+    <pre><code class="language-python">mamba env update --file environment.yaml --prune</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-10. Upgrade some troublesome packages
+10. Upgrade some troublesome packages using pip
     <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
