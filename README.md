@@ -220,7 +220,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">mamba clean --all</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 4. Create a new Conda environment using Mamba
-    <pre><code class="language-python">mamba create --name vouchervision python=3.10.4 git -c conda-forge</code></pre>
+    <pre><code class="language-python">mamba create --name vouchervision python=3.10 git -c conda-forge</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 5. Activate the Conda environment
     <pre><code class="language-python">conda activate vouchervision</code></pre>
@@ -234,7 +234,7 @@ Installation should basically be the same for Linux.
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 9. Then we need to install some packages using our `environment.yaml`. Use Mamba for a faster installation process.
-    <pre><code class="language-python">mamba env update --file environment.yaml --prune</code></pre>
+    <pre><code class="language-python">mamba env update --file environment.yaml</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 10. Upgrade some troublesome packages using pip
