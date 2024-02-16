@@ -242,7 +242,7 @@ Installation should basically be the same for Linux.
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 10. Upgrade some troublesome packages using pip
-    <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision tqdm labelbox</code></pre>
+    <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision tqdm labelbox pydantic transformers</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 > If you do *NOT* have a GPU, then you are all set. Otherwise...

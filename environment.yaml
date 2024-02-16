@@ -8,7 +8,6 @@ dependencies:
   - wheel
   - numpy
   - opencv
-  - Pillow
   - pandas
   - matplotlib
   - matplotlib-inline
