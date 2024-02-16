@@ -5,7 +5,7 @@ channels:
 dependencies:
   - pip
   - wheel
-  - numpy==1.24.0
+  - numpy
   - opencv
   - streamlit
   - streamlit-extras
