@@ -238,7 +238,7 @@ Installation should basically be the same for Linux.
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 10. Upgrade some troublesome packages using pip
-    <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision</code></pre>
+    <pre><code class="language-python">pip install --upgrade tensorflow torch torchaudio torchvision tqdm labelbox</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 > If you do *NOT* have a GPU, then you are all set. Otherwise...
@@ -262,10 +262,21 @@ Installation should basically be the same for Linux.
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     - If this throws an error, then you do not have CUDA installed. Please see the troubleshooting steps below. 
     - Otherwise, look for `CUDA Version: XX.X`. In this example, we saw `CUDA Version: 11.7`
-    - Go to [https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/), search for `11.7` (or your CUDA version) and find the `conda` installation version
+    - Go to [https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/), search for `11.7` (or your CUDA version) and find the `conda` installation version. There are MacOS options too. 
     - We need a PyTorch version greater than 2.X.X. If none exists, then your CUDA version may be too old.
-    - When I searched for `11.7`, I found this: `conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia`
+    - When I searched for `11.7`, I found this: `mamba install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia`
     - Install your matching version (conda install can be very slow)
+    - Cheat sheet:
+        - CUDA 11.7
+        <pre><code class="language-python">conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia</code></pre>
+        <button class="btn" data-clipboard-target="#code-snippet"></button>
+        - CUDA 11.8
+        <pre><code class="language-python">conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=11.8 -c pytorch -c nvidia</code></pre>
+        <button class="btn" data-clipboard-target="#code-snippet"></button>
+        - CUDA 12.1
+        <pre><code class="language-python">conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=12.1 -c pytorch -c nvidia</code></pre>
+        <button class="btn" data-clipboard-target="#code-snippet"></button>
+
     - Verify the installation 
     <pre><code class="language-python">conda list cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>

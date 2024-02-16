@@ -13,6 +13,7 @@ dependencies:
   - pyyaml
   - Pillow
   - pandas
+  - labelbox
   - matplotlib
   - matplotlib-inline
   - tqdm
