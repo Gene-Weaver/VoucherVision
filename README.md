@@ -223,7 +223,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">mamba create --name vouchervision python=3.10 git -c conda-forge</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 5. Activate the Conda environment
-    <pre><code class="language-python">conda activate vouchervision</code></pre>
+    <pre><code class="language-python">mamba activate vouchervision</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 6. Use `cd` to move to the directory where you want VoucherVision to live
 8. Clone the VoucherVision repository
@@ -268,17 +268,17 @@ Installation should basically be the same for Linux.
     - Install your matching version (conda install can be very slow)
     - Cheat sheet:
         - CUDA 11.7
-        <pre><code class="language-python">conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia</code></pre>
+        <pre><code class="language-python">mamba install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia</code></pre>
         <button class="btn" data-clipboard-target="#code-snippet"></button>
         - CUDA 11.8
-        <pre><code class="language-python">conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=11.8 -c pytorch -c nvidia</code></pre>
+        <pre><code class="language-python">mamba install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=11.8 -c pytorch -c nvidia</code></pre>
         <button class="btn" data-clipboard-target="#code-snippet"></button>
         - CUDA 12.1
-        <pre><code class="language-python">conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=12.1 -c pytorch -c nvidia</code></pre>
+        <pre><code class="language-python">mamba install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=12.1 -c pytorch -c nvidia</code></pre>
         <button class="btn" data-clipboard-target="#code-snippet"></button>
 
     - Verify the installation 
-    <pre><code class="language-python">conda list cudnn</code></pre>
+    <pre><code class="language-python">mamba list cudnn</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     - Now we should have the right PyTorch version. Check to see if `torch.cuda.is_available()` returns `True` by following the same procedure as above
     - Check `torch.cuda.is_available()` one more time just to be sure. 
