@@ -379,8 +379,10 @@ class OCREngine:
 
         for bound, confidence, char_height, character in zip(bounds_flat, confidences, heights, characters):
             font_size = int(char_height)
-            # font = ImageFont.load_default().font_variant(size=font_size)
-            font = ImageFont.truetype("arial.ttf", font_size)
+            try:
+                font = ImageFont.truetype("arial.ttf", font_size)
+            except:
+                font = ImageFont.load_default().font_variant(size=font_size)
             if option == 'trOCR':
                 color = (0, 170, 255)
             else:
