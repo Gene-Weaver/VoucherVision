@@ -707,20 +707,29 @@ class OCREngine:
 
         if 'normal' in self.OCR_option or 'hand' in self.OCR_option:
             if 'normal' in self.OCR_option:
-                self.OCR = self.OCR + "\nGoogle Printed OCR:\n" + self.detect_text()
+                if self.double_OCR:
+                    part_OCR = self.OCR + "\nGoogle Printed OCR:\n" + self.detect_text()
+                    self.OCR = self.OCR + part_OCR + part_OCR
+                else:
+                    self.OCR = self.OCR + "\nGoogle Printed OCR:\n" + self.detect_text()
             if 'hand' in self.OCR_option:
-                self.OCR = self.OCR + "\nGoogle Handwritten OCR:\n" + self.detect_handwritten_ocr()
+                if self.double_OCR:
+                    part_OCR = self.OCR + "\nGoogle Handwritten OCR:\n" + self.detect_handwritten_ocr()
+                    self.OCR = self.OCR + part_OCR + part_OCR
+                else:
+                    self.OCR = self.OCR + "\nGoogle Handwritten OCR:\n" + self.detect_handwritten_ocr()
             # if self.OCR_option not in ['normal', 'hand', 'both']:
             #     self.OCR_option = 'both'
             #     self.detect_text()
             #     self.detect_handwritten_ocr()
 
             ### Optionally add trOCR to the self.OCR for additional context
-            if self.double_OCR:
-                part_OCR = "\ntrOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
-                self.OCR = self.OCR + part_OCR + part_OCR
-            else:
-                self.OCR = self.OCR + "\ntrOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
+            if self.do_use_trOCR:
+                if self.double_OCR:
+                    part_OCR = "\ntrOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
+                    self.OCR = self.OCR + part_OCR + part_OCR
+                else:
+                    self.OCR = self.OCR + "\ntrOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
             # logger.info(f"OCR:\n{self.OCR}")
 
         if do_create_OCR_helper_image and ('LLaVA' not in self.OCR_option):
