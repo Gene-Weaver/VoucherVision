@@ -1010,46 +1010,46 @@ def create_private_file():
         with st.expander("**View Google API Instructions**"):
         
             blog_text_and_image(text="Select your project, then in the search bar, search for `vertex ai` and select the option in the photo below.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_00.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_00.PNG'))
             
             blog_text_and_image(text="On the main overview page, click `Enable All Recommended APIs`. Sometimes this button may be hidden. In that case, enable all of the suggested APIs listed on this page.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_0.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_0.PNG'))
             
             blog_text_and_image(text="Sometimes this button may be hidden. In that case, enable all of the suggested APIs listed on this page.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_2.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_2.PNG'))
             
             blog_text_and_image(text="Make sure that all APIs are enabled.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_1.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_1.PNG'))
             
             blog_text_and_image(text="Find the `Vision AI API` service and go to its page.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_3.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_3.PNG'))
             
             blog_text_and_image(text="Find the `Vision AI API` service and go to its page. This is the API service required to use OCR in VoucherVision and must be enabled.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_6.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_6.PNG'))
             
             blog_text_and_image(text="You can also search for the Vertex AI Vision service.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_4.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_4.PNG'))
             
             blog_text_and_image(text=None, 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_5.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_5.PNG'))
             
             st.subheader("Getting a Google JSON authentication key")
             st.write("Google uses a JSON file to store additional authentication information. Save this file in a safe, private location and assign the `GOOGLE_APPLICATION_CREDENTIALS` value to the file path. For Hugging Face, copy the contents of the JSON file including the `\{\}` and paste it as the secret value.")
             st.write("To download your JSON key...")
             blog_text_and_image(text="Open the navigation menu. Click on the hamburger menu (three horizontal lines) in the top left corner. Go to IAM & Admin. ", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_7.png'),width=300)
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_7.PNG'),width=300)
             
             blog_text_and_image(text="In the navigation pane, hover over `IAM & Admin` and then click on `Service accounts`.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_8.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_8.PNG'))
             
             blog_text_and_image(text="Find the default Compute Engine service account, select it.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_9.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_9.PNG'))
             
             blog_text_and_image(text="Click `Add Key`.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_10.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_10.PNG'))
             
             blog_text_and_image(text="Select `JSON` and click create. This will download your key. Store this in a safe location. The file path to this safe location is the value that you enter into the `GOOGLE_APPLICATION_CREDENTIALS` value.", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_11.png'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_11.PNG'))
             
             blog_text(text_bold="Store Safely", text=": This file contains sensitive data that can be used to authenticate and bill your Google Cloud account. Never commit it to public repositories or expose it in any way. Always keep it safe and secure.")
 
