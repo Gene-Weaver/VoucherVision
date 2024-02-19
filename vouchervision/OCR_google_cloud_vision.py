@@ -731,6 +731,10 @@ class OCREngine:
                 else:
                     self.OCR = self.OCR + "\ntrOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
             # logger.info(f"OCR:\n{self.OCR}")
+            else:
+                # populate self.OCR_JSON_to_file = {}
+                _ = self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
+
 
         if do_create_OCR_helper_image and ('LLaVA' not in self.OCR_option):
             self.image = Image.open(self.path)
