@@ -31,7 +31,7 @@ def resolve_path(path):
 if __name__ == "__main__":
     dir_home = os.path.dirname(__file__)
 
-    start_port = 8529
+    start_port = 8528
     try:
         free_port = find_available_port(start_port)
         sys.argv = [

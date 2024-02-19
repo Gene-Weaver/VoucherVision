@@ -492,6 +492,8 @@ class VoucherVision():
                 vertexai.init(project=os.getenv('GOOGLE_PROJECT_ID'), location=os.getenv('GOOGLE_LOCATION'), credentials=self.get_google_credentials())
             else:
                 vertexai.init(project=k_google_project_id, location=k_google_location, credentials=self.get_google_credentials())
+                os.environ['GOOGLE_API_KEY'] = self.cfg_private['google']['GOOGLE_PALM_API']
+
 
         ### OpenAI
         if self.has_key_openai:

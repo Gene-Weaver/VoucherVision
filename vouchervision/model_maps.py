@@ -206,7 +206,7 @@ class ModelMaps:
             return "text-unicorn@001"
         
         elif key == 'GEMINI_PRO':
-            return "gemini-pro"
+            return "gemini-1.0-pro"
         
         ### Mistral 
         elif key == 'MISTRAL_TINY':

@@ -212,6 +212,7 @@ class LocalMistralHandler:
         self.logger.info(f"Failed to extract valid JSON after [{ind}] attempts")
         self.json_report.set_text(text_main=f'Failed to extract valid JSON after [{ind}] attempts')
 
+        self.monitor.stop_inference_timer() # Starts tool timer too
         usage_report = self.monitor.stop_monitoring_report_usage()                
         json_report.set_text(text_main=f'LLM call failed')
 

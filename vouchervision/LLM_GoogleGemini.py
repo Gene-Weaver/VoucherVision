@@ -6,7 +6,7 @@ from langchain.output_parsers import RetryWithErrorOutputParser
 # from langchain.schema import HumanMessage
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-# from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import VertexAI
 
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
@@ -78,13 +78,13 @@ class GoogleGeminiHandler:
 
     def _build_model_chain_parser(self):
         # Instantiate the LLM class for Google Gemini
-        # self.llm_model = ChatGoogleGenerativeAI(model='gemini-pro',
-        #                             max_output_tokens=self.config.get('max_output_tokens'),
-        #                             top_p=self.config.get('top_p'))    
-        self.llm_model = VertexAI(model='gemini-pro', 
-                                  max_output_tokens=self.config.get('max_output_tokens'),
-                                  top_p=self.config.get('top_p'))   
-        
+        self.llm_model = ChatGoogleGenerativeAI(model=self.model_name)#, 
+                                    # max_output_tokens=self.config.get('max_output_tokens'),
+                                    # top_p=self.config.get('top_p'))    
+        # self.llm_model = VertexAI(model='gemini-1.0-pro', 
+        #                           max_output_tokens=self.config.get('max_output_tokens'),
+        #                           top_p=self.config.get('top_p'))   
+
         # Set up the retry parser with the runnable
         self.retry_parser = RetryWithErrorOutputParser.from_llm(parser=self.parser, llm=self.llm_model, max_retries=self.MAX_RETRIES)
         # Prepare the chain
@@ -92,10 +92,10 @@ class GoogleGeminiHandler:
 
     # Define a function to format the input for Google Gemini call
     def call_google_gemini(self, prompt_text):
-        model = GenerativeModel(self.model_name)
-        response = model.generate_content(prompt_text.text,
-                                        generation_config=self.config,
-                                        safety_settings=self.safety_settings)
+        model = GenerativeModel(self.model_name)#,
+                                        # generation_config=self.config,
+                                        # safety_settings=self.safety_settings)
+        response = model.generate_content(prompt_text.text)
         return response.text
     
     def call_llm_api_GoogleGemini(self, prompt_template, json_report, paths):
@@ -154,6 +154,8 @@ class GoogleGeminiHandler:
 
         self.logger.info(f"Failed to extract valid JSON after [{ind}] attempts")
         self.json_report.set_text(text_main=f'Failed to extract valid JSON after [{ind}] attempts')
+        
+        self.monitor.stop_inference_timer() # Starts tool timer too
 
         usage_report = self.monitor.stop_monitoring_report_usage()                
         self._reset_config()
