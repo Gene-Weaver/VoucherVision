@@ -19,6 +19,7 @@ demo/demo_output/*
 demo/demo_configs/*
 uploads/*
 uploads_small/*
+settings/*
 wandb/
 venv_LM2_linux/
 venv_LM2_l/
