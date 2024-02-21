@@ -12,6 +12,9 @@ yolov8n.pt
 !/custom_prompts/SLTPvA_long.yaml
 !/custom_prompts/SLTPvA_medium.yaml
 !/custom_prompts/SLTPvA_short.yaml
+!/custom_prompts/SLTPvB_long.yaml
+!/custom_prompts/SLTPvB_medium.yaml
+!/custom_prompts/SLTPvB_short.yaml
 
 # Dirs
 custom_prompts_deprecated/

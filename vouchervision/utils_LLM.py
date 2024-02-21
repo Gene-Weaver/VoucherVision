@@ -63,14 +63,11 @@ def run_tools(output, tool_WFO, tool_GEO, tool_wikipedia, json_file_path_wiki):
     return output_WFO, WFO_record, output_GEO, GEO_record
 
 
+
 def save_individual_prompt(prompt_template, txt_file_path_ind_prompt):
     with open(txt_file_path_ind_prompt, 'w',encoding='utf-8') as file:
         file.write(prompt_template)
 
-
-
-def remove_colons_and_double_apostrophes(text):
-    return text.replace(":", "").replace("\"", "")
 
 
 def sanitize_prompt(data):

@@ -19,12 +19,19 @@ class WFONameMatcher:
         self.is_enabled = tool_WFO
 
     def extract_input_string(self, record):
-        primary_input = f"{record.get('scientificName', '').strip()} {record.get('scientificNameAuthorship', '').strip()}".strip()
-        secondary_input = ' '.join(filter(None, [record.get('genus', '').strip(), 
-                                                 record.get('subgenus', '').strip(), 
-                                                 record.get('specificEpithet', '').strip(), 
-                                                 record.get('infraspecificEpithet', '').strip()])).strip()
+        if 'scientificName' in record and 'scientificNameAuthorship' in record:
+            primary_input = f"{record.get('scientificName', '').strip()} {record.get('scientificNameAuthorship', '').strip()}".strip()
+        elif 'speciesBinomialName' in record and 'speciesBinomialNameAuthorship' in record:
+            primary_input = f"{record.get('speciesBinomialName', '').strip()} {record.get('speciesBinomialNameAuthorship', '').strip()}".strip()
+        else:
+            return None, None
 
+        if 'genus' in record and 'specificEpithet' in record:
+            secondary_input = ' '.join(filter(None, [record.get('genus', '').strip(), 
+                                                 record.get('specificEpithet', '').strip()])).strip()
+        else:
+            return None, None
+            
         return primary_input, secondary_input
 
     def query_wfo_name_matching(self, input_string, check_homonyms=True, check_rank=True, accept_single_candidate=True):
@@ -46,6 +53,8 @@ class WFONameMatcher:
     
     def query_and_process(self, record):
         primary_input, secondary_input = self.extract_input_string(record)
+        if primary_input is None and secondary_input is None:
+            return self.NULL_DICT
         
         # Query with primary input
         primary_result = self.query_wfo_name_matching(primary_input)

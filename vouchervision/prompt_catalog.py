@@ -18,7 +18,7 @@ class PromptCatalog:
 
 
     def prompt_SLTP(self, rules_config_path, OCR=None, is_palm=False):
-        self.OCR = OCR
+        self.OCR = self.remove_colons_and_double_apostrophes(OCR)
 
         self.rules_config_path = rules_config_path
         self.rules_config = self.load_rules_config()
@@ -48,9 +48,9 @@ class PromptCatalog:
                 The unstructured OCR text is:
                 {self.OCR}
                 Please populate the following JSON dictionary based on the rules and the unformatted OCR text:
-                {self.structure}
-                {self.structure}
-                {self.structure}
+                {self.dictionary_structure}
+                {self.dictionary_structure}
+                {self.dictionary_structure}
                 """
         else:
             prompt = f"""Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
@@ -62,13 +62,16 @@ class PromptCatalog:
                 The unstructured OCR text is:
                 {self.OCR}
                 Please populate the following JSON dictionary based on the rules and the unformatted OCR text:
-                {self.structure}
+                {self.dictionary_structure}
                 """
         # xlsx_headers = self.generate_xlsx_headers(is_palm)
         
         # return prompt, self.PromptJSONModel, self.n_fields, xlsx_headers
+        # print(prompt)
         return prompt, self.dictionary_structure
 
+    def remove_colons_and_double_apostrophes(self, text):
+        return text.replace(":", "").replace("\"", "")
 
     def copy_prompt_template_to_new_dir(self, new_directory_path, rules_config_path):
         # Ensure the target directory exists, create it if it doesn't
@@ -102,22 +105,31 @@ class PromptCatalog:
         return structure_json_str
     
     def create_structure(self, is_palm=False):
-        # Create fields for the Pydantic model dynamically
-        fields = {key: (str, Field(default=value, description=value)) for key, value in self.rules_list.items()}
+        # # Create fields for the Pydantic model dynamically
+        # fields = {key: (str, Field(default=value, description=value)) for key, value in self.rules_list.items()}
 
-        # Dynamically create the Pydantic model
-        DynamicJSONParsingModel = create_model('SLTPvA', **fields)
-        DynamicJSONParsingModel_use = DynamicJSONParsingModel()
+        # # Dynamically create the Pydantic model
+        # DynamicJSONParsingModel = create_model('SLTPvA', **fields)
+        # DynamicJSONParsingModel_use = DynamicJSONParsingModel()
 
-        # Define the structure for the "Dictionary" section
-        dictionary_fields = {key: (str, Field(default='', description="")) for key in self.rules_list.keys()}
+        # # Define the structure for the "Dictionary" section
+        # dictionary_fields = {key: (str, Field(default='', description="")) for key in self.rules_list.keys()}
         
-        # Dynamically create the "Dictionary" Pydantic model
-        PromptJSONModel = create_model('PromptJSONModel', **dictionary_fields)
+        # # Dynamically create the "Dictionary" Pydantic model
+        # PromptJSONModel = create_model('PromptJSONModel', **dictionary_fields)
 
-        # Convert the model to JSON string (for demonstration)
-        dictionary_structure = PromptJSONModel().dict()
+        # # Convert the model to JSON string (for demonstration)
+        # dictionary_structure = PromptJSONModel().dict()
+        # structure_json_str = json.dumps(dictionary_structure, sort_keys=False, indent=4)
+
+        # Directly create the dictionary structure with empty strings as default values
+        dictionary_structure = {key: '' for key in self.rules_list.keys()}
+
+        # Convert the dictionary to JSON string for demonstration if needed
         structure_json_str = json.dumps(dictionary_structure, sort_keys=False, indent=4)
+        # print(structure_json_str)
+        # print(dictionary_structure)
+
         return structure_json_str, dictionary_structure
 
 

@@ -7,7 +7,6 @@ import pandas as pd
 from io import BytesIO
 from streamlit_extras.let_it_rain import rain
 from annotated_text import annotated_text
-from transformers import AutoConfig
 
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
 from vouchervision.VoucherVision_Config_Builder import build_VV_config, TestOptionsGPT, TestOptionsPalm, check_if_usable
@@ -1482,11 +1481,11 @@ def content_header():
         ct_left, ct_right = st.columns([1,1])
     with ct_left:
         st.button("Refresh", on_click=refresh, use_container_width=True)
-    # with ct_right:
-    #     try:
-    #         st.page_link(os.path.join("pages","faqs.py"), label="FAQs", icon="❔")
-    #     except:
-    #         st.page_link(os.path.join(os.path.dirname(__file__),"pages","faqs.py"), label="FAQs", icon="❔")
+    with ct_right:
+        try:
+            st.page_link(os.path.join("pages","faqs.py"), label="FAQs", icon="❔")
+        except:
+            st.page_link(os.path.join(os.path.dirname(__file__),"pages","faqs.py"), label="FAQs", icon="❔")
 
       
 
@@ -1687,12 +1686,12 @@ def content_prompt_and_llm_version():
                 selected_version = default_version
             st.session_state.config['leafmachine']['project']['prompt_version'] = st.selectbox("Prompt Version", available_prompts, index=available_prompts.index(selected_version),label_visibility='collapsed')
 
-    # with col_prompt_2:
-    #     # if st.button("Build Custom LLM Prompt"):
-    #     try:
-    #         st.page_link(os.path.join("pages","prompt_builder.py"), label="Prompt Builder", icon="🚧")
-    #     except:
-    #         st.page_link(os.path.join(os.path.dirname(__file__),"pages","prompt_builder.py"), label="Prompt Builder", icon="🚧")
+    with col_prompt_2:
+        # if st.button("Build Custom LLM Prompt"):
+        try:
+            st.page_link(os.path.join("pages","prompt_builder.py"), label="Prompt Builder", icon="🚧")
+        except:
+            st.page_link(os.path.join(os.path.dirname(__file__),"pages","prompt_builder.py"), label="Prompt Builder", icon="🚧")
 
 
     st.header('LLM Version')
@@ -1927,6 +1926,8 @@ def content_ocr_method():
     #     st.text_area(label='Handwritten/Printed + trOCR',placeholder=demo_text_trh,disabled=True, label_visibility='visible', height=150)
 
 def is_valid_huggingface_model_path(model_path):
+    from transformers import AutoConfig
+
     try:
         # Attempt to load the model configuration from Hugging Face Model Hub
         config = AutoConfig.from_pretrained(model_path)

@@ -76,7 +76,9 @@ def load_prompt_yaml(filename):
         st.session_state['mapping'] = st.session_state['prompt_info'].get('mapping', {})
         st.session_state['LLM'] = st.session_state['prompt_info'].get('LLM', 'General Purpose')
 
-        # Placeholder:
+        # print(st.session_state['mapping'].values())
+        # print(chain.from_iterable(st.session_state['mapping'].values()))
+        # print(list(chain.from_iterable(st.session_state['mapping'].values())))
         st.session_state['assigned_columns'] = list(chain.from_iterable(st.session_state['mapping'].values())) 
 
 

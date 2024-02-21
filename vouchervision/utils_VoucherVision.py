@@ -14,7 +14,6 @@ from vouchervision.LLM_GoogleGemini import GoogleGeminiHandler
 from vouchervision.LLM_MistralAI import MistralHandler
 from vouchervision.LLM_local_cpu_MistralAI import LocalCPUMistralHandler
 from vouchervision.LLM_local_MistralAI import LocalMistralHandler 
-from vouchervision.utils_LLM import remove_colons_and_double_apostrophes
 from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
 from vouchervision.general_utils import get_cfg_from_full_path
@@ -713,7 +712,7 @@ class VoucherVision():
             else:
                 ### Format prompt
                 prompt = self.setup_prompt()
-                prompt = remove_colons_and_double_apostrophes(prompt)
+                # prompt = remove_colons_and_double_apostrophes(prompt) # This is moved to utils_VV since it broke the json structure.
 
                 ### Send prompt to chosen LLM
                 self.logger.info(f'Waiting for {model_name} API call --- Using {MODEL_NAME_FORMATTED}')
