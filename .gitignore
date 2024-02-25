@@ -7,6 +7,8 @@ yolov8x-pose.pt
 yolov8n.pt
 *PRIVATE_DATA*
 
+vouchervision/LLM_MistralAI_Azure_endpoints.py
+
 # Prompts
 /custom_prompts/*
 !/custom_prompts/SLTPvA_long.yaml
