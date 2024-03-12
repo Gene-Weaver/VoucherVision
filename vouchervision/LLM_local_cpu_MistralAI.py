@@ -30,7 +30,7 @@ class LocalCPUMistralHandler:
     SEED = 2023
 
 
-    def __init__(self, cfg, logger, model_name, JSON_dict_structure):
+    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation):
         self.cfg = cfg
         self.tool_WFO = self.cfg['leafmachine']['project']['tool_WFO']
         self.tool_GEO = self.cfg['leafmachine']['project']['tool_GEO']
@@ -106,13 +106,15 @@ class LocalCPUMistralHandler:
 
     def _adjust_config(self):
         new_temp = self.adjust_temp + self.temp_increment
-        self.json_report.set_text(text_main=f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
         self.logger.info(f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
         self.adjust_temp += self.temp_increment
         self.config['temperature'] = self.adjust_temp      
 
     def _reset_config(self):
-        self.json_report.set_text(text_main=f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
         self.logger.info(f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
         self.adjust_temp = self.starting_temp
         self.config['temperature'] = self.starting_temp        
@@ -140,7 +142,8 @@ class LocalCPUMistralHandler:
     def call_llm_local_cpu_MistralAI(self, prompt_template, json_report, paths):
         _____, ____, _, __, ___, json_file_path_wiki, txt_file_path_ind_prompt = paths
         self.json_report = json_report
-        self.json_report.set_text(text_main=f'Sending request to {self.model_name}')
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Sending request to {self.model_name}')
         self.monitor.start_monitoring_usage()
 
         nt_in = 0
@@ -180,7 +183,8 @@ class LocalCPUMistralHandler:
                     else:
                         self.monitor.stop_inference_timer() # Starts tool timer too
 
-                        json_report.set_text(text_main=f'Working on WFO, Geolocation, Links')
+                        if self.json_report:            
+                            self.json_report.set_text(text_main=f'Working on WFO, Geolocation, Links')
                         output_WFO, WFO_record, output_GEO, GEO_record = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
 
                         save_individual_prompt(sanitize_prompt(prompt_template), txt_file_path_ind_prompt)
@@ -192,7 +196,8 @@ class LocalCPUMistralHandler:
                         if self.adjust_temp != self.starting_temp:            
                             self._reset_config()
 
-                        json_report.set_text(text_main=f'LLM call successful')
+                        if self.json_report:            
+                            self.json_report.set_text(text_main=f'LLM call successful')
                         return output, nt_in, nt_out, WFO_record, GEO_record, usage_report
                     
             except Exception as e:
@@ -200,13 +205,15 @@ class LocalCPUMistralHandler:
                 self._adjust_config()  
         
         self.logger.info(f"Failed to extract valid JSON after [{ind}] attempts")
-        self.json_report.set_text(text_main=f'Failed to extract valid JSON after [{ind}] attempts')
+        if self.json_report:            
+            self.json_report.set_text(text_main=f'Failed to extract valid JSON after [{ind}] attempts')
 
         self.monitor.stop_inference_timer() # Starts tool timer too
         usage_report = self.monitor.stop_monitoring_report_usage()                
         self._reset_config()
 
-        json_report.set_text(text_main=f'LLM call failed')
+        if self.json_report:            
+            self.json_report.set_text(text_main=f'LLM call failed')
         return None, nt_in, nt_out, None, None, usage_report
 
 

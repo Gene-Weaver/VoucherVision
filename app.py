@@ -17,6 +17,7 @@ from vouchervision.API_validation import APIvalidation
 from vouchervision.utils_hf import setup_streamlit_config, save_uploaded_file, save_uploaded_local, save_uploaded_file_local
 from vouchervision.data_project import convert_pdf_to_jpg
 from vouchervision.utils_LLM import check_system_gpus
+from vouchervision.OCR_google_cloud_vision import check_for_inappropriate_content
 
 import cProfile
 import pstats
@@ -249,14 +250,25 @@ def load_gallery(converted_files, uploaded_file):
             file_path_small = save_uploaded_file(st.session_state['dir_uploaded_images_small'], uploaded_file, img)
             st.session_state['input_list_small'].append(file_path_small)
 
+
+
+
 @st.cache_data
 def handle_image_upload_and_gallery_hf(uploaded_files):
     if uploaded_files:
+        
         # Clear input image gallery and input list
         clear_image_uploads()
 
         ind_small = 0
         for uploaded_file in uploaded_files:
+
+            if check_for_inappropriate_content(uploaded_file):
+                clear_image_uploads()
+                st.error("Warning: You have uploaded an inappropriate image")
+                return True
+
+            
             # Determine the file type
             if uploaded_file.name.lower().endswith('.pdf'):
                 # Handle PDF files
@@ -304,6 +316,8 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
             # If there are less than 100 images, take them all
             images_to_display = st.session_state['input_list_small']
         show_gallery_small_hf(images_to_display)
+    
+    return False
 
 
 @st.cache_data
@@ -377,7 +391,7 @@ def content_input_images(col_left, col_right):
     
     with col_right:
         if st.session_state.is_hf:
-            handle_image_upload_and_gallery_hf(uploaded_files)
+            result = handle_image_upload_and_gallery_hf(uploaded_files)
 
         else:
             st.session_state['view_local_gallery'] = st.toggle("View Image Gallery",)
@@ -426,7 +440,8 @@ def count_jpg_images(directory_path):
 
 def create_download_button(zip_filepath, col, key):
     with col:
-        labal_n_images = f"Download Results for {st.session_state['processing_add_on']} Images"
+        # labal_n_images = f"Download Results for {st.session_state['processing_add_on']} Images"
+        labal_n_images = f"Download Results"
         with open(zip_filepath, 'rb') as f:
             bytes_io = BytesIO(f.read())
         st.download_button(
@@ -1066,6 +1081,11 @@ def create_private_file():
                 "client_x509_cert_url": "A LONG URL",
                 "universe_domain": "googleapis.com"
                 })
+            
+            blog_text('Google project ID', ': The project ID is the "project_id"  value from the JSON file.')
+            blog_text('Google project location', ': The project location specifies the location of the Google server that your project resources will utilize. It should not really make a difference which location you choose. We use `us-central1`, but you might want to choose a location closer to where you live. [please see this page for a list of available regions](https://cloud.google.com/vertex-ai/docs/general/locations)')
+
+            
         google_application_credentials = st.text_input(label = 'Full path to Google Cloud JSON API key file', value = cfg_private['google'].get('GOOGLE_APPLICATION_CREDENTIALS', ''),
                                                 placeholder = 'e.g. C:/Documents/Secret_Files/google_API/application_default_credentials.json',
                                                 help ="This API Key is in the form of a JSON file. Please save the JSON file in a safe directory. DO NOT store the JSON key inside of the VoucherVision directory.",
@@ -1126,7 +1146,7 @@ def create_private_file():
 
         st.write("---")
         st.subheader("MistralAI")
-        st.markdown('Follow these [instructions](https://platform.here.com/sign-up?step=verify-identity) to generate an API key for HERE.')
+        st.markdown('Follow these [instructions](https://console.mistral.ai/) to generate an API key for MistralAI.')
         mistral_API_KEY = st.text_input("MistralAI API Key", cfg_private['mistral'].get('MISTRAL_API_KEY', ''),
                                                  help='e.g. a 32-character string',
                                                  placeholder='e.g. SATgthsykuE64FgrrrrEervr3S4455t_geyDeGq',
@@ -1359,7 +1379,7 @@ def get_all_cost_tables():
             cost_openai[key] = cost_data.get(value,'')
         elif 'PALM2' in parts or 'GEMINI' in parts:
             cost_google[key] = cost_data.get(value,'')
-        elif 'MISTRAL' in parts:
+        elif ('MISTRAL' in parts) or ('MIXTRAL' in parts):
             cost_mistral[key] = cost_data.get(value,'')
 
     styled_cost_openai = convert_cost_dict_to_table(cost_openai, "OpenAI")
@@ -1402,9 +1422,9 @@ def content_header():
         N_STEPS = 6
 
         if check_if_usable(is_hf=st.session_state['is_hf']):
-            b_text = f"Start Processing {st.session_state['processing_add_on']} Images" if st.session_state['processing_add_on'] > 1 else f"Start Processing {st.session_state['processing_add_on']} Image"
-            if st.session_state['processing_add_on'] == 0:
-                b_text = f"Start Processing"
+            # b_text = f"Start Processing {st.session_state['processing_add_on']} Images" if st.session_state['processing_add_on'] > 1 else f"Start Processing {st.session_state['processing_add_on']} Image"
+            # if st.session_state['processing_add_on'] == 0:
+            b_text = f"Start Transcription"
             if st.button(b_text, type='primary',use_container_width=True):
                 st.session_state['formatted_json'] = {}
                 st.session_state['formatted_json_WFO'] = {}
@@ -1465,7 +1485,7 @@ def content_header():
             if st.session_state['zip_filepath']:
                 create_download_button(st.session_state['zip_filepath'], col_run_1,key=97863332)
         else:
-            st.button("Start Processing", type='primary', disabled=True)
+            st.button("Start Transcription", type='primary', disabled=True)
             with col_run_4:
                 st.error(":heavy_exclamation_mark: Required API keys not set. Please visit the 'API Keys' tab and set the Google Vision OCR API key and at least one LLM key.")
       
@@ -1702,18 +1722,18 @@ def content_prompt_and_llm_version():
         st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", GUI_MODEL_LIST, index=GUI_MODEL_LIST.index(st.session_state.config['leafmachine'].get('LLM_version', ModelMaps.MODELS_GUI_DEFAULT)))
         st.markdown("""
 Based on preliminary results, the following models perform the best. We are currently running tests of all possible OCR + LLM + Prompt combinations to create recipes for different workflows.
-- `Mistral Medium`          
-- `Mistral Small`          
-- `Mistral Tiny`  
+- Any Mistral model e.g., `Mistral Large`          
 - `PaLM 2 text-bison@001`
 - `GPT 4 Turbo 1106-preview`
-- `GPT 3.5 Instruct`
+- `GPT 3.5 Turbo`
 - `LOCAL Mixtral 7Bx8 Instruct`
 - `LOCAL Mixtral 7B Instruct`
 
 Larger models (e.g., `GPT 4`, `GPT 4 32k`, `Gemini Pro`) do not necessarily perform better for these tasks. MistralAI models exceeded our expectations and perform extremely well. PaLM 2 text-bison@001 also seems to consistently out-perform Gemini Pro.
                     
-The `SLTPvA_short.yaml` prompt also seems to work better with smaller LLMs (e.g., Mistral Tiny). Alternatively, enable double OCR to help the LLM focus on the OCR text given a longer prompt.""")
+The `SLTPvA_short.yaml` prompt also seems to work better with smaller LLMs (e.g., Mistral Tiny). Alternatively, enable double OCR to help the LLM focus on the OCR text given a longer prompt.
+                    
+Models `GPT 3.5 Turbo` and `GPT 4 Turbo 0125-preview` enable OpenAI's [JSON mode](https://platform.openai.com/docs/guides/text-generation/json-mode), which helps prevent JSON errors. All models implement Langchain JSON parsing too, so JSON errors are rare for most models.""")
 
 
 def content_api_check():

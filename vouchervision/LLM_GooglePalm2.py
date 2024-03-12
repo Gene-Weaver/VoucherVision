@@ -1,4 +1,4 @@
-import os, time, json
+import os, time, json, typing
 # import vertexai
 from vertexai.language_models import TextGenerationModel
 from vertexai.generative_models._generative_models import HarmCategory, HarmBlockThreshold
@@ -10,6 +10,8 @@ from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 # from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import VertexAI
+from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.prompt_values import PromptValue as BasePromptValue
 
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
@@ -31,7 +33,7 @@ class GooglePalm2Handler:
     VENDOR = 'google'
     STARTING_TEMP = 0.5
 
-    def __init__(self, cfg, logger, model_name, JSON_dict_structure):
+    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation):
         self.cfg = cfg
         self.tool_WFO = self.cfg['leafmachine']['project']['tool_WFO']
         self.tool_GEO = self.cfg['leafmachine']['project']['tool_GEO']
@@ -41,9 +43,9 @@ class GooglePalm2Handler:
         self.model_name = model_name
         self.JSON_dict_structure = JSON_dict_structure
 
-        self.starting_temp = float(self.STARTING_TEMP)
-        self.temp_increment = float(0.2)
-        self.adjust_temp = self.starting_temp   
+        self.config_vals_for_permutation = config_vals_for_permutation
+
+        
 
         self.monitor = SystemLoadMonitor(logger)
 
@@ -59,12 +61,26 @@ class GooglePalm2Handler:
 
     def _set_config(self):
         # vertexai.init(project=os.environ['PALM_PROJECT_ID'], location=os.environ['PALM_LOCATION'])
-        self.config = {
+        if self.config_vals_for_permutation:
+            self.starting_temp = float(self.config_vals_for_permutation.get('google').get('temperature'))
+            self.config = {
+                    'max_output_tokens': self.config_vals_for_permutation.get('google').get('max_output_tokens'),
+                    'temperature': self.starting_temp,
+                    'top_k': self.config_vals_for_permutation.get('google').get('top_k'),
+                    'top_p': self.config_vals_for_permutation.get('google').get('top_p'),
+                    }
+        else:
+            self.starting_temp = float(self.STARTING_TEMP)
+            self.config = {
                 "max_output_tokens": 1024,
                 "temperature": self.starting_temp,
+                "top_k": 1,
                 "top_p": 1.0,
-                "top_k": 40,
             }
+            
+        self.temp_increment = float(0.2)
+        self.adjust_temp = self.starting_temp   
+
         self.safety_settings = {
             HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
             HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -75,13 +91,15 @@ class GooglePalm2Handler:
 
     def _adjust_config(self):
         new_temp = self.adjust_temp + self.temp_increment
-        self.json_report.set_text(text_main=f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
         self.logger.info(f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
         self.adjust_temp += self.temp_increment
         self.config['temperature'] = self.adjust_temp    
 
     def _reset_config(self):
-        self.json_report.set_text(text_main=f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
         self.logger.info(f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
         self.adjust_temp = self.starting_temp
         self.config['temperature'] = self.starting_temp   
@@ -89,7 +107,11 @@ class GooglePalm2Handler:
     def _build_model_chain_parser(self):
         # Instantiate the parser and the retry parser
         # self.llm_model = ChatGoogleGenerativeAI(model=self.model_name)
-        self.llm_model = VertexAI(model=self.model_name)
+        self.llm_model = VertexAI(model=self.model_name,
+                                  max_output_tokens=self.config.get('max_output_tokens'),
+                                  temperature=self.config.get('temperature'),
+                                  top_k=self.config.get('top_k'),
+                                  top_p=self.config.get('top_p'))
         
         self.retry_parser = RetryWithErrorOutputParser.from_llm(
                                                 parser=self.parser,
@@ -105,6 +127,7 @@ class GooglePalm2Handler:
         response = model.predict(prompt_text.text,
                                 max_output_tokens=self.config.get('max_output_tokens'),
                                 temperature=self.config.get('temperature'),
+                                top_k=self.config.get('top_k'),
                                 top_p=self.config.get('top_p'))
         # model = GenerativeModel(self.model_name)
 
@@ -115,7 +138,8 @@ class GooglePalm2Handler:
     def call_llm_api_GooglePalm2(self, prompt_template, json_report, paths):
         _____, ____, _, __, ___, json_file_path_wiki, txt_file_path_ind_prompt = paths
         self.json_report = json_report
-        self.json_report.set_text(text_main=f'Sending request to {self.model_name}')
+        if json_report:
+            self.json_report.set_text(text_main=f'Sending request to {self.model_name}')
         self.monitor.start_monitoring_usage()
         nt_in = 0
         nt_out = 0
@@ -124,12 +148,23 @@ class GooglePalm2Handler:
         while ind < self.MAX_RETRIES:
             ind += 1
             try:
-                model_kwargs = {"temperature": self.adjust_temp}
+                # model_kwargs = {"temperature": self.adjust_temp}
                 # Invoke the chain to generate prompt text
-                response = self.chain.invoke({"query": prompt_template, "model_kwargs": model_kwargs})
+                response = self.chain.invoke({"query": prompt_template})#, "model_kwargs": model_kwargs})
 
                 # Use retry_parser to parse the response with retry logic
-                output = self.retry_parser.parse_with_prompt(response, prompt_value=prompt_template)
+                try:
+                    output = self.retry_parser.parse_with_prompt(response, prompt_value=PromptValue(prompt_template))
+                except:
+                    try:
+                        output = self.retry_parser.parse_with_prompt(response, prompt_value=prompt_template)
+                    except:
+                        try:
+                            output = json.loads(response)
+                        except Exception as e:
+                            print(e)
+                            output = None
+
 
                 if output is None:
                     self.logger.error(f'[Attempt {ind}] Failed to extract JSON from:\n{response}')
@@ -144,8 +179,9 @@ class GooglePalm2Handler:
                         self._adjust_config()           
                     else:
                         self.monitor.stop_inference_timer() # Starts tool timer too
-
-                        json_report.set_text(text_main=f'Working on WFO, Geolocation, Links')
+                        
+                        if self.json_report:
+                            self.json_report.set_text(text_main=f'Working on WFO, Geolocation, Links')
                         output_WFO, WFO_record, output_GEO, GEO_record = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
 
                         save_individual_prompt(sanitize_prompt(prompt_template), txt_file_path_ind_prompt)
@@ -157,7 +193,8 @@ class GooglePalm2Handler:
                         if self.adjust_temp != self.starting_temp:            
                             self._reset_config()
 
-                        json_report.set_text(text_main=f'LLM call successful')
+                        if self.json_report:
+                            self.json_report.set_text(text_main=f'LLM call successful')
                         return output, nt_in, nt_out, WFO_record, GEO_record, usage_report
 
             except Exception as e:
@@ -167,11 +204,19 @@ class GooglePalm2Handler:
                 time.sleep(self.RETRY_DELAY)
 
         self.logger.info(f"Failed to extract valid JSON after [{ind}] attempts")
-        self.json_report.set_text(text_main=f'Failed to extract valid JSON after [{ind}] attempts')
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Failed to extract valid JSON after [{ind}] attempts')
 
         self.monitor.stop_inference_timer() # Starts tool timer too
         usage_report = self.monitor.stop_monitoring_report_usage()                
         self._reset_config()
 
-        json_report.set_text(text_main=f'LLM call failed')
+        if self.json_report:
+            self.json_report.set_text(text_main=f'LLM call failed')
         return None, nt_in, nt_out, None, None, usage_report
+    
+class PromptValue(BasePromptValue):
+    prompt_str: str
+
+    def to_string(self) -> str:
+        return self.prompt_str

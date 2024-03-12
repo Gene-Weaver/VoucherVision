@@ -1,4 +1,5 @@
 import logging, os, psutil, torch, platform, cpuinfo, yaml #py-cpuinfo
+from tqdm import tqdm
 from vouchervision.general_utils import get_datetime, print_main_warn, print_main_info
 
 class SanitizingFileHandler(logging.FileHandler):
@@ -17,7 +18,7 @@ def start_logging(Dirs, cfg):
     path_log = os.path.join(Dirs.path_log, '__'.join(['LM2-log', str(get_datetime()), run_name]) + '.log')
 
     # Disable default StreamHandler
-    logging.getLogger().handlers = []
+    logging.getLogger().handlers = [] 
 
     # create logger
     logger = logging.getLogger('Hardware Components')
@@ -27,20 +28,25 @@ def start_logging(Dirs, cfg):
     sanitizing_fh = SanitizingFileHandler(path_log, encoding='utf-8')
     sanitizing_fh.setLevel(logging.DEBUG)
 
+    tqdm_handler = TqdmLoggingHandler()
+    tqdm_handler.setLevel(logging.DEBUG)
+
     # create console handler and set level to debug
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    # ch = logging.StreamHandler()
+    # ch.setLevel(logging.DEBUG)
 
     # create formatter
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
     # add formatter to handlers
     sanitizing_fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
+    tqdm_handler.setFormatter(formatter)
+    # ch.setFormatter(formatter)
 
     # add handlers to logger
     logger.addHandler(sanitizing_fh)
-    logger.addHandler(ch)
+    logger.addHandler(tqdm_handler)
+    # logger.addHandler(ch)
 
     # Create a logger for the file handler
     file_logger = logging.getLogger('file_logger')
@@ -110,6 +116,17 @@ def find_cpu_info():
         except:
             return "CPU: UNKNOWN"
 
+class TqdmLoggingHandler(logging.Handler):
+    def __init__(self, level=logging.NOTSET):
+        super().__init__(level)
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            tqdm.write(msg)  # Use tqdm's write function to ensure correct output
+            self.flush()
+        except Exception:
+            self.handleError(record)
 
 def LM2_banner():
         logo = """

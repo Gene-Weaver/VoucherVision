@@ -35,7 +35,7 @@ rules:
   occurrenceRemarks: all descriptive text in the OCR rearranged into sensible sentences or sentence fragments.
   habitat: habitat description.
   locality: description of geographic information aiding in pinpointing the exact origin or location of the specimen.
-  isCultivated: cultivated plants are intentionally grown by humans. Use either - unknown or cultivated.
+  isCultivated: cultivated plants are intentionally grown by humans. Set to 'cultivated' if cultivated, otherwise use an empty string.
   country: country or major administrative unit.
   stateProvince: state, province, canton, department, region, etc.
   county: county, shire, department, parish etc.

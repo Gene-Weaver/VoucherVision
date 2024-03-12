@@ -2,11 +2,16 @@ import openai
 import os, json, glob, shutil, yaml, torch, logging
 import openpyxl
 from openpyxl import Workbook, load_workbook
+from tqdm import tqdm
 import vertexai
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from langchain_openai import AzureChatOpenAI
 from google.oauth2 import service_account
 from transformers import AutoTokenizer, AutoModel
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from queue import Queue
+import threading
 
 from vouchervision.LLM_OpenAI import OpenAIHandler
 from vouchervision.LLM_GooglePalm2 import GooglePalm2Handler
@@ -691,55 +696,47 @@ class VoucherVision():
         if json_report:
             json_report.set_text(text_main=f'Loading {MODEL_NAME_FORMATTED}')
             json_report.set_JSON({}, {}, {})
-        llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm, self.config_vals_for_permutation)
+        # llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm, self.config_vals_for_permutation)
 
-        for i, path_to_crop in enumerate(self.img_paths):
-            self.update_progress_report_batch(progress_report, i)
+        results_queue = Queue()
+        
+        if json_report:
+            json_report.set_text(text_main='Sending batch to OCR and LLM')
 
-            if self.should_skip_specimen(path_to_crop):
-                self.log_skipping_specimen(path_to_crop)
-                continue
+        num_files = len(self.img_paths)
+        # num_threads = min(num_files, 128)
+        num_threads = 128
+        counter = AtomicCounter()
 
-            paths = self.generate_paths(path_to_crop, i)
-            self.path_to_crop = path_to_crop
+        # Setup for parallel execution
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [executor.submit(self.send_to_LLM_worker, 
+                                    path_to_crop, 
+                                    results_queue, 
+                                    model_name,
+                                    MODEL_NAME_FORMATTED,
+                                    name_parts,
+                                    is_azure, 
+                                    i
+                                ) for i, path_to_crop in enumerate(self.img_paths)]
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Processing", unit="task"):
+                try:
+                    # Here, you could also directly process results if they were not being put in a queue
+                    future.result()  # Forces a wait on the future and re-raises any exceptions
+                    new_value = counter.inc()
+                    try:
+                        if json_report:
+                            current_value = counter.value
+                            json_report.set_text(text_main=f'Completed {current_value} of {num_files}')
+                    except:
+                        pass
+                except Exception as e:
+                    # Log the error, possibly mark the task for retry, or handle it as necessary
+                    print(f"A task failed with exception: {e}")
 
-            filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt = paths
-            if json_report:
-                json_report.set_text(text_main='Starting OCR')
-            self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds)
-            if json_report:
-                json_report.set_text(text_main='Finished OCR')
-
-            if not self.OCR:
-                self.n_failed_OCR += 1
-                response_candidate = None
-                nt_in = 0
-                nt_out = 0
-            else:
-                ### Format prompt
-                prompt = self.setup_prompt()
-                # prompt = remove_colons_and_double_apostrophes(prompt) # This is moved to utils_VV since it broke the json structure.
-
-                ### Send prompt to chosen LLM
-                self.logger.info(f'Waiting for {model_name} API call --- Using {MODEL_NAME_FORMATTED}')
-
-                if 'PALM2' in name_parts:
-                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GooglePalm2(prompt, json_report, paths)
-                
-                elif 'GEMINI' in name_parts:
-                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GoogleGemini(prompt, json_report, paths)
-                
-                elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
-                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_MistralAI(prompt, json_report, paths)
-                
-                elif 'LOCAL' in name_parts: 
-                    if 'MISTRAL' in name_parts or 'MIXTRAL' in name_parts:
-                        if 'CPU' in name_parts:     
-                            response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_cpu_MistralAI(prompt, json_report, paths) 
-                        else:
-                            response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_MistralAI(prompt, json_report, paths) 
-                else:
-                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_OpenAI(prompt, json_report, paths)
+        # Process results from the queue
+        while not results_queue.empty():
+            response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report, path_to_crop, paths = results_queue.get()
 
             self.n_failed_LLM_calls += 1 if response_candidate is None else 0
                 
@@ -756,10 +753,65 @@ class VoucherVision():
             if json_report:
                 json_report.set_JSON(final_JSON_response, final_WFO_record, final_GEO_record)
 
+        if json_report:
+            json_report.set_text(text_main='Finished!')
+
         self.update_progress_report_final(progress_report)
         final_JSON_response = self.parse_final_json_response(final_JSON_response)
         return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out
     
+    def send_to_LLM_worker(self, path_to_crop, queue, model_name, MODEL_NAME_FORMATTED, name_parts, is_azure, i):
+        llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm, self.config_vals_for_permutation)
+
+        # self.update_progress_report_batch(progress_report, i)
+
+        if self.should_skip_specimen(path_to_crop):
+            self.log_skipping_specimen(path_to_crop)
+            return
+
+        paths = self.generate_paths(path_to_crop, i)
+        self.path_to_crop = path_to_crop
+
+        filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt = paths
+        # if json_report:
+            # json_report.set_text(text_main='Starting OCR')
+        self.perform_OCR_and_save_results(i, None, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds)
+        # if json_report:
+            # json_report.set_text(text_main='Finished OCR')
+
+        if not self.OCR:
+            self.n_failed_OCR += 1
+            response_candidate = None
+            nt_in = 0
+            nt_out = 0
+        else:
+            ### Format prompt
+            prompt = self.setup_prompt()
+            # prompt = remove_colons_and_double_apostrophes(prompt) # This is moved to utils_VV since it broke the json structure.
+
+            ### Send prompt to chosen LLM
+            self.logger.info(f'Waiting for {model_name} API call --- Using {MODEL_NAME_FORMATTED}')
+
+            if 'PALM2' in name_parts:
+                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GooglePalm2(prompt, None, paths)
+            
+            elif 'GEMINI' in name_parts:
+                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GoogleGemini(prompt, None, paths)
+            
+            elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
+                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_MistralAI(prompt, None, paths)
+            
+            elif 'LOCAL' in name_parts: 
+                if 'MISTRAL' in name_parts or 'MIXTRAL' in name_parts:
+                    if 'CPU' in name_parts:     
+                        response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_cpu_MistralAI(prompt, None, paths) 
+                    else:
+                        response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_MistralAI(prompt, None, paths) 
+            else:
+                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_OpenAI(prompt, None, paths)
+
+        # Instead of directly updating shared resources, put the structured result in the queue
+        queue.put((response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report, path_to_crop, paths))
 
     ##################################################################################################################################
     ################################################## LLM Helper Funcs ##############################################################
@@ -910,7 +962,31 @@ class VoucherVision():
     #         img_path = os.path.join(path_to_crop, img_filename)
     #     self.OCR, self.bounds, self.text_to_box_mapping = detect_text(img_path)
 
-
+# https://gist.github.com/benhoyt/8c8a8d62debe8e5aa5340373f9c509c7
+class AtomicCounter(object):
+        """An atomic, thread-safe counter"""
+    
+        def __init__(self, initial=0):
+            """Initialize a new atomic counter to given initial value"""
+            self._value = initial
+            self._lock = threading.Lock()
+    
+        def inc(self, num=1):
+            """Atomically increment the counter by num and return the new value"""
+            with self._lock:
+                self._value += num
+                return self._value
+    
+        def dec(self, num=1):
+            """Atomically decrement the counter by num and return the new value"""
+            with self._lock:
+                self._value -= num
+                return self._value
+    
+        @property
+        def value(self):
+            return self._value
+        
 
 def space_saver(cfg, Dirs, logger):
     dir_out = cfg['leafmachine']['project']['dir_output']

@@ -31,7 +31,7 @@ def resolve_path(path):
 if __name__ == "__main__":
     dir_home = os.path.dirname(__file__)
 
-    start_port = 8528
+    start_port = 8530
     try:
         free_port = find_available_port(start_port)
         sys.argv = [
@@ -42,6 +42,7 @@ if __name__ == "__main__":
             "--global.developmentMode=false",
             # "--server.port=8545",
             f"--server.port={free_port}",
+            f"--server.maxUploadSize=51200",
             # Toggle below for HF vs Local
             # "--is_hf=1",
             # "--is_hf=0",

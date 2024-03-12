@@ -123,8 +123,9 @@ class OCREngine:
 
             self.model_path = "liuhaotian/" + self.cfg['leafmachine']['project']['OCR_option_llava']
             self.model_quant = self.cfg['leafmachine']['project']['OCR_option_llava_bit']
-
-            self.json_report.set_text(text_main=f'Loading LLaVA model: {self.model_path} Quantization: {self.model_quant}')
+            
+            if self.json_report:
+                self.json_report.set_text(text_main=f'Loading LLaVA model: {self.model_path} Quantization: {self.model_quant}')
 
             if self.model_quant == '4bit':
                 use_4bit = True
@@ -191,7 +192,8 @@ class OCREngine:
         # Process each detected text region
         for box in self.prediction_result["boxes"]:
             i+=1
-            self.json_report.set_text(text_main=f'Locating text using CRAFT --- {i}/{total_b}')
+            if self.json_report:
+                self.json_report.set_text(text_main=f'Locating text using CRAFT --- {i}/{total_b}')
 
             vertices = [{"x": int(vertex[0]), "y": int(vertex[1])} for vertex in box]
             
@@ -283,7 +285,8 @@ class OCREngine:
             i=0
             for bound in tqdm(available_bounds, desc="Processing words using Google Vision bboxes"):
                 i+=1
-                self.json_report.set_text(text_main=f'Working on trOCR :construction: {i}/{total_b}')
+                if self.json_report:
+                    self.json_report.set_text(text_main=f'Working on trOCR :construction: {i}/{total_b}')
 
                 vertices = bound["vertices"]
 
@@ -688,7 +691,8 @@ class OCREngine:
             # logger.info(f"CRAFT trOCR:\n{self.OCR}")
 
         if 'LLaVA' in self.OCR_option: # This option does not produce an OCR helper image
-            self.json_report.set_text(text_main=f'Working on LLaVA {self.Llava.model_path} transcription :construction:')
+            if self.json_report:
+                self.json_report.set_text(text_main=f'Working on LLaVA {self.Llava.model_path} transcription :construction:')
 
             image, json_output, direct_output, str_output, usage_report = self.Llava.transcribe_image(self.path, self.multimodal_prompt)
             self.logger.info(f"LLaVA Usage Report for Model {self.Llava.model_path}:\n{usage_report}")
@@ -787,3 +791,19 @@ class OCREngine:
             empty_cuda_cache()
         except:
             pass
+
+def check_for_inappropriate_content(file_stream):
+    client = vision.ImageAnnotatorClient()
+
+    content = file_stream.read()
+    image = vision.Image(content=content)
+    response = client.safe_search_detection(image=image)
+    safe = response.safe_search_annotation
+
+    # Check the levels of adult, violence, racy, etc. content.
+    if (safe.adult > vision.Likelihood.POSSIBLE or
+        safe.violence > vision.Likelihood.POSSIBLE or
+        safe.racy > vision.Likelihood.POSSIBLE):
+        return True  # The image violates safe search guidelines.
+    
+    return False  # The image is considered safe.

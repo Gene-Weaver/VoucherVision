@@ -11,7 +11,8 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
             if value is None:
                 data[key] = ''
             elif isinstance(value, str):
-                if value.lower() in ['unknown', 'not provided', 'missing', 'na', 'none', 'n/a', 'null', 'unspecified',
+                if value.lower() in ['unknown','not provided', 'missing', 'na', 'none', 'n/a', 'null', 'unspecified',
+                                     'TBD',
                                     'not provided in the text', 'not found in the text', 
                                     'not in the text', 'not provided', 'not found',
                                     'not provided in the ocr', 'not found in the ocr', 

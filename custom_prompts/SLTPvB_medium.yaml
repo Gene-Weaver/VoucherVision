@@ -40,7 +40,7 @@ rules:
       the exact origin or location of the specimen.
   isCultivated: Cultivated plants are intentionally grown by humans. In text descriptions,
       look for planting dates, garden locations, ornamental, cultivar names, garden,
-      or farm to indicate cultivated plant. Use either - unknown or cultivated.
+      or farm to indicate cultivated plant. Set to 'cultivated' if cultivated, otherwise use an empty string.
   country: The name of the country or major administrative unit in which the specimen was originally collected.
   stateProvince: The name of the next smaller administrative region than country (state, province, canton, department, region, etc.) in which the specimen was originally collected.
   county: The full, unabbreviated name of the next smaller administrative region than stateProvince (county, shire, department, parish etc.) in which the specimen was originally collected.

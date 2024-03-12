@@ -39,7 +39,7 @@ rules:
   county: county, shire, department, parish etc.
   municipality: city, municipality, etc.
   locality: description of geographic information aiding in pinpointing the exact origin or location of the specimen.
-  degreeOfEstablishment: cultivated plants are intentionally grown by humans. Use either - unknown or cultivated.
+  degreeOfEstablishment: cultivated plants are intentionally grown by humans. Set to 'cultivated' if cultivated, otherwise use an empty string.
   decimalLatitude: latitude decimal coordinate.
   decimalLongitude: longitude decimal coordinate.
   verbatimCoordinates: verbatim location coordinates.

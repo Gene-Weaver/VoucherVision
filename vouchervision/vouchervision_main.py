@@ -14,6 +14,7 @@ from vouchervision.data_project import Project_Info
 from vouchervision.LM2_logger import start_logging
 from vouchervision.fetch_data import fetch_data
 from vouchervision.utils_VoucherVision import VoucherVision, space_saver
+# from vouchervision.utils_VoucherVision_parallel import VoucherVision, space_saver
 from vouchervision.utils_hf import upload_to_drive
 
 def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progress_report, json_report, path_api_cost=None, test_ind = None, is_hf = True, is_real_run=False):

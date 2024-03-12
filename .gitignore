@@ -21,6 +21,13 @@ vouchervision/LLM_MistralAI_Azure_endpoints.py
 # Dirs
 custom_prompts_deprecated/
 demo/demo_output/*
+
+demo/validation_images_repeat/
+demo/validation_json/
+demo/validation_figs/
+demo/validation_output/
+demo/validation_xlsx/
+
 demo/demo_configs/*
 uploads/*
 uploads_small/*
@@ -63,6 +70,9 @@ vouchervision/component_detector/wandb/
 vouchervision/component_detector/runs/
 vouchervision/component_detector/architecture/
 vouchervision/component_detector/yolov5x6.pt
+
+vouchervision/vouchervision_test_all_options.py
+vouchervision/prompt_arena.py
 
 vouchervision/instructor-xl/
 vouchervision/instructor-embedding/

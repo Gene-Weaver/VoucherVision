@@ -20,9 +20,11 @@ class ModelMaps:
         'AZURE_GPT_3_5_INSTRUCT': '#9400D3',  # Dark Violet
         'AZURE_GPT_3_5': '#9932CC',  # Dark Orchid
 
-        'MISTRAL_TINY': '#FFA07A',  # Light Salmon
-        'MISTRAL_SMALL': '#FF8C00',  # Dark Orange
+        'OPEN_MISTRAL_7B': '#FFA07A',  # Light Salmon
+        'OPEN_MIXTRAL_8X7B': '#FF8C00',  # Dark Orange
+        'MISTRAL_SMALL': '#FF6347',  # Tomato
         'MISTRAL_MEDIUM': '#FF4500',  # Orange Red
+        'MISTRAL_LARGE': '#800000',  # Maroon
 
         'LOCAL_MIXTRAL_8X7B_INSTRUCT_V01': '#000000',  # Black
         'LOCAL_MISTRAL_7B_INSTRUCT_V02': '#4a4a4a',  # Gray
@@ -34,14 +36,14 @@ class ModelMaps:
                      "GPT 4 32k",
                      "GPT 4 Turbo 0125-preview",
                      "GPT 4 Turbo 1106-preview",
-                     "GPT 3.5",
+                     "GPT 3.5 Turbo",
                      "GPT 3.5 Instruct",
 
                      "Azure GPT 4",
                      "Azure GPT 4 32k",
                      "Azure GPT 4 Turbo 0125-preview",
                      "Azure GPT 4 Turbo 1106-preview",
-                     "Azure GPT 3.5",
+                     "Azure GPT 3.5 Turbo",
                      "Azure GPT 3.5 Instruct",]
     
     MODELS_GOOGLE = ["PaLM 2 text-bison@001",
@@ -49,15 +51,18 @@ class ModelMaps:
                      "PaLM 2 text-unicorn@001",
                      "Gemini Pro"]
     
-    MODELS_MISTRAL = ["Mistral Tiny",
-                      "Mistral Small",
-                      "Mistral Medium",]
+    MODELS_MISTRAL = ["Mistral Small",
+                      "Mistral Medium",
+                      "Mistral Large",
+                      "Open Mixtral 8x7B",
+                      "Open Mistral 7B",
+                      ]
 
     MODELS_LOCAL = ["LOCAL Mixtral 8x7B Instruct v0.1",
                     "LOCAL Mistral 7B Instruct v0.2",
                     "LOCAL CPU Mistral 7B Instruct v0.2 GGUF",]
 
-    MODELS_GUI_DEFAULT = "Azure GPT 3.5 Instruct" # "GPT 4 Turbo 1106-preview"
+    MODELS_GUI_DEFAULT = "Azure GPT 3.5 Turbo" # "GPT 4 Turbo 1106-preview"
 
     version_mapping_cost = {
         'GPT 4 32k': 'GPT_4_32K',
@@ -65,23 +70,25 @@ class ModelMaps:
         'GPT 4 Turbo 0125-preview': 'GPT_4_TURBO_0125',
         'GPT 4 Turbo 1106-preview': 'GPT_4_TURBO_1106',
         'GPT 3.5 Instruct': 'GPT_3_5_INSTRUCT',
-        'GPT 3.5': 'GPT_3_5',
+        'GPT 3.5 Turbo': 'GPT_3_5',
 
         'Azure GPT 4 32k': 'AZURE_GPT_4_32K',
         'Azure GPT 4': 'AZURE_GPT_4',
         'Azure GPT 4 Turbo 0125-preview': 'AZURE_GPT_4_TURBO_0125',
         'Azure GPT 4 Turbo 1106-preview': 'AZURE_GPT_4_TURBO_1106',
         'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
-        'Azure GPT 3.5': 'AZURE_GPT_3_5',
+        'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
         'Gemini Pro': 'GEMINI_PRO',
         'PaLM 2 text-unicorn@001': 'PALM2_TU_1',
         'PaLM 2 text-bison@001': 'PALM2_TB_1',
         'PaLM 2 text-bison@002': 'PALM2_TB_2',
 
+        'Mistral Large': 'MISTRAL_LARGE',
         'Mistral Medium': 'MISTRAL_MEDIUM',
         'Mistral Small': 'MISTRAL_SMALL',
-        'Mistral Tiny': 'MISTRAL_TINY',
+        'Open Mixtral 8x7B': 'OPEN_MIXTRAL_8X7B',
+        'Open Mistral 7B': 'OPEN_MISTRAL_7B',
 
         'LOCAL Mixtral 8x7B Instruct v0.1': 'LOCAL_MIXTRAL_8X7B_INSTRUCT_V01',
         'LOCAL Mistral 7B Instruct v0.2': 'LOCAL_MISTRAL_7B_INSTRUCT_V02',
@@ -97,10 +104,10 @@ class ModelMaps:
             'GPT 4 Turbo 0125-preview': has_key_openai,
             'GPT 4':  has_key_openai,
             'GPT 4 32k':  has_key_openai,
-            'GPT 3.5':  has_key_openai,
+            'GPT 3.5 Turbo':  has_key_openai,
             'GPT 3.5 Instruct':  has_key_openai,
 
-            'Azure GPT 3.5': has_key_azure_openai,
+            'Azure GPT 3.5 Turbo': has_key_azure_openai,
             'Azure GPT 3.5 Instruct': has_key_azure_openai,
             'Azure GPT 4': has_key_azure_openai,
             'Azure GPT 4 Turbo 1106-preview': has_key_azure_openai,
@@ -112,9 +119,11 @@ class ModelMaps:
             'PaLM 2 text-unicorn@001':  has_key_google_application_credentials,
             'Gemini Pro':  has_key_google_application_credentials,
 
-            'Mistral Tiny':  has_key_mistral,
             'Mistral Small':  has_key_mistral,
             'Mistral Medium':  has_key_mistral,
+            'Mistral Large':  has_key_mistral,
+            'Open Mixtral 8x7B':  has_key_mistral,
+            'Open Mistral 7B':  has_key_mistral,
 
             'LOCAL Mixtral 8x7B Instruct v0.1':  True,
             'LOCAL Mistral 7B Instruct v0.2':  True,
@@ -127,15 +136,17 @@ class ModelMaps:
     def get_version_mapping_is_azure(cls, key):
         version_mapping_is_azure = {
             "GPT 4 Turbo 1106-preview": False,
+            "GPT 4 Turbo 0125-preview": False,
             'GPT 4': False,
             'GPT 4 32k':  False,
-            'GPT 3.5':  False,
+            'GPT 3.5 Turbo':  False,
             'GPT 3.5 Instruct':  False,
 
-            'Azure GPT 3.5': True,
+            'Azure GPT 3.5 Turbo': True,
             'Azure GPT 3.5 Instruct': True,
             'Azure GPT 4': True,
             'Azure GPT 4 Turbo 1106-preview': True,
+            'Azure GPT 4 Turbo 0125-preview': True,
             'Azure GPT 4 32k': True,
 
             'PaLM 2 text-bison@001':  False,
@@ -143,9 +154,11 @@ class ModelMaps:
             'PaLM 2 text-unicorn@001':  False,
             'Gemini Pro':  False,
 
-            'Mistral Tiny':  False,
             'Mistral Small':  False,
             'Mistral Medium':  False,
+            'Mistral Large':  False,
+            'Open Mixtral 8x7B':  False,
+            'Open Mistral 7B':  False,
 
             'LOCAL Mixtral 8x7B Instruct v0.1':  False,
             'LOCAL Mistral 7B Instruct v0.2':  False,
@@ -159,7 +172,7 @@ class ModelMaps:
         
         ### OpenAI
         if key == 'GPT_3_5':
-            return 'gpt-3.5-turbo-1106'
+            return 'gpt-3.5-turbo-0125' #'gpt-3.5-turbo-1106'
         
         elif key == 'GPT_3_5_INSTRUCT':
             return 'gpt-3.5-turbo-instruct'
@@ -178,7 +191,7 @@ class ModelMaps:
         
         ### Azure
         elif key == 'AZURE_GPT_3_5':
-            return 'gpt-35-turbo-1106'
+            return 'gpt-35-turbo-0125'
 
         elif key == 'AZURE_GPT_3_5_INSTRUCT':
             return 'gpt-35-turbo-instruct'
@@ -209,14 +222,20 @@ class ModelMaps:
             return "gemini-1.0-pro"
         
         ### Mistral 
-        elif key == 'MISTRAL_TINY':
-            return "mistral-tiny"
+        elif key == 'OPEN_MISTRAL_7B':
+            return "open-mistral-7b"
+        
+        elif key == 'OPEN_MIXTRAL_8X7B':
+            return 'open-mixtral-8x7b'
         
         elif key == 'MISTRAL_SMALL':
-            return 'mistral-small'
+            return 'mistral-small-latest'
         
         elif key == 'MISTRAL_MEDIUM':
-            return 'mistral-medium'
+            return 'mistral-medium-latest'
+        
+        elif key == 'MISTRAL_LARGE':
+            return 'mistral-large-latest'
         
 
         ### Mistral LOCAL

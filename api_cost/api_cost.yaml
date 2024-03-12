@@ -66,15 +66,21 @@ PALM2_TB_2:
 
 # Mistral AI 
 # https://docs.mistral.ai/platform/pricing/
+OPEN_MIXTRAL_8X7B:
+  in: 0.0007
+  out: 0.0007
+OPEN_MISTRAL_7B:
+  in: 0.000250
+  out: 0.000250
+MISTRAL_LARGE:
+  in: 0.008
+  out: 0.024
 MISTRAL_MEDIUM:
-  in: 0.00250
-  out: 0.00750
+  in: 0.0027
+  out: 0.0081
 MISTRAL_SMALL:
-  in: 0.00060
-  out: 0.00180
-MISTRAL_TINY:
-  in: 0.00014
-  out: 0.00042
+  in: 0.002
+  out: 0.006
 
 
 ################

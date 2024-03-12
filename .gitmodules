@@ -1,3 +1,6 @@
 [submodule "vouchervision/LLaVA"]
 	path = vouchervision/LLaVA
 	url = https://github.com/haotian-liu/LLaVA.git
+[submodule "vouchervision/SLTP"]
+	path = vouchervision/SLTP
+	url = https://github.com/Gene-Weaver/SLTP.git

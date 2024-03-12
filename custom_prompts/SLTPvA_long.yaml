@@ -60,7 +60,7 @@ rules:
       the exact origin or location of the specimen.
   degreeOfEstablishment: Cultivated plants are intentionally grown by humans. In text descriptions,
       look for planting dates, garden locations, ornamental, cultivar names, garden,
-      or farm to indicate cultivated plant. Use either - unknown or cultivated.
+      or farm to indicate cultivated plant. Set to 'cultivated' if cultivated, otherwise use an empty string.
   decimalLatitude: Latitude decimal coordinate. Correct and convert the verbatim location coordinates to conform
       with the decimal degrees GPS coordinate format.
   decimalLongitude: Longitude decimal coordinate. Correct and convert the verbatim location coordinates to conform
