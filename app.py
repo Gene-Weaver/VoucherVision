@@ -5,7 +5,7 @@ import plotly.graph_objs as go
 from PIL import Image
 import pandas as pd
 from io import BytesIO
-from streamlit_extras.let_it_rain import rain
+# from streamlit_extras.let_it_rain import rain
 from annotated_text import annotated_text
 
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
@@ -14,10 +14,10 @@ from vouchervision.vouchervision_main import voucher_vision
 from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report, validate_dir
 from vouchervision.model_maps import ModelMaps
 from vouchervision.API_validation import APIvalidation
-from vouchervision.utils_hf import setup_streamlit_config, save_uploaded_file, save_uploaded_local, save_uploaded_file_local
+from vouchervision.utils_hf import setup_streamlit_config, save_uploaded_file, save_uploaded_local, save_uploaded_file_local, report_violation
 from vouchervision.data_project import convert_pdf_to_jpg
 from vouchervision.utils_LLM import check_system_gpus
-from vouchervision.OCR_google_cloud_vision import check_for_inappropriate_content
+from vouchervision.OCR_google_cloud_vision import SafetyCheck
 
 import cProfile
 import pstats
@@ -253,8 +253,9 @@ def load_gallery(converted_files, uploaded_file):
 
 
 
-@st.cache_data
+# @st.cache_data
 def handle_image_upload_and_gallery_hf(uploaded_files):
+    # SAFE = SafetyCheck(st.session_state['is_hf'])
     if uploaded_files:
         
         # Clear input image gallery and input list
@@ -263,10 +264,11 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
         ind_small = 0
         for uploaded_file in uploaded_files:
 
-            if check_for_inappropriate_content(uploaded_file):
-                clear_image_uploads()
-                st.error("Warning: You have uploaded an inappropriate image")
-                return True
+            # if SAFE.check_for_inappropriate_content(uploaded_file):
+            #     clear_image_uploads()
+            #     report_violation(uploaded_file.name, is_hf=st.session_state['is_hf'])
+            #     st.error("Warning: You uploaded an image that violates our terms of service.")
+            #     return True
 
             
             # Determine the file type
@@ -317,10 +319,10 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
             images_to_display = st.session_state['input_list_small']
         show_gallery_small_hf(images_to_display)
     
-    return False
+    # return False
 
 
-@st.cache_data
+# @st.cache_data
 def handle_image_upload_and_gallery():
     
     if st.session_state['view_local_gallery'] and st.session_state['input_list_small'] and (st.session_state['dir_images_local_TEMP'] == st.session_state.config['leafmachine']['project']['dir_images_local']):
@@ -369,6 +371,8 @@ def handle_image_upload_and_gallery():
 
 
 def content_input_images(col_left, col_right):
+    SAFE = SafetyCheck(st.session_state['is_hf'])
+
     st.write('---')
     # col1, col2 = st.columns([2,8])
     with col_left:
@@ -391,7 +395,16 @@ def content_input_images(col_left, col_right):
     
     with col_right:
         if st.session_state.is_hf:
-            result = handle_image_upload_and_gallery_hf(uploaded_files)
+            if uploaded_files:
+                is_violation = False
+                for uploaded_file in uploaded_files:
+                    if SAFE.check_for_inappropriate_content(uploaded_file):
+                        clear_image_uploads()
+                        report_violation(uploaded_file.name, is_hf=st.session_state['is_hf'])
+                        st.error("Warning: You uploaded an image that violates our terms of service.")
+                        is_violation = True
+            if not is_violation:
+                handle_image_upload_and_gallery_hf(uploaded_files)
 
         else:
             st.session_state['view_local_gallery'] = st.toggle("View Image Gallery",)
@@ -883,7 +896,7 @@ def display_test_results(test_results, JSON_results, llm_version):
     # success_count = sum(1 for result in test_results.values() if result)
     # failure_count = len(test_results) - success_count
     # proportional_rain("🥇", success_count, "💔", failure_count, font_size=72, falling_speed=5, animation_length="infinite")
-    rain_emojis(test_results)
+    # rain_emojis(test_results)
 
 
 
@@ -892,44 +905,44 @@ def add_emoji_delay():
 
 
 
-def rain_emojis(test_results):
-    # test_results = {
-    #     'test1': True,   # Test passed
-    #     'test2': True,   # Test passed
-    #     'test3': True,   # Test passed
-    #     'test4': False,  # Test failed
-    #     'test5': False,  # Test failed
-    #     'test6': False,  # Test failed
-    #     'test7': False,  # Test failed
-    #     'test8': False,  # Test failed
-    #     'test9': False,  # Test failed
-    #     'test10': False,  # Test failed
-    # }
-    success_emojis = ["🥇", "🏆", "🍾", "🙌"]
-    failure_emojis = ["💔", "😭"]
+# def rain_emojis(test_results):
+#     # test_results = {
+#     #     'test1': True,   # Test passed
+#     #     'test2': True,   # Test passed
+#     #     'test3': True,   # Test passed
+#     #     'test4': False,  # Test failed
+#     #     'test5': False,  # Test failed
+#     #     'test6': False,  # Test failed
+#     #     'test7': False,  # Test failed
+#     #     'test8': False,  # Test failed
+#     #     'test9': False,  # Test failed
+#     #     'test10': False,  # Test failed
+#     # }
+#     success_emojis = ["🥇", "🏆", "🍾", "🙌"]
+#     failure_emojis = ["💔", "😭"]
 
-    success_count = sum(1 for result in test_results.values() if result)
-    failure_count = len(test_results) - success_count
+#     success_count = sum(1 for result in test_results.values() if result)
+#     failure_count = len(test_results) - success_count
 
-    chosen_emoji = random.choice(success_emojis)
-    for _ in range(success_count):
-        rain(
-            emoji=chosen_emoji,
-            font_size=72,
-            falling_speed=4,
-            animation_length=2,
-        )
-        add_emoji_delay()
+#     chosen_emoji = random.choice(success_emojis)
+#     for _ in range(success_count):
+#         rain(
+#             emoji=chosen_emoji,
+#             font_size=72,
+#             falling_speed=4,
+#             animation_length=2,
+#         )
+#         add_emoji_delay()
 
-    chosen_emoji = random.choice(failure_emojis)
-    for _ in range(failure_count):
-        rain(
-            emoji=chosen_emoji,
-            font_size=72,
-            falling_speed=5,
-            animation_length=1,
-        )
-        add_emoji_delay()
+#     chosen_emoji = random.choice(failure_emojis)
+#     for _ in range(failure_count):
+#         rain(
+#             emoji=chosen_emoji,
+#             font_size=72,
+#             falling_speed=5,
+#             animation_length=1,
+#         )
+#         add_emoji_delay()
 
 
 

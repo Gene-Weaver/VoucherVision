@@ -792,18 +792,55 @@ class OCREngine:
         except:
             pass
 
-def check_for_inappropriate_content(file_stream):
-    client = vision.ImageAnnotatorClient()
+class SafetyCheck():
+    def __init__(self, is_hf) -> None:
+        self.is_hf = is_hf
+        self.set_client()
 
-    content = file_stream.read()
-    image = vision.Image(content=content)
-    response = client.safe_search_detection(image=image)
-    safe = response.safe_search_annotation
+    def set_client(self):
+        if self.is_hf:
+            self.client = vision.ImageAnnotatorClient(credentials=self.get_google_credentials())
+        else:
+            self.client = vision.ImageAnnotatorClient(credentials=self.get_google_credentials())
 
-    # Check the levels of adult, violence, racy, etc. content.
-    if (safe.adult > vision.Likelihood.POSSIBLE or
-        safe.violence > vision.Likelihood.POSSIBLE or
-        safe.racy > vision.Likelihood.POSSIBLE):
-        return True  # The image violates safe search guidelines.
+
+    def get_google_credentials(self):
+        creds_json_str = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+        credentials = service_account.Credentials.from_service_account_info(json.loads(creds_json_str))
+        return credentials
     
-    return False  # The image is considered safe.
+    def check_for_inappropriate_content(self, file_stream):
+        LEVEL = 2
+        content = file_stream.read()
+        image = vision.Image(content=content)
+        response = self.client.safe_search_detection(image=image)
+        safe = response.safe_search_annotation
+
+        likelihood_name = (
+            "UNKNOWN",
+            "VERY_UNLIKELY",
+            "UNLIKELY",
+            "POSSIBLE",
+            "LIKELY",
+            "VERY_LIKELY",
+        )
+        print("Safe search:")
+
+        print(f"    adult*: {likelihood_name[safe.adult]}")
+        print(f"    medical*: {likelihood_name[safe.medical]}")
+        print(f"    spoofed: {likelihood_name[safe.spoof]}")
+        print(f"    violence*: {likelihood_name[safe.violence]}")
+        print(f"    racy: {likelihood_name[safe.racy]}")
+
+        # Check the levels of adult, violence, racy, etc. content.
+        if (safe.adult > LEVEL or
+            safe.medical > LEVEL or
+            # safe.spoof > LEVEL or
+            safe.violence > LEVEL #or
+            # safe.racy > LEVEL
+            ):
+            print("Found violation")
+            return True  # The image violates safe search guidelines.
+
+        print("Found NO violation")
+        return False  # The image is considered safe.
