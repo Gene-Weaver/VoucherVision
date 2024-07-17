@@ -245,7 +245,7 @@ Installation should basically be the same for Linux.
 > If your CUDA version < 11.8, then you should probably upgrade to 12.1
 > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 
-4. To run LLMs locally also install `pip install flash-attn==1.0.9`. Windowd is not yet compatible with newer versions. For Linux, you can try `pip install flash-attn --no-build-isolation` and use a 2.X version.
+4. To run LLMs locally also install `pip install flash-attn==1.0.9`. Windows is not yet compatible with newer versions. For Linux, you can try `pip install flash-attn --no-build-isolation` and use a 2.X version.
 ---
 
 # Installing VoucherVision (using conda)
