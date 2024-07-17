@@ -28,11 +28,16 @@ demo/validation_figs/
 demo/validation_output/
 demo/validation_xlsx/
 
+datasets/*
+datasets/
+
 demo/demo_configs/*
 uploads/*
 uploads_small/*
 settings/*
 wandb/
+flash-attention/*
+flash-attention/
 venv_LM2_linux/
 venv_LM2_l/
 venv_LM2_310/
@@ -45,7 +50,6 @@ tests/
 .vscode/
 runs/
 KP_Test/
-LLaVA/
 
 # VV Specific
 vouchervision/DEP_*
