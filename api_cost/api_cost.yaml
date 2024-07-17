@@ -10,6 +10,12 @@ GPT_4:
 # GPT_4_TURBO: ###############
 #   in: 0.01
 #   out: 0.03
+GPT_4o_2024_05_13:
+  in: 0.005
+  out: 0.015
+GPT_4_TURBO_2024_04_09:
+  in: 0.01
+  out: 0.03
 GPT_4_TURBO_0125:
   in: 0.01
   out: 0.03
@@ -47,9 +53,14 @@ AZURE_GPT_3_5:
 # Google Gemini
 # https://ai.google.dev/pricing
 GEMINI_PRO:
-  in: 0.00025
-  out: 0.0005
-
+  in: 0.0005
+  out: 0.0015
+GEMINI_1_5_FLASH:
+  in: 0.00035
+  out: 0.00105
+GEMINI_1_5_PRO:
+  in: 0.0035
+  out: 0.0105
 
 # Google PaLM 2 (text-bison, text-unicorn)
 # https://cloud.google.com/vertex-ai/docs/generative-ai/pricing
@@ -93,5 +104,8 @@ LOCAL_MISTRAL_7B_INSTRUCT_V02:
   in: 0.0
   out: 0.0
 LOCAL_CPU_MISTRAL_7B_INSTRUCT_V02_GGUF:
+  in: 0.0
+  out: 0.0
+phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05:
   in: 0.0
   out: 0.0

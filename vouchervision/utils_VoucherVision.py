@@ -14,6 +14,7 @@ from vouchervision.LLM_GoogleGemini import GoogleGeminiHandler
 from vouchervision.LLM_MistralAI import MistralHandler
 from vouchervision.LLM_local_cpu_MistralAI import LocalCPUMistralHandler
 from vouchervision.LLM_local_MistralAI import LocalMistralHandler 
+from vouchervision.LLM_local_custom_fine_tune import LocalFineTuneHandler 
 from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
 from vouchervision.general_utils import get_cfg_from_full_path
@@ -449,6 +450,8 @@ class VoucherVision():
             k_openai = os.getenv('OPENAI_API_KEY')
             k_openai_azure = os.getenv('AZURE_API_VERSION')
 
+            k_huggingface = None
+
             k_google_project_id = os.getenv('GOOGLE_PROJECT_ID')
             k_google_location = os.getenv('GOOGLE_LOCATION')
             k_google_application_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
@@ -464,6 +467,8 @@ class VoucherVision():
             k_openai = self.cfg_private['openai']['OPENAI_API_KEY']
             k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
 
+            k_huggingface = self.cfg_private['huggingface']['hf_token']
+
             k_google_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
             k_google_location = self.cfg_private['google']['GOOGLE_LOCATION']
             k_google_application_credentials = self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS']
@@ -478,6 +483,8 @@ class VoucherVision():
         self.has_key_azure_openai = self.has_API_key(k_openai_azure)
         self.llm = None
         
+        self.has_key_huggingface = self.has_API_key(k_huggingface)
+
         self.has_key_google_project_id = self.has_API_key(k_google_project_id)
         self.has_key_google_location = self.has_API_key(k_google_location)
         self.has_key_google_application_credentials = self.has_API_key(k_google_application_credentials)
@@ -505,6 +512,11 @@ class VoucherVision():
                 openai.api_key = self.cfg_private['openai']['OPENAI_API_KEY']
                 os.environ["OPENAI_API_KEY"] = self.cfg_private['openai']['OPENAI_API_KEY']
 
+        if self.has_key_huggingface:
+            if self.is_hf:
+                pass
+            else:
+                os.environ["HUGGING_FACE_KEY"] = self.cfg_private['huggingface']['hf_token']
 
         ### OpenAI - Azure
         if self.has_key_azure_openai:
@@ -738,6 +750,10 @@ class VoucherVision():
                             response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_cpu_MistralAI(prompt, json_report, paths) 
                         else:
                             response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_MistralAI(prompt, json_report, paths) 
+                
+                elif "/" in ''.join(name_parts):
+                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_custom_fine_tune(self.OCR, json_report, paths)  ###
+
                 else:
                     response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_OpenAI(prompt, json_report, paths)
 
@@ -771,6 +787,8 @@ class VoucherVision():
                     return LocalCPUMistralHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
                 else:
                     return LocalMistralHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
+        elif "/" in ''.join(name_parts):
+            return LocalFineTuneHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
         else:
             if 'PALM2' in name_parts:
                 return GooglePalm2Handler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)

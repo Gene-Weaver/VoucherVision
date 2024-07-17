@@ -45,6 +45,7 @@ tests/
 .vscode/
 runs/
 KP_Test/
+LLaVA/
 
 # VV Specific
 vouchervision/DEP_*

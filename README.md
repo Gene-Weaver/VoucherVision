@@ -51,6 +51,10 @@ Initiated by the **University of Michigan Herbarium**, VoucherVision harnesses t
   
 For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.com/Gene-Weaver/VoucherVisionEditor) serves as a quality control tool.
 
+Thanks to all of our collaborating institutions!
+
+[![Partners](https://LeafMachine.org/partners/collage.jpg "Partners")](https://docs.google.com/forms/d/e/1FAIpQLSe2E9zU1bPJ1BW4PMakEQFsRmLbQ0WTBI2UXHIMEFm4WbnAVw/viewform?usp=sf_link)
+
 ## Roadmap and New Features List
 
 #### VoucherVision
@@ -240,6 +244,8 @@ Installation should basically be the same for Linux.
 
 > If your CUDA version < 11.8, then you should probably upgrade to 12.1
 > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
+
+4. To run LLMs locally also install `pip install flash-attn==1.0.9`. Windowd is not yet compatible with newer versions. For Linux, you can try `pip install flash-attn --no-build-isolation` and use a 2.X version.
 ---
 
 # Installing VoucherVision (using conda)

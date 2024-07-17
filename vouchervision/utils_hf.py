@@ -73,7 +73,7 @@ def save_uploaded_file(directory, img_file, image=None):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    full_path = os.path.join(directory, img_file.name)
+    full_path = os.path.join(directory, img_file.name) ########## TODO THIS MUST BE MOVED TO conditional specific location
 
     # Assuming the uploaded file is an image
     if img_file.name.lower().endswith('.pdf'):
@@ -98,11 +98,18 @@ def save_uploaded_file(directory, img_file, image=None):
                 # Return the full path of the saved image
                 return full_path
             except:
-                with Image.open(os.path.join(directory,img_file)) as image:
-                    full_path = os.path.join(directory, img_file)
-                    image.save(full_path, "JPEG")
-                # Return the full path of the saved image
-                return full_path
+                try:
+                    with Image.open(os.path.join(directory,img_file)) as image:
+                        full_path = os.path.join(directory, img_file)
+                        image.save(full_path, "JPEG")
+                    # Return the full path of the saved image
+                    return full_path
+                except:
+                    with Image.open(img_file.name) as image:
+                        full_path = os.path.join(directory, img_file.name)
+                        image.save(full_path, "JPEG")
+                    # Return the full path of the saved image
+                    return full_path
         else:
             try:
                 full_path = os.path.join(directory, img_file.name)
@@ -112,6 +119,35 @@ def save_uploaded_file(directory, img_file, image=None):
                 full_path = os.path.join(directory, img_file)
                 image.save(full_path, "JPEG")
                 return full_path
+# def save_uploaded_file(directory, uploaded_file, image=None):
+#     if not os.path.exists(directory):
+#         os.makedirs(directory)
+
+#     full_path = os.path.join(directory, uploaded_file.name)
+
+#     # Handle PDF files
+#     if uploaded_file.name.lower().endswith('.pdf'):
+#         with open(full_path, 'wb') as out_file:
+#             if hasattr(uploaded_file, 'read'):
+#                 copyfileobj(uploaded_file, out_file)
+#             else:
+#                 with open(uploaded_file, 'rb') as fd:
+#                     copyfileobj(fd, out_file)
+#         return full_path
+#     else:
+#         if image is None:
+#             try:
+#                 with Image.open(uploaded_file) as img:
+#                     img.save(full_path, "JPEG")
+#             except:
+#                 with Image.open(full_path) as img:
+#                     img.save(full_path, "JPEG")
+#         else:
+#             try:
+#                 image.save(full_path, "JPEG")
+#             except:
+#                 image.save(os.path.join(directory, uploaded_file.name), "JPEG")
+#         return full_path
     
 def save_uploaded_local(directory, img_file, image=None):
     name = img_file.split(os.path.sep)[-1]

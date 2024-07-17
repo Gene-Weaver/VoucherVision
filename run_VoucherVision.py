@@ -3,7 +3,8 @@ import os, sys, socket
 
 # pip install protobuf==3.20.0
 # pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117 nope
-# pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118
+# pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118 nope
+# pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
 # pip install protobuf==3.20.0
 
 def find_available_port(start_port, max_attempts=1000):
@@ -31,7 +32,7 @@ def resolve_path(path):
 if __name__ == "__main__":
     dir_home = os.path.dirname(__file__)
 
-    start_port = 8530
+    start_port = 8531
     try:
         free_port = find_available_port(start_port)
         sys.argv = [

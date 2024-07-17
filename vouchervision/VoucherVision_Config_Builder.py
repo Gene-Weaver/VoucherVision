@@ -36,12 +36,13 @@ def build_VV_config(loaded_cfg=None):
         save_cropped_annotations = ['label','barcode']
 
         do_use_trOCR = False
+        do_use_florence = False
         trOCR_model_path = "microsoft/trocr-large-handwritten"
+        florence_model_path = "microsoft/Florence-2-large"
         OCR_option = 'hand'
         OCR_option_llava = 'llava-v1.6-mistral-7b' # "llava-v1.6-mistral-7b", "llava-v1.6-34b", "llava-v1.6-vicuna-13b", "llava-v1.6-vicuna-7b",
         OCR_option_llava_bit = 'full' # full or 4bit
         double_OCR = False
-
 
         tool_GEO = True
         tool_WFO = True
@@ -49,8 +50,8 @@ def build_VV_config(loaded_cfg=None):
 
         check_for_illegal_filenames = False
 
-        LLM_version_user = 'Azure GPT 3.5 Turbo' #'Azure GPT 4 Turbo 1106-preview'
-        prompt_version = 'SLTPvA_long.yaml' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
+        LLM_version_user = 'Gemini 1.5 Flash' # 'Azure GPT 4' #'Azure GPT 4 Turbo 1106-preview'
+        prompt_version = 'SLTPvM_long.yaml' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
         use_LeafMachine2_collage_images = True # Use LeafMachine2 collage images
         do_create_OCR_helper_image = True
 
@@ -71,7 +72,7 @@ def build_VV_config(loaded_cfg=None):
         return assemble_config(dir_home, run_name, dir_images_local,dir_output,
                         prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, trOCR_model_path, OCR_option, OCR_option_llava, 
+                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, double_OCR, save_cropped_annotations, 
                         tool_GEO, tool_WFO, tool_wikipedia,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
@@ -88,7 +89,9 @@ def build_VV_config(loaded_cfg=None):
         catalog_numerical_only = loaded_cfg['leafmachine']['project']['catalog_numerical_only']
 
         do_use_trOCR = loaded_cfg['leafmachine']['project']['do_use_trOCR']
+        do_use_florence = loaded_cfg['leafmachine']['project']['do_use_florence']
         trOCR_model_path = loaded_cfg['leafmachine']['project']['trOCR_model_path']
+        florence_model_path = loaded_cfg['leafmachine']['project']['florence_model_path']
         OCR_option = loaded_cfg['leafmachine']['project']['OCR_option']
         OCR_option_llava = loaded_cfg['leafmachine']['project']['OCR_option_llava']
         OCR_option_llava_bit  = loaded_cfg['leafmachine']['project']['OCR_option_llava_bit']
@@ -118,7 +121,7 @@ def build_VV_config(loaded_cfg=None):
         return assemble_config(dir_home, run_name, dir_images_local,dir_output,
                         prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, trOCR_model_path, OCR_option, OCR_option_llava, 
+                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, double_OCR, save_cropped_annotations,
                         tool_GEO, tool_WFO, tool_wikipedia,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
@@ -127,7 +130,7 @@ def build_VV_config(loaded_cfg=None):
 def assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                     path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                    prompt_version, do_create_OCR_helper_image_user, do_use_trOCR, trOCR_model_path, OCR_option, OCR_option_llava, 
+                    prompt_version, do_create_OCR_helper_image_user, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
                     OCR_option_llava_bit, double_OCR, save_cropped_annotations, 
                     tool_GEO, tool_WFO, tool_wikipedia,
                     check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False):
@@ -174,7 +177,9 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
         'delete_all_temps': False,
         'delete_temps_keep_VVE': False,
         'do_use_trOCR': do_use_trOCR,
+        'do_use_florence': do_use_florence,
         'trOCR_model_path': trOCR_model_path,
+        'florence_model_path': florence_model_path,
         'OCR_option': OCR_option,
         'OCR_option_llava': OCR_option_llava,
         'OCR_option_llava_bit': OCR_option_llava_bit,

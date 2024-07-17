@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 import colorsys
 from tqdm import tqdm
 from google.oauth2 import service_account
-
+from OCR_Florence_2 import FlorenceOCR
 ### LLaVA should only be installed if the user will actually use it.
 ### It requires the most recent pytorch/Python and can mess with older systems
 
@@ -43,6 +43,7 @@ class OCREngine:
         self.path = path
         self.cfg = cfg
         self.do_use_trOCR = self.cfg['leafmachine']['project']['do_use_trOCR']
+        self.do_use_florence = self.cfg['leafmachine']['project']['do_use_florence']
         self.OCR_option = self.cfg['leafmachine']['project']['OCR_option']
         self.double_OCR = self.cfg['leafmachine']['project']['double_OCR']
         self.dir_home = dir_home
@@ -52,6 +53,8 @@ class OCREngine:
         self.trOCR_processor = trOCR_processor
         self.trOCR_model = trOCR_model
         self.device = device
+
+        self.OCR_JSON_to_file = {}
 
         self.hand_cleaned_text = None
         self.hand_organized_text = None
@@ -80,6 +83,7 @@ class OCREngine:
         self.trOCR_confidences = None
         self.trOCR_characters = None
         self.set_client()
+        self.init_florence()
         self.init_craft()
 
         self.multimodal_prompt = """I need you to transcribe all of the text in this image. 
@@ -116,6 +120,10 @@ class OCREngine:
                 self.craft_net = load_craftnet_model(weight_path=os.path.join(self.dir_home,'vouchervision','craft','craft_mlt_25k.pth'), cuda=True)
             else:
                 self.craft_net = load_craftnet_model(weight_path=os.path.join(self.dir_home,'vouchervision','craft','craft_mlt_25k.pth'), cuda=False)
+
+    def init_florence(self):
+        if 'Florence-2' in self.OCR_option:
+            self.Florence = FlorenceOCR(logger=self.logger, model_id=self.cfg['leafmachine']['project']['florence_model_path'])
 
     def init_llava(self):
         if 'LLaVA' in self.OCR_option:
@@ -241,8 +249,6 @@ class OCREngine:
     def detect_text_with_trOCR_using_google_bboxes(self, do_use_trOCR, logger):
         CONFIDENCES = 0.80
         MAX_NEW_TOKENS = 50
-
-        self.OCR_JSON_to_file = {}
         
         ocr_parts = ''
         if not do_use_trOCR:
@@ -677,6 +683,9 @@ class OCREngine:
 
 
     def process_image(self, do_create_OCR_helper_image, logger):
+        if 'hand' not in self.OCR_option and 'normal' not in self.OCR_option:
+            do_create_OCR_helper_image = False
+            
         # Can stack options, so solitary if statements
         self.OCR = 'OCR:\n'
         if 'CRAFT' in self.OCR_option:
@@ -697,17 +706,27 @@ class OCREngine:
             image, json_output, direct_output, str_output, usage_report = self.Llava.transcribe_image(self.path, self.multimodal_prompt)
             self.logger.info(f"LLaVA Usage Report for Model {self.Llava.model_path}:\n{usage_report}")
 
-            try:
-                self.OCR_JSON_to_file['OCR_LLaVA'] = str_output
-            except:
-                self.OCR_JSON_to_file = {}
-                self.OCR_JSON_to_file['OCR_LLaVA'] = str_output
+            self.OCR_JSON_to_file['OCR_LLaVA'] = str_output
 
             if self.double_OCR:
                 self.OCR = self.OCR + f"\nLLaVA OCR:\n{str_output}" + f"\nLLaVA OCR:\n{str_output}"
             else:
                 self.OCR = self.OCR + f"\nLLaVA OCR:\n{str_output}"
             # logger.info(f"LLaVA OCR:\n{self.OCR}")
+
+        if 'Florence-2' in self.OCR_option: # This option does not produce an OCR helper image
+            if self.json_report:
+                self.json_report.set_text(text_main=f'Working on Florence-2 [{self.Florence.model_id}] transcription :construction:')
+
+            self.logger.info(f"Florence-2 Usage Report for Model [{self.Florence.model_id}]")
+            results_text, results_text_dirty, results, usage_report = self.Florence.ocr_florence(self.path, task_prompt='<OCR>', text_input=None)
+
+            self.OCR_JSON_to_file['OCR_Florence'] = results_text
+
+            if self.double_OCR:
+                self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}" + f"\nFlorence-2 OCR:\n{results_text}"
+            else:
+                self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}"
 
         if 'normal' in self.OCR_option or 'hand' in self.OCR_option:
             if 'normal' in self.OCR_option:
@@ -762,14 +781,16 @@ class OCREngine:
 
             ### Merge final overlay image
             ### [original, normal bboxes, normal text]
-            if 'CRAFT' in self.OCR_option or 'normal' in self.OCR_option:
-                self.overlay_image = self.merge_images(Image.open(self.path), self.merged_image_normal)
-            ### [original, hand bboxes, hand text]
-            elif 'hand' in self.OCR_option:
-                self.overlay_image = self.merge_images(Image.open(self.path), self.merged_image_hand)
-            ### [original, normal bboxes, normal text, hand bboxes, hand text]
-            else:
-                self.overlay_image = self.merge_images(Image.open(self.path), self.merge_images(self.merged_image_normal, self.merged_image_hand))
+            if 'hand' in self.OCR_option or 'normal' in self.OCR_option:
+                if 'CRAFT' in self.OCR_option or 'normal' in self.OCR_option:
+                    self.overlay_image = self.merge_images(Image.open(self.path), self.merged_image_normal)
+                ### [original, hand bboxes, hand text]
+                elif 'hand' in self.OCR_option:
+                    self.overlay_image = self.merge_images(Image.open(self.path), self.merged_image_hand)
+                ### [original, normal bboxes, normal text, hand bboxes, hand text]
+                else:
+                    self.overlay_image = self.merge_images(Image.open(self.path), self.merge_images(self.merged_image_normal, self.merged_image_hand))
+                
             
             if self.do_use_trOCR:
                 if 'CRAFT' in self.OCR_option:

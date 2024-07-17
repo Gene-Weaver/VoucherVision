@@ -1,10 +1,8 @@
 [theme]
-    primaryColor = "#16a616"
-    backgroundColor="#1a1a1a"
-    secondaryBackgroundColor="#303030"
-    textColor = "cccccc"
+    base = "dark"
+    primaryColor = "#00ff00"
 
-[server]
+    [server]
     enableStaticServing = false
     runOnSave = true
     port = 8524

@@ -1,10 +1,22 @@
-date: February 29, 2024
+date: July 12, 2024
 missing_keys: []
 present_keys:
 - Google OCR Print (Valid)
 - Google OCR Handwriting (Valid)
+- Hugging Face Local LLMs (Valid)
+- '[MODEL] microsoft/Florence-2-large (Valid)'
+- '[MODEL] microsoft/Florence-2-base (Valid)'
+- '[MODEL] microsoft/trocr-base-handwritten (Valid)'
+- '[MODEL] microsoft/trocr-large-handwritten (Valid)'
+- '[MODEL] google/gemma-2-9b (Valid)'
+- '[MODEL] google/gemma-2-9b-it (Valid)'
+- '[MODEL] google/gemma-2-27b (Valid)'
+- '[MODEL] google/gemma-2-27b-it (Valid)'
+- '[MODEL] mistralai/Mistral-7B-Instruct-v0.3 (Valid)'
+- '[MODEL] mistralai/Mixtral-8x22B-v0.1 (Valid)'
+- '[MODEL] mistralai/Mixtral-8x22B-Instruct-v0.1 (Valid)'
+- '[MODEL] unsloth/mistral-7b-instruct-v0.3-bnb-4bit (Valid)'
 - OpenAI (Valid)
-- Azure OpenAI (Valid)
 - Palm2 (Valid)
 - Palm2 LangChain (Valid)
 - Gemini (Valid)

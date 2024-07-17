@@ -1,4 +1,5 @@
 import os, io, openai, vertexai, json, tempfile
+import webbrowser
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage
 from langchain.schema import HumanMessage
@@ -9,12 +10,14 @@ from google.cloud import vision
 from google.cloud import vision_v1p3beta1 as vision_beta
 # from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import VertexAI
-
+from huggingface_hub import HfApi, HfFolder
 
 from datetime import datetime
-import google.generativeai as genai
+# import google.generativeai as genai
 from google.oauth2 import service_account
-from googleapiclient.discovery import build
+# from googleapiclient.discovery import build
+
+
 
 
 class APIvalidation:
@@ -24,6 +27,13 @@ class APIvalidation:
         self.dir_home = dir_home
         self.is_hf = is_hf
         self.formatted_date = self.get_formatted_date()
+
+        self.HF_MODEL_LIST = ['microsoft/Florence-2-large','microsoft/Florence-2-base',
+            'microsoft/trocr-base-handwritten','microsoft/trocr-large-handwritten',
+            'google/gemma-2-9b','google/gemma-2-9b-it','google/gemma-2-27b','google/gemma-2-27b-it',
+            'mistralai/Mistral-7B-Instruct-v0.3','mistralai/Mixtral-8x22B-v0.1','mistralai/Mixtral-8x22B-Instruct-v0.1',
+            'unsloth/mistral-7b-instruct-v0.3-bnb-4bit'
+            ]
 
     def get_formatted_date(self):
         # Get the current date
@@ -59,7 +69,7 @@ class APIvalidation:
             try:
                 # Initialize the Azure OpenAI client
                 model = AzureChatOpenAI(
-                    deployment_name = 'gpt-35-turbo',#'gpt-35-turbo',
+                    deployment_name = 'gpt-4',#'gpt-35-turbo',
                     openai_api_version = self.cfg_private['openai_azure']['OPENAI_API_VERSION'],
                     openai_api_key = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE'],
                     azure_endpoint = self.cfg_private['openai_azure']['OPENAI_API_BASE'],
@@ -67,7 +77,7 @@ class APIvalidation:
                 )
                 msg = HumanMessage(content="hello")
                 # self.llm_object.temperature = self.config.get('temperature')
-                response = model([msg])
+                response = model.invoke([msg])
 
                 # Check the response content (you might need to adjust this depending on how your AzureChatOpenAI class handles responses)
                 if response:
@@ -85,7 +95,7 @@ class APIvalidation:
                 azure_organization = os.getenv('AZURE_ORGANIZATION')
                 # Initialize the Azure OpenAI client
                 model = AzureChatOpenAI(
-                    deployment_name = 'gpt-35-turbo',#'gpt-35-turbo',
+                    deployment_name = 'gpt-4',#'gpt-35-turbo',
                     openai_api_version = azure_api_version,
                     openai_api_key = azure_api_key,
                     azure_endpoint = azure_api_base,
@@ -93,7 +103,7 @@ class APIvalidation:
                 )
                 msg = HumanMessage(content="hello")
                 # self.llm_object.temperature = self.config.get('temperature')
-                response = model([msg])
+                response = model.invoke([msg])
 
                 # Check the response content (you might need to adjust this depending on how your AzureChatOpenAI class handles responses)
                 if response:
@@ -223,7 +233,54 @@ class APIvalidation:
 
         return results
 
+    def test_hf_token(self, k_huggingface):
+        if not k_huggingface:
+            print("Hugging Face API token not found in environment variables.")
+            return False
 
+        # Create an instance of the API
+        api = HfApi()
+
+        try:
+            # Try to get details of a known public model
+            model_info = api.model_info("bert-base-uncased", use_auth_token=k_huggingface)
+            if model_info:
+                print("Token is valid. Accessed model details successfully.")
+                return True
+            else:
+                print("Token is valid but failed to access model details.")
+                return True
+        except Exception as e:
+            print(f"Failed to validate token: {e}")
+            return False
+
+    def check_gated_model_access(self, model_id, k_huggingface):
+        api = HfApi()
+        attempts = 0
+        max_attempts = 2
+
+        while attempts < max_attempts:
+            try:
+                model_info = api.model_info(model_id, use_auth_token=k_huggingface)
+                print(f"Access to model '{model_id}' is granted.")
+                return "valid"
+            except Exception as e:
+                error_message = str(e)
+                if 'awaiting a review' in error_message:
+                    print(f"Access to model '{model_id}' is awaiting review. (Under Review)")
+                    return "under_review"
+                print(f"Access to model '{model_id}' is denied. Please accept the terms and conditions.")
+                print(f"Error: {e}")
+                webbrowser.open(f"https://huggingface.co/{model_id}")
+                input("Press Enter after you have accepted the terms and conditions...")
+
+            attempts += 1
+
+        print(f"Failed to access model '{model_id}' after {max_attempts} attempts.")
+        return "invalid"
+
+
+    
 
     def get_google_credentials(self):
         if self.is_hf:
@@ -251,6 +308,8 @@ class APIvalidation:
             k_google_application_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
             k_project_id = os.getenv('GOOGLE_PROJECT_ID')
             k_location = os.getenv('GOOGLE_LOCATION')
+
+            k_huggingface = None
             
             k_mistral = os.getenv('MISTRAL_API_KEY')
             k_here = os.getenv('HERE_API_KEY')
@@ -258,6 +317,8 @@ class APIvalidation:
         else:
             k_OPENAI_API_KEY = self.cfg_private['openai']['OPENAI_API_KEY']
             k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
+
+            k_huggingface = self.cfg_private['huggingface']['hf_token']
 
             k_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
             k_location = self.cfg_private['google']['GOOGLE_LOCATION']
@@ -284,6 +345,29 @@ class APIvalidation:
                 present_keys.append('Google OCR Handwriting (Invalid)')
         else:
             missing_keys.append('Google OCR')
+
+        # present_keys.append('[MODEL] TEST (Under Review)')
+
+        # HF key check
+        if self.has_API_key(k_huggingface):
+            is_valid = self.test_hf_token(k_huggingface)
+            if is_valid:
+                present_keys.append('Hugging Face Local LLMs (Valid)')
+            else:
+                present_keys.append('Hugging Face Local LLMs (Invalid)')
+        else:
+            missing_keys.append('Hugging Face Local LLMs')
+
+        # List of gated models to check access for
+        for model_id in self.HF_MODEL_LIST:
+            access_status = self.check_gated_model_access(model_id, k_huggingface)
+            if access_status == "valid":
+                present_keys.append(f'[MODEL] {model_id} (Valid)')
+            elif access_status == "under_review":
+                present_keys.append(f'[MODEL] {model_id} (Under Review)')
+            else:
+                present_keys.append(f'[MODEL] {model_id} (Invalid)')
+        
         
         
         # OpenAI key check
@@ -297,14 +381,14 @@ class APIvalidation:
             missing_keys.append('OpenAI')
 
         # Azure OpenAI key check
-        if self.has_API_key(k_openai_azure):
-            is_valid = self.check_azure_openai_api_key()
-            if is_valid:
-                present_keys.append('Azure OpenAI (Valid)')
-            else:
-                present_keys.append('Azure OpenAI (Invalid)')
-        else:
-            missing_keys.append('Azure OpenAI')
+        # if self.has_API_key(k_openai_azure):
+        #     is_valid = self.check_azure_openai_api_key()
+        #     if is_valid:
+        #         present_keys.append('Azure OpenAI (Valid)')
+        #     else:
+        #         present_keys.append('Azure OpenAI (Invalid)')
+        # else:
+        #     missing_keys.append('Azure OpenAI')
 
         # Google PALM2/Gemini key check
         if self.has_API_key(k_google_application_credentials) and self.has_API_key(k_project_id) and self.has_API_key(k_location): ##################

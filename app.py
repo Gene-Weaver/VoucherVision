@@ -144,6 +144,8 @@ if 'present_annotations' not in st.session_state:
     st.session_state['present_annotations'] = None
 if 'missing_annotations' not in st.session_state:
     st.session_state['missing_annotations'] = None
+if 'model_annotations' not in st.session_state:
+    st.session_state['model_annotations'] = None
 if 'date_of_check' not in st.session_state:
     st.session_state['date_of_check'] = None
 
@@ -253,9 +255,8 @@ def load_gallery(converted_files, uploaded_file):
 
 
 
-# @st.cache_data
 def handle_image_upload_and_gallery_hf(uploaded_files):
-    # SAFE = SafetyCheck(st.session_state['is_hf'])
+    SAFE = SafetyCheck(st.session_state['is_hf'])
     if uploaded_files:
         
         # Clear input image gallery and input list
@@ -264,11 +265,11 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
         ind_small = 0
         for uploaded_file in uploaded_files:
 
-            # if SAFE.check_for_inappropriate_content(uploaded_file):
-            #     clear_image_uploads()
-            #     report_violation(uploaded_file.name, is_hf=st.session_state['is_hf'])
-            #     st.error("Warning: You uploaded an image that violates our terms of service.")
-            #     return True
+            if SAFE.check_for_inappropriate_content(uploaded_file):
+                clear_image_uploads()
+                report_violation(uploaded_file.name, is_hf=st.session_state['is_hf'])
+                st.error("Warning: You uploaded an image that violates our terms of service.")
+                return True
 
             
             # Determine the file type
@@ -319,10 +320,9 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
             images_to_display = st.session_state['input_list_small']
         show_gallery_small_hf(images_to_display)
     
-    # return False
+    return False
 
 
-# @st.cache_data
 def handle_image_upload_and_gallery():
     
     if st.session_state['view_local_gallery'] and st.session_state['input_list_small'] and (st.session_state['dir_images_local_TEMP'] == st.session_state.config['leafmachine']['project']['dir_images_local']):
@@ -371,8 +371,6 @@ def handle_image_upload_and_gallery():
 
 
 def content_input_images(col_left, col_right):
-    SAFE = SafetyCheck(st.session_state['is_hf'])
-
     st.write('---')
     # col1, col2 = st.columns([2,8])
     with col_left:
@@ -395,16 +393,7 @@ def content_input_images(col_left, col_right):
     
     with col_right:
         if st.session_state.is_hf:
-            if uploaded_files:
-                is_violation = False
-                for uploaded_file in uploaded_files:
-                    if SAFE.check_for_inappropriate_content(uploaded_file):
-                        clear_image_uploads()
-                        report_violation(uploaded_file.name, is_hf=st.session_state['is_hf'])
-                        st.error("Warning: You uploaded an image that violates our terms of service.")
-                        is_violation = True
-            if not is_violation:
-                handle_image_upload_and_gallery_hf(uploaded_files)
+            result = handle_image_upload_and_gallery_hf(uploaded_files)
 
         else:
             st.session_state['view_local_gallery'] = st.toggle("View Image Gallery",)
@@ -1030,6 +1019,16 @@ def create_private_file():
         st.info("Note: You can manually edit these API keys later by opening the /PRIVATE_DATA.yaml file in a plain text editor.")
 
         st.write("---")
+        st.subheader("Hugging Face  (*Required For Local LLMs*)")
+        st.markdown("VoucherVision relies on LLM models from Hugging Face. Some models are 'gated', meaning that you have to agree to the creator's usage guidelines.")
+        st.markdown("""Create a [Hugging Face account](https://huggingface.co/join). Once your account is created, in your profile settings [navigate to 'Access Tokens'](https://huggingface.co/settings/tokens) and click 'Create new token'. Create a token that has 'Read' privileges. Copy the token into the field below.""")
+
+        hugging_face_token = st.text_input(label = 'Hugging Face token', value = cfg_private['huggingface'].get('hf_token', ''),
+                                                placeholder = 'e.g. hf_GNRLIUBnvfkjvnf....',
+                                                help ="This is your Hugging Face access token. It only needs Read access. Please see https://huggingface.co/settings/tokens",
+                                                type='password')
+
+        st.write("---")
         st.subheader("Google Vision  (*Required*) / Google PaLM 2 / Google Gemini")
         st.markdown("VoucherVision currently uses [Google Vision API](https://cloud.google.com/vision/docs/ocr) for OCR. Generating an API key for this is more involved than the others. [Please carefully follow the instructions outlined here to create and setup your account.](https://cloud.google.com/vision/docs/setup) ")
         st.markdown("""Once your account is created, [visit this page](https://console.cloud.google.com) and create a project. Then follow these instructions:""")
@@ -1183,6 +1182,7 @@ def create_private_file():
         st.button("Set API Keys",type='primary', on_click=save_changes_to_API_keys, 
                     args=[cfg_private,
                         openai_api_key,
+                        hugging_face_token,
                         azure_openai_api_version, azure_openai_api_key, azure_openai_api_base, azure_openai_organization, azure_openai_api_type,
                         google_application_credentials, google_project_location, google_project_id,
                         mistral_API_KEY, 
@@ -1196,12 +1196,15 @@ def create_private_file():
 
 def save_changes_to_API_keys(cfg_private,
                         openai_api_key,
+                        hugging_face_token,
                         azure_openai_api_version, azure_openai_api_key, azure_openai_api_base, azure_openai_organization, azure_openai_api_type,
                         google_application_credentials, google_project_location, google_project_id,
                         mistral_API_KEY, 
                         here_APP_ID, here_API_KEY): 
     
     # Update the configuration dictionary with the new values
+    cfg_private['huggingface']['hf_token'] = hugging_face_token 
+
     cfg_private['openai']['OPENAI_API_KEY'] = openai_api_key 
 
     cfg_private['openai_azure']['OPENAI_API_VERSION'] = azure_openai_api_version
@@ -1282,8 +1285,19 @@ def display_api_key_status(ccol):
             # Convert keys to annotations (similar to what you do in check_api_key_status)
             present_annotations = []
             missing_annotations = []
+            model_annotations = []
             for key in present_keys:
-                if "Valid" in key:
+                if "[MODEL]" in key:
+                    show_text = key.split(']')[1]
+                    show_text = show_text.split('(')[0]
+                    if 'Under Review' in key:
+                        model_annotations.append((show_text, "under review", "#9C0586"))  # Green for valid
+                    elif 'invalid' in key:
+                        model_annotations.append((show_text, "error!", "#870307"))  # Green for valid
+                    else:
+                        model_annotations.append((show_text, "ready!", "#059c1b"))  # Green for valid
+
+                elif "Valid" in key:
                     show_text = key.split('(')[0]
                     present_annotations.append((show_text, "ready!", "#059c1b"))  # Green for valid
                 elif "Invalid" in key:
@@ -1292,6 +1306,7 @@ def display_api_key_status(ccol):
 
             st.session_state['present_annotations'] = present_annotations
             st.session_state['missing_annotations'] = missing_annotations
+            st.session_state['model_annotations'] = model_annotations
             st.session_state['date_of_check'] = date_of_check
             st.session_state['API_checked'] = True
             # print('for')
@@ -1320,6 +1335,13 @@ def display_api_key_status(ccol):
     if 'missing_annotations' in st.session_state and st.session_state['missing_annotations']:
         annotated_text(*st.session_state['missing_annotations'])
     
+    st.markdown(f"Access to Hugging Face Models")
+    
+    if 'model_annotations' in st.session_state and st.session_state['model_annotations']:
+        annotated_text(*st.session_state['model_annotations'])
+
+    
+    
 
 
 def check_api_key_status():
@@ -1335,8 +1357,19 @@ def check_api_key_status():
     # Prepare annotations for present keys
     present_annotations = []
     missing_annotations = []
+    model_annotations = []
     for key in present_keys:
-        if "Valid" in key:
+        if "[MODEL]" in key:
+            show_text = key.split(']')[1]
+            show_text = show_text.split('(')[0]
+            if 'Under Review' in key:
+                model_annotations.append((show_text, "under review", "#9C0586"))  # Green for valid
+            elif 'invalid' in key:
+                model_annotations.append((show_text, "error!", "#870307"))  # Green for valid
+            else:
+                model_annotations.append((show_text, "ready!", "#059c1b"))  # Green for valid
+
+        elif "Valid" in key:
             show_text = key.split('(')[0]
             present_annotations.append((show_text, "ready!", "#059c1b"))  # Green for valid
         elif "Invalid" in key:
@@ -1353,6 +1386,7 @@ def check_api_key_status():
 
     st.session_state['present_annotations'] = present_annotations
     st.session_state['missing_annotations'] = missing_annotations
+    st.session_state['model_annotations'] = model_annotations
     st.session_state['date_of_check'] = date_of_check
     
 
@@ -1409,7 +1443,7 @@ def content_header():
     with col_run_4:
         with st.expander("View Messages and Updates"):
             st.info("***Note:*** If you use VoucherVision frequently, you can change the default values that are auto-populated in the form below. In a text editor or IDE, edit the first few rows in the file `../VoucherVision/vouchervision/VoucherVision_Config_Builder.py`")
-        st.info("Please enable LeafMachine2 collage for full-sized images of herbarium vouchers, you will get better results!")
+        st.info("Please enable LeafMachine2 collage for full-sized images of herbarium vouchers, you will get better results! If your image is primarily text (like a flora or book page) then disable the collage.")
     
     col_test = st.container()
 
@@ -1706,6 +1740,8 @@ def content_llm_cost():
 
 
 def content_prompt_and_llm_version():
+    st.info("Note: The default settings may not work for your particular image. If VoucherVision does not produce the results that you were expecting: 1) try disabling the LM2 collage 2) Then try enabling 2 copies of OCR, SLTPvB_long prompt, Azure GPT 4. We are currently building 'recipes' for different scenarios, please stay tuned!")
+    st.warning("UPDATE :bell: May 25, 2024 - The default LLM used to be Azure GPT-3.5, which was served by the University of Michigan. However, UofM has sunset all but GPT-4 Turbo so that is now the default LLM. If you ran VV prior to this update and saw an empty result, that was the reason.")
     st.header('Prompt Version')
     col_prompt_1, col_prompt_2 = st.columns([4,2])              
     with col_prompt_1:
@@ -1736,13 +1772,13 @@ def content_prompt_and_llm_version():
         st.markdown("""
 Based on preliminary results, the following models perform the best. We are currently running tests of all possible OCR + LLM + Prompt combinations to create recipes for different workflows.
 - Any Mistral model e.g., `Mistral Large`          
-- `PaLM 2 text-bison@001`
+- `PaLM 2 text-bison@002`
 - `GPT 4 Turbo 1106-preview`
 - `GPT 3.5 Turbo`
 - `LOCAL Mixtral 7Bx8 Instruct`
 - `LOCAL Mixtral 7B Instruct`
 
-Larger models (e.g., `GPT 4`, `GPT 4 32k`, `Gemini Pro`) do not necessarily perform better for these tasks. MistralAI models exceeded our expectations and perform extremely well. PaLM 2 text-bison@001 also seems to consistently out-perform Gemini Pro.
+Larger models (e.g., `GPT 4`, `Gemini Pro`) do not necessarily perform better for these tasks. MistralAI models exceeded our expectations and perform extremely well. PaLM 2 text-bison@001 also seems to consistently out-perform Gemini Pro.
                     
 The `SLTPvA_short.yaml` prompt also seems to work better with smaller LLMs (e.g., Mistral Tiny). Alternatively, enable double OCR to help the LLM focus on the OCR text given a longer prompt.
                     
@@ -1842,7 +1878,7 @@ def content_ocr_method():
     demo_text_trh = demo_text_h + '\n' + demo_text_tr
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
-    options = ["Google Vision Handwritten", "Google Vision Printed", "CRAFT + trOCR","LLaVA"]
+    options = ["Google Vision Handwritten", "Google Vision Printed", "CRAFT + trOCR","LLaVA", "Florence-2"]
     options_llava = ["llava-v1.6-mistral-7b", "llava-v1.6-34b", "llava-v1.6-vicuna-13b", "llava-v1.6-vicuna-7b",]
     options_llava_bit = ["full", "4bit",]
     captions_llava = [
@@ -1893,6 +1929,7 @@ def content_ocr_method():
             "Google Vision Printed": 'normal',
             "CRAFT + trOCR": 'CRAFT',
             "LLaVA": 'LLaVA',
+            "Florence-2": 'Florence-2',
         }
 
         # Map selected options to their corresponding internal representations
@@ -1924,6 +1961,19 @@ def content_ocr_method():
                 st.error(f"The Hugging Face model path {user_input_trOCR_model_path} is not valid. Please revise.")
             else:
                 st.session_state.config['leafmachine']['project']['trOCR_model_path'] = user_input_trOCR_model_path
+
+
+    if "Florence-2" in selected_OCR_options:
+        default_florence_model_path = st.session_state.config['leafmachine']['project']['florence_model_path']
+        user_input_florence_model_path = st.text_input("Florence-2 Hugging Face model path. MUST be a Florence-2 version based on 'microsoft/Florence-2-large' or similar.", value=default_florence_model_path)
+
+        if st.session_state.config['leafmachine']['project']['florence_model_path'] != user_input_florence_model_path:
+            is_valid_mp = is_valid_huggingface_model_path(user_input_florence_model_path)
+            if not is_valid_mp:
+                st.error(f"The Hugging Face model path {user_input_florence_model_path} is not valid. Please revise.")
+            else:
+                st.session_state.config['leafmachine']['project']['florence_model_path'] = user_input_florence_model_path
+
 
     if 'LLaVA' in selected_OCR_options:
         OCR_option_llava = st.radio(
