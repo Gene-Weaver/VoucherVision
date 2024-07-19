@@ -43,6 +43,10 @@ class VoucherVision():
         self.prompt_version = None
         self.is_hf = is_hf
 
+        self.OCR_cost = 0.0
+        self.OCR_tokens_in = 0
+        self.OCR_tokens_out = 0
+
         ### config_vals_for_permutation allows you to set the starting temp, top_k, top_p, seed....
         self.config_vals_for_permutation = config_vals_for_permutation
 
@@ -649,11 +653,19 @@ class VoucherVision():
     def perform_OCR_and_save_results(self, image_index, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds):
         self.logger.info(f'Working on {image_index + 1}/{len(self.img_paths)} --- Starting OCR')
         # self.OCR - None
+        self.OCR_cost = 0.0
+        self.OCR_tokens_in = 0
+        self.OCR_tokens_out = 0
 
         ### Process_image() runs the OCR for text, handwriting, trOCR AND creates the overlay image
         ocr_google = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, self.path_to_crop, self.cfg, self.trOCR_model_version, self.trOCR_model, self.trOCR_processor, self.device)  
         ocr_google.process_image(self.do_create_OCR_helper_image, self.logger)
         self.OCR = ocr_google.OCR
+
+        self.OCR_cost = ocr_google.cost
+        self.OCR_tokens_in = ocr_google.tokens_in
+        self.OCR_tokens_out = ocr_google.tokens_out
+
         self.logger.info(f"Complete OCR text for LLM prompt:\n\n{self.OCR}\n\n")
 
         self.write_json_to_file(txt_file_path_OCR, ocr_google.OCR_JSON_to_file)
@@ -774,7 +786,8 @@ class VoucherVision():
 
         self.update_progress_report_final(progress_report)
         final_JSON_response = self.parse_final_json_response(final_JSON_response)
-        return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out
+        
+        return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out, self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out
     
 
     ##################################################################################################################################
@@ -905,9 +918,9 @@ class VoucherVision():
             if is_real_run:
                 progress_report.update_overall(f"Transcribing Labels")
 
-            final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out = self.send_to_LLM(self.is_azure, progress_report, json_report, self.model_name)
+            final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out = self.send_to_LLM(self.is_azure, progress_report, json_report, self.model_name)
             
-            return final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out
+            return final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out
 
         except Exception as e:
             self.logger.error(f"LLM call failed in process_specimen_batch: {e}")

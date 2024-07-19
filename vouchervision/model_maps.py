@@ -5,6 +5,7 @@ class ModelMaps:
         'GPT_3_5': '#008000',  # Green
         'GPT_4_TURBO_2024_04_09': '#32CD32',  # Lime Green
         'GPT_4o_2024_05_13': '#3CB371',  # Lime Green gpt-4o-2024-05-13
+        'GPT_4o_mini_2024_07_18': '#115730',  # Lime Green gpt-4o-2024-05-13
         'GPT_3_5_INSTRUCT': '#3CB371',  # Medium Sea Green
         'GPT_4_TURBO_1106': '#228B22',  # Forest Green
         'GPT_4_TURBO_0125': '#228B22',  # Forest Green
@@ -39,22 +40,27 @@ class ModelMaps:
         'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05': '#bababa',  # Gray
     }
 
-    MODELS_OPENAI = ["GPT 4",
-                     "GPT 4 32k",
-                     "GPT 4o 2024-05-13", #GPT_4o_2024_05_13
-                     "GPT 4 Turbo 2024-04-09",#GPT_4_TURBO_2024_04_09
-                     "GPT 4 Turbo 0125-preview",
-                     "GPT 4 Turbo 1106-preview",
-                     "GPT 3.5 Turbo",
-                     "GPT 3.5 Instruct",
+    MODELS_OPENAI = [
+                    "GPT 4o 2024-05-13", #GPT_4o_2024_05_13
+                    "GPT 4o mini 2024-07-18",
+                    "GPT 4 Turbo 2024-04-09",#GPT_4_TURBO_2024_04_09
+                    "GPT 4",
+                    "GPT 4 32k",
+                    "GPT 4 Turbo 0125-preview",
+                    "GPT 4 Turbo 1106-preview",
+                    "GPT 3.5 Turbo",
+                    "GPT 3.5 Instruct",
+                    ]
+    
 
-                     "Azure GPT 4",
+    MODELS_OPENAI_AZURE = [
+                    "Azure GPT 4",
                     #  "Azure GPT 4 32k",
                     #  "Azure GPT 4 Turbo 0125-preview",
                     #  "Azure GPT 4 Turbo 1106-preview",
                     #  "Azure GPT 3.5 Turbo",
                     #  "Azure GPT 3.5 Instruct",
-                     ]
+                    ]
     
     MODELS_GOOGLE = [
                     # "PaLM 2 text-bison@001",
@@ -77,12 +83,20 @@ class ModelMaps:
                     "LOCAL CPU Mistral 7B Instruct v0.2 GGUF",
                     'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05']
 
-    MODELS_GUI_DEFAULT = "Azure GPT 4" # "GPT 4 Turbo 1106-preview"
+    MODELS_GUI_DEFAULT = "Gemini 1.5 Flash" #"Azure GPT 4" # "GPT 4 Turbo 1106-preview"
+
+    MODEL_FAMILY = {
+                    'OpenAI': MODELS_OPENAI,
+                    'OpenAI Azure': MODELS_OPENAI_AZURE,
+                    'Google': MODELS_GOOGLE, 
+                    'Mistral': MODELS_MISTRAL, 
+                    'Local': MODELS_LOCAL}
 
     version_mapping_cost = {
         'GPT 4 32k': 'GPT_4_32K',
         'GPT 4': 'GPT_4',
         "GPT 4o 2024-05-13": 'GPT_4o_2024_05_13',
+        "GPT 4o mini 2024-07-18": 'GPT_4o_mini_2024_07_18',
         "GPT 4 Turbo 2024-04-09": 'GPT_4_TURBO_2024_04_09',
         'GPT 4 Turbo 0125-preview': 'GPT_4_TURBO_0125',
         'GPT 4 Turbo 1106-preview': 'GPT_4_TURBO_1106',
@@ -127,6 +141,7 @@ class ModelMaps:
             'GPT 4 Turbo 0125-preview': has_key_openai,
             'GPT 4':  has_key_openai,
             "GPT 4o 2024-05-13": has_key_openai, 
+            "GPT 4o mini 2024-07-18": has_key_openai, 
             'GPT 4 32k':  has_key_openai,
             'GPT 3.5 Turbo':  has_key_openai,
             'GPT 3.5 Instruct':  has_key_openai,
@@ -164,6 +179,7 @@ class ModelMaps:
     def get_version_mapping_is_azure(cls, key):
         version_mapping_is_azure = {
             "GPT 4o 2024-05-13": False, 
+            "GPT 4o mini 2024-07-18": False, 
             "GPT 4 Turbo 2024-04-09": False,
             "GPT 4 Turbo 1106-preview": False,
             "GPT 4 Turbo 0125-preview": False,
@@ -171,7 +187,7 @@ class ModelMaps:
             'GPT 4 32k':  False,
             'GPT 3.5 Turbo':  False,
             'GPT 3.5 Instruct':  False,
-
+           
             # 'Azure GPT 3.5 Turbo': True,
             # 'Azure GPT 3.5 Instruct': True,
             'Azure GPT 4': True,
@@ -219,6 +235,9 @@ class ModelMaps:
 
         elif key == 'GPT_4o_2024_05_13':
             return 'gpt-4o-2024-05-13'
+        
+        elif key == 'GPT_4o_mini_2024_07_18':
+            return 'gpt-4o-mini-2024-07-18'
         
         elif key == 'GPT_4_TURBO_2024_04_09':
             return 'gpt-4-turbo-2024-04-09'
@@ -308,7 +327,16 @@ class ModelMaps:
 
     @classmethod
     def get_models_gui_list(cls):
-        return cls.MODELS_LOCAL + cls.MODELS_GOOGLE + cls.MODELS_OPENAI + cls.MODELS_MISTRAL
+        return cls.MODELS_LOCAL + cls.MODELS_GOOGLE + cls.MODELS_OPENAI + cls.MODELS_OPENAI_AZURE + cls.MODELS_MISTRAL
+    
+    @classmethod 
+    def get_models_gui_list_family(cls, family=None):
+        if family and family in cls.MODEL_FAMILY:
+            return cls.MODEL_FAMILY[family]
+        all_models = []
+        for family_models in cls.MODEL_FAMILY.values():
+            all_models.extend(family_models)
+        return all_models
 
     @classmethod
     def get_version_mapping_cost(cls, key):

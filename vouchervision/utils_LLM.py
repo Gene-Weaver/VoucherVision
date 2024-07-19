@@ -8,11 +8,16 @@ import psutil
 import threading
 import torch
 from datetime import datetime
-from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
-from vouchervision.tool_geolocate_HERE import validate_coordinates_here
-from vouchervision.tool_wikipedia import validate_wikipedia
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+try:
+    from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
+    from vouchervision.tool_geolocate_HERE import validate_coordinates_here
+    from vouchervision.tool_wikipedia import validate_wikipedia
+except:
+    from tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
+    from tool_geolocate_HERE import validate_coordinates_here
+    from tool_wikipedia import validate_wikipedia
 
 def run_tools(output, tool_WFO, tool_GEO, tool_wikipedia, json_file_path_wiki):
     # Define a function that will catch and return the results of your functions
@@ -179,15 +184,26 @@ class SystemLoadMonitor():
             
         }
 
-        self.logger.info(f"Inference Time: {round(self.inference_time,2)} seconds")
-        self.logger.info(f"Tool Time: {round(tool_time,2)} seconds")
-        self.logger.info(f"Max CPU Usage: {round(self.gpu_usage['max_cpu_usage'],2)}%")
-        self.logger.info(f"Max RAM Usage: {round(self.gpu_usage['max_ram_usage'],2)}GB")
+        if self.logger:
+            self.logger.info(f"Inference Time: {round(self.inference_time,2)} seconds")
+            self.logger.info(f"Tool Time: {round(tool_time,2)} seconds")
+            self.logger.info(f"Max CPU Usage: {round(self.gpu_usage['max_cpu_usage'],2)}%")
+            self.logger.info(f"Max RAM Usage: {round(self.gpu_usage['max_ram_usage'],2)}GB")
+        else:
+            print(f"Inference Time: {round(self.inference_time,2)} seconds")
+            print(f"Tool Time: {round(tool_time,2)} seconds")
+            print(f"Max CPU Usage: {round(self.gpu_usage['max_cpu_usage'],2)}%")
+            print(f"Max RAM Usage: {round(self.gpu_usage['max_ram_usage'],2)}GB")
+
         if self.has_GPU:
             report.update({'max_gpu_load': str(round(self.gpu_usage['max_load'] * 100, 2))})
             report.update({'max_gpu_vram_gb': str(round(self.gpu_usage['max_vram_usage'], 2))})
-            self.logger.info(f"Max GPU Load: {round(self.gpu_usage['max_load'] * 100, 2)}%")
-            self.logger.info(f"Max GPU Memory Usage: {round(self.gpu_usage['max_vram_usage'], 2)}GB")
+            if self.logger:
+                self.logger.info(f"Max GPU Load: {round(self.gpu_usage['max_load'] * 100, 2)}%")
+                self.logger.info(f"Max GPU Memory Usage: {round(self.gpu_usage['max_vram_usage'], 2)}GB")
+            else:
+                print(f"Max GPU Load: {round(self.gpu_usage['max_load'] * 100, 2)}%")
+                print(f"Max GPU Memory Usage: {round(self.gpu_usage['max_vram_usage'], 2)}GB")
         else:
             report.update({'max_gpu_load': '0'})
             report.update({'max_gpu_vram_gb': '0'})

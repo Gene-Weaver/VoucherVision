@@ -1,6 +1,8 @@
 # OpenAI
 # https://openai.com/pricing
 
+
+# ALL COSTS REPORTED PER 1,000 TOKENS
 GPT_4_32K:
   in: 0.06
   out: 0.12
@@ -13,6 +15,9 @@ GPT_4:
 GPT_4o_2024_05_13:
   in: 0.005
   out: 0.015
+GPT_4o_mini_2024_07_18:
+  in: 0.000150
+  out: 0.000600
 GPT_4_TURBO_2024_04_09:
   in: 0.01
   out: 0.03

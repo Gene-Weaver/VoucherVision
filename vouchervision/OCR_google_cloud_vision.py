@@ -8,6 +8,7 @@ import colorsys
 from tqdm import tqdm
 from google.oauth2 import service_account
 from OCR_Florence_2 import FlorenceOCR
+from OCR_GPT4oMini import GPT4oMiniOCR
 ### LLaVA should only be installed if the user will actually use it.
 ### It requires the most recent pytorch/Python and can mess with older systems
 
@@ -56,6 +57,11 @@ class OCREngine:
 
         self.OCR_JSON_to_file = {}
 
+        # for paid vLM OCR like GPT-vision
+        self.cost = 0.0
+        self.tokens_in = 0
+        self.tokens_out = 0
+
         self.hand_cleaned_text = None
         self.hand_organized_text = None
         self.hand_bounds = None
@@ -84,6 +90,7 @@ class OCREngine:
         self.trOCR_characters = None
         self.set_client()
         self.init_florence()
+        self.init_gpt_4o_mini()
         self.init_craft()
 
         self.multimodal_prompt = """I need you to transcribe all of the text in this image. 
@@ -124,6 +131,10 @@ class OCREngine:
     def init_florence(self):
         if 'Florence-2' in self.OCR_option:
             self.Florence = FlorenceOCR(logger=self.logger, model_id=self.cfg['leafmachine']['project']['florence_model_path'])
+
+    def init_gpt_4o_mini(self):
+        if 'GPT-4o-mini' in self.OCR_option:
+            self.GPTmini = GPT4oMiniOCR(api_key = os.getenv('OPENAI_API_KEY'))
 
     def init_llava(self):
         if 'LLaVA' in self.OCR_option:
@@ -701,7 +712,7 @@ class OCREngine:
 
         if 'LLaVA' in self.OCR_option: # This option does not produce an OCR helper image
             if self.json_report:
-                self.json_report.set_text(text_main=f'Working on LLaVA {self.Llava.model_path} transcription :construction:')
+                self.json_report.set_text(text_main=f'Working on LLaVA {self.Llava.model_path} OCR :construction:')
 
             image, json_output, direct_output, str_output, usage_report = self.Llava.transcribe_image(self.path, self.multimodal_prompt)
             self.logger.info(f"LLaVA Usage Report for Model {self.Llava.model_path}:\n{usage_report}")
@@ -716,7 +727,7 @@ class OCREngine:
 
         if 'Florence-2' in self.OCR_option: # This option does not produce an OCR helper image
             if self.json_report:
-                self.json_report.set_text(text_main=f'Working on Florence-2 [{self.Florence.model_id}] transcription :construction:')
+                self.json_report.set_text(text_main=f'Working on Florence-2 [{self.Florence.model_id}] OCR :construction:')
 
             self.logger.info(f"Florence-2 Usage Report for Model [{self.Florence.model_id}]")
             results_text, results_text_dirty, results, usage_report = self.Florence.ocr_florence(self.path, task_prompt='<OCR>', text_input=None)
@@ -727,6 +738,21 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}" + f"\nFlorence-2 OCR:\n{results_text}"
             else:
                 self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}"
+
+        if 'GPT-4o-mini' in self.OCR_option: # This option does not produce an OCR helper image
+            if self.json_report:
+                self.json_report.set_text(text_main=f'Working on GPT-4o-mini OCR :construction:')
+
+            self.logger.info(f"GPT-4o-mini Usage Report")
+            results_text, cost_in, cost_out, total_cost, rates_in, rates_out, self.tokens_in, self.tokens_out = self.GPTmini.ocr_gpt4o(self.path, resolution=self.cfg['leafmachine']['project']['OCR_GPT_4o_mini_resolution'], max_tokens=512)
+            self.cost += total_cost
+
+            self.OCR_JSON_to_file['OCR_GPT_4o_mini'] = results_text
+
+            if self.double_OCR:
+                self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}" + f"\nGPT-4o-mini OCR:\n{results_text}"
+            else:
+                self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}"
 
         if 'normal' in self.OCR_option or 'hand' in self.OCR_option:
             if 'normal' in self.OCR_option:

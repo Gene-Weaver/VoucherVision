@@ -42,6 +42,7 @@ def build_VV_config(loaded_cfg=None):
         OCR_option = 'hand'
         OCR_option_llava = 'llava-v1.6-mistral-7b' # "llava-v1.6-mistral-7b", "llava-v1.6-34b", "llava-v1.6-vicuna-13b", "llava-v1.6-vicuna-7b",
         OCR_option_llava_bit = 'full' # full or 4bit
+        OCR_GPT_4o_mini_resolution = 'high'
         double_OCR = False
 
         tool_GEO = True
@@ -73,7 +74,7 @@ def build_VV_config(loaded_cfg=None):
                         prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
                         prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
-                        OCR_option_llava_bit, double_OCR, save_cropped_annotations, 
+                        OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
                         tool_GEO, tool_WFO, tool_wikipedia,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
     else:
@@ -95,6 +96,7 @@ def build_VV_config(loaded_cfg=None):
         OCR_option = loaded_cfg['leafmachine']['project']['OCR_option']
         OCR_option_llava = loaded_cfg['leafmachine']['project']['OCR_option_llava']
         OCR_option_llava_bit  = loaded_cfg['leafmachine']['project']['OCR_option_llava_bit']
+        OCR_GPT_4o_mini_resolution = loaded_cfg['leafmachine']['project']['OCR_GPT_4o_mini_resolution']
         double_OCR = loaded_cfg['leafmachine']['project']['double_OCR']
 
         tool_GEO = loaded_cfg['leafmachine']['project']['tool_GEO']
@@ -122,7 +124,7 @@ def build_VV_config(loaded_cfg=None):
                         prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
                         prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
-                        OCR_option_llava_bit, double_OCR, save_cropped_annotations,
+                        OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations,
                         tool_GEO, tool_WFO, tool_wikipedia,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
 
@@ -131,7 +133,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                     path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
                     prompt_version, do_create_OCR_helper_image_user, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
-                    OCR_option_llava_bit, double_OCR, save_cropped_annotations, 
+                    OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
                     tool_GEO, tool_WFO, tool_wikipedia,
                     check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False):
     
@@ -183,6 +185,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
         'OCR_option': OCR_option,
         'OCR_option_llava': OCR_option_llava,
         'OCR_option_llava_bit': OCR_option_llava_bit,
+        'OCR_GPT_4o_mini_resolution': OCR_GPT_4o_mini_resolution,
         'double_OCR': double_OCR,
         'pdf_conversion_dpi': pdf_conversion_dpi,
         'tool_GEO': tool_GEO, 

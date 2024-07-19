@@ -1335,10 +1335,11 @@ def display_api_key_status(ccol):
     if 'missing_annotations' in st.session_state and st.session_state['missing_annotations']:
         annotated_text(*st.session_state['missing_annotations'])
     
-    st.markdown(f"Access to Hugging Face Models")
-    
-    if 'model_annotations' in st.session_state and st.session_state['model_annotations']:
-        annotated_text(*st.session_state['model_annotations'])
+    if not st.session_state['is_hf']:
+        st.markdown(f"Access to Hugging Face Models")
+        
+        if 'model_annotations' in st.session_state and st.session_state['model_annotations']:
+            annotated_text(*st.session_state['model_annotations'])
 
     
     
@@ -1763,12 +1764,47 @@ def content_prompt_and_llm_version():
             st.page_link(os.path.join(os.path.dirname(__file__),"pages","prompt_builder.py"), label="Prompt Builder", icon="🚧")
 
 
-    st.header('LLM Version')
-    col_llm_1, col_llm_2 = st.columns([4,2])  
+    # st.header('LLM Version')
+    # col_llm_1, col_llm_2 = st.columns([4,2])  
      
+    # with col_llm_1:
+    #     GUI_MODEL_LIST = ModelMaps.get_models_gui_list()
+    #     st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", GUI_MODEL_LIST, index=GUI_MODEL_LIST.index(st.session_state.config['leafmachine'].get('LLM_version', ModelMaps.MODELS_GUI_DEFAULT)))
+        
+
+    # Determine the default family based on the default model
+    default_model = ModelMaps.MODELS_GUI_DEFAULT
+    default_family = None
+    for family, models in ModelMaps.MODEL_FAMILY.items():
+        if default_model in models:
+            default_family = family
+            break
+
+    st.header("LLM Version")
+
+    col_llm_1, col_llm_2 = st.columns([4, 2])  
     with col_llm_1:
-        GUI_MODEL_LIST = ModelMaps.get_models_gui_list()
-        st.session_state.config['leafmachine']['LLM_version'] = st.selectbox("LLM version", GUI_MODEL_LIST, index=GUI_MODEL_LIST.index(st.session_state.config['leafmachine'].get('LLM_version', ModelMaps.MODELS_GUI_DEFAULT)))
+        # Step 1: Select Model Family with default family pre-selected
+        family_list = list(ModelMaps.MODEL_FAMILY.keys())
+        selected_family = st.selectbox("Select Model Family", family_list, index=family_list.index(default_family) if default_family else 0)
+
+        # Step 2: Display Models based on selected family
+        GUI_MODEL_LIST = ModelMaps.get_models_gui_list_family(selected_family)
+        
+        # Ensure the selected model is part of the current family; if not, use the default of this family
+        selected_model_default = st.session_state.config['leafmachine'].get('LLM_version', default_model)
+        if selected_model_default not in GUI_MODEL_LIST:
+            selected_model_default = GUI_MODEL_LIST[0]
+
+        selected_model = st.selectbox("LLM version", GUI_MODEL_LIST, index=GUI_MODEL_LIST.index(selected_model_default))
+        
+        # Update the session state with the selected model
+        st.session_state.config['leafmachine']['LLM_version'] = selected_model
+
+
+
+    
+        
         st.markdown("""
 Based on preliminary results, the following models perform the best. We are currently running tests of all possible OCR + LLM + Prompt combinations to create recipes for different workflows.
 - Any Mistral model e.g., `Mistral Large`          
@@ -1811,25 +1847,43 @@ def content_api_check():
                 
 
 
-def adjust_ocr_options_based_on_capability(capability_score):
-    llava_models_requirements = {
-        "liuhaotian/llava-v1.6-mistral-7b": {"full": 18, "4bit": 9},
-        "liuhaotian/llava-v1.6-34b": {"full": 70, "4bit": 25},
-        "liuhaotian/llava-v1.6-vicuna-13b": {"full": 33, "4bit": 15},
-        "liuhaotian/llava-v1.6-vicuna-7b": {"full": 20, "4bit": 10},
-    }
-    if capability_score == 'no_gpu':
-        return False
-    else:
-        capability_score_n = int(capability_score.split("_")[1].split("GB")[0])
-        supported_models = [model for model, reqs in llava_models_requirements.items()
-                            if reqs["full"] <= capability_score_n or reqs["4bit"] <= capability_score_n]
+def adjust_ocr_options_based_on_capability(capability_score, model_name='llava'):
+    if model_name == 'llava':
+        llava_models_requirements = {
+            "liuhaotian/llava-v1.6-mistral-7b": {"full": 18, "4bit": 9},
+            "liuhaotian/llava-v1.6-34b": {"full": 70, "4bit": 25},
+            "liuhaotian/llava-v1.6-vicuna-13b": {"full": 33, "4bit": 15},
+            "liuhaotian/llava-v1.6-vicuna-7b": {"full": 20, "4bit": 10},
+        }
+        if capability_score == 'no_gpu':
+            return False
+        else:
+            capability_score_n = int(capability_score.split("_")[1].split("GB")[0])
+            supported_models = [model for model, reqs in llava_models_requirements.items()
+                                if reqs["full"] <= capability_score_n or reqs["4bit"] <= capability_score_n]
 
-        # If no models are supported, disable the LLaVA option
-        if not supported_models:
-            # Assuming the LLaVA option is the last in your list
-            return False  # Indicate LLaVA is not supported
-        return True  # Indicate LLaVA is supported
+            # If no models are supported, disable the LLaVA option
+            if not supported_models:
+                # Assuming the LLaVA option is the last in your list
+                return False  # Indicate LLaVA is not supported
+            return True  # Indicate LLaVA is supported
+    elif model_name == 'florence-2':
+        florence_models_requirements = {
+            "microsoft/Florence-2-large": {"full": 16,},
+            "microsoft/Florence-2-base": {"full": 12,},
+        }
+        if capability_score == 'no_gpu':
+            return False
+        else:
+            capability_score_n = int(capability_score.split("_")[1].split("GB")[0])
+            supported_models = [model for model, reqs in florence_models_requirements.items()
+                                if reqs["full"] <= capability_score_n]
+
+            # If no models are supported, disable the model option
+            if not supported_models:
+                # Assuming the model option is the last in your list
+                return False  # Indicate model is not supported
+            return True  # Indicate model is supported
 
 
 
@@ -1863,12 +1917,22 @@ def content_ocr_method():
 
     c1, c2 = st.columns([4,4])   
 
-    # Check if LLaVA models are supported based on capability score
-    llava_supported = adjust_ocr_options_based_on_capability(st.session_state.capability_score)
-    if llava_supported:
-        st.success("LLaVA models are supported on this computer")
-    else:
-        st.warning("LLaVA models are NOT supported on this computer. Requires a GPU with at least 12 GB of VRAM.")
+    with c2:
+        st.subheader("Local Methods")
+        st.write("Local methods are free, but require a capable GPU. ")
+        # Check if LLaVA models are supported based on capability score
+        llava_supported = adjust_ocr_options_based_on_capability(st.session_state.capability_score, model_name='llava')
+        florence_supported = adjust_ocr_options_based_on_capability(st.session_state.capability_score, model_name='florence-2')
+
+        if llava_supported:
+            st.success("LLaVA models are supported on this computer. A GPU with at least 12 GB of VRAM is available.")
+        else:
+            st.warning("LLaVA models are NOT supported on this computer. Requires a GPU with at least 12 GB of VRAM.")
+
+        if llava_supported:
+            st.success("Florence-2 models are supported on this computer. A GPU with at least 12 GB of VRAM is available.")
+        else:
+            st.warning("Florence-2 models are NOT supported on this computer. Requires a GPU with at least 12 GB of VRAM.")
 
     demo_text_h = f"Google_OCR_Handwriting:\nHERBARIUM OF MARCUS W. LYON , JR . Tracaulon sagittatum Indiana : Porter Co. incal Springs edge wet subdunal woods 1927 TX 11 Ilowers pink UNIVERSITE HERBARIUM MICH University of Michigan Herbarium 1439649 copyright reserved PERSICARIA FEB 2 6 1965 cm "
     demo_text_tr = f"trOCR:\nherbarium of marcus w. lyon jr. : : : tracaulon sagittatum indiana porter co. incal springs TX 11 Ilowers pink  1439649 copyright reserved D H U Q "
@@ -1878,7 +1942,7 @@ def content_ocr_method():
     demo_text_trh = demo_text_h + '\n' + demo_text_tr
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
-    options = ["Google Vision Handwritten", "Google Vision Printed", "CRAFT + trOCR","LLaVA", "Florence-2"]
+    options = ["Google Vision Handwritten", "Google Vision Printed", "Florence-2", "GPT-4o-mini", "CRAFT + trOCR","LLaVA", ]
     options_llava = ["llava-v1.6-mistral-7b", "llava-v1.6-34b", "llava-v1.6-vicuna-13b", "llava-v1.6-vicuna-7b",]
     options_llava_bit = ["full", "4bit",]
     captions_llava = [
@@ -1901,7 +1965,7 @@ def content_ocr_method():
     default_index_llava_bit = 0
     with c1:
         st.subheader("API Methods (Google Vision)")
-        st.write("Using APIs for OCR allows VoucherVision to run on most computers.")
+        st.write("Using APIs for OCR allows VoucherVision to run on most computers. You can use multiple OCR engines simultaneously.")
 
         st.session_state.config['leafmachine']['project']['double_OCR'] = st.checkbox(label="Send 2 copies of the OCR to the LLM",
                                                                                       help="This can help the LLMs focus attention on the OCR and not get lost in the longer instruction text",
@@ -1930,6 +1994,7 @@ def content_ocr_method():
             "CRAFT + trOCR": 'CRAFT',
             "LLaVA": 'LLaVA',
             "Florence-2": 'Florence-2',
+            "GPT-4o-mini": "GPT-4o-mini",
         }
 
         # Map selected options to their corresponding internal representations
@@ -1939,45 +2004,52 @@ def content_ocr_method():
         st.session_state.config['leafmachine']['project']['OCR_option'] = selected_OCR_options
 
 
-    with c2:
-        st.subheader("Local Methods")
-        st.write("Local methods are free, but require a capable GPU. ")
+
         
-
-    st.write("Supplement Google Vision OCR with trOCR (handwriting OCR) using `microsoft/trocr-base-handwritten`. This option requires Google Vision API and a GPU.")
     if 'CRAFT' in selected_OCR_options:
-        do_use_trOCR = st.checkbox("Enable trOCR", value=True, key="Enable trOCR1",disabled=True)#,disabled=st.session_state['lacks_GPU'])
-    else:
-        do_use_trOCR = st.checkbox("Enable trOCR", value=st.session_state.config['leafmachine']['project']['do_use_trOCR'],key="Enable trOCR2")#,disabled=st.session_state['lacks_GPU'])
-        st.session_state.config['leafmachine']['project']['do_use_trOCR'] = do_use_trOCR
+        st.subheader('Options for :blue[CRAFT + trOCR]')
+        st.write("Supplement Google Vision OCR with :blue[trOCR] (handwriting OCR) using `microsoft/trocr-base-handwritten`. This option requires Google Vision API and a GPU.")
+        if 'CRAFT' in selected_OCR_options:
+            do_use_trOCR = st.checkbox("Enable :blue[trOCR]", value=True, key="Enable trOCR1",disabled=True)#,disabled=st.session_state['lacks_GPU'])
+        else:
+            do_use_trOCR = st.checkbox("Enable :blue[trOCR]", value=st.session_state.config['leafmachine']['project']['do_use_trOCR'],key="Enable trOCR2")#,disabled=st.session_state['lacks_GPU'])
+            st.session_state.config['leafmachine']['project']['do_use_trOCR'] = do_use_trOCR
 
-    if do_use_trOCR:
-        # st.session_state.config['leafmachine']['project']['trOCR_model_path'] = "microsoft/trocr-large-handwritten"
-        default_trOCR_model_path = st.session_state.config['leafmachine']['project']['trOCR_model_path']
-        user_input_trOCR_model_path = st.text_input("trOCR Hugging Face model path. MUST be a fine-tuned version of 'microsoft/trocr-base-handwritten' or 'microsoft/trocr-large-handwritten', or a microsoft trOCR model.", value=default_trOCR_model_path)
-        if st.session_state.config['leafmachine']['project']['trOCR_model_path'] != user_input_trOCR_model_path:
-            is_valid_mp = is_valid_huggingface_model_path(user_input_trOCR_model_path)
-            if not is_valid_mp:
-                st.error(f"The Hugging Face model path {user_input_trOCR_model_path} is not valid. Please revise.")
-            else:
-                st.session_state.config['leafmachine']['project']['trOCR_model_path'] = user_input_trOCR_model_path
+        if do_use_trOCR:
+            # st.session_state.config['leafmachine']['project']['trOCR_model_path'] = "microsoft/trocr-large-handwritten"
+            default_trOCR_model_path = st.session_state.config['leafmachine']['project']['trOCR_model_path']
+            user_input_trOCR_model_path = st.text_input(":blue[trOCR] Hugging Face model path. MUST be a fine-tuned version of 'microsoft/trocr-base-handwritten' or 'microsoft/trocr-large-handwritten', or a microsoft :blue[trOCR] model.", value=default_trOCR_model_path)
+            if st.session_state.config['leafmachine']['project']['trOCR_model_path'] != user_input_trOCR_model_path:
+                is_valid_mp = is_valid_huggingface_model_path(user_input_trOCR_model_path)
+                if not is_valid_mp:
+                    st.error(f"The Hugging Face model path {user_input_trOCR_model_path} is not valid. Please revise.")
+                else:
+                    st.session_state.config['leafmachine']['project']['trOCR_model_path'] = user_input_trOCR_model_path
 
 
     if "Florence-2" in selected_OCR_options:
+        st.subheader('Options for :green[Florence-2]')
         default_florence_model_path = st.session_state.config['leafmachine']['project']['florence_model_path']
-        user_input_florence_model_path = st.text_input("Florence-2 Hugging Face model path. MUST be a Florence-2 version based on 'microsoft/Florence-2-large' or similar.", value=default_florence_model_path)
 
-        if st.session_state.config['leafmachine']['project']['florence_model_path'] != user_input_florence_model_path:
-            is_valid_mp = is_valid_huggingface_model_path(user_input_florence_model_path)
-            if not is_valid_mp:
-                st.error(f"The Hugging Face model path {user_input_florence_model_path} is not valid. Please revise.")
-            else:
-                st.session_state.config['leafmachine']['project']['florence_model_path'] = user_input_florence_model_path
+        st.session_state.config['leafmachine']['project']['florence_model_path'] = st.radio(
+            "Select :green[Florence-2] version.",
+            ["microsoft/Florence-2-large", "microsoft/Florence-2-base", ],
+            captions=["'large' requires at least 16GB of VRAM", "'base' requires 12GB of VRAM."])
+
+    if "GPT-4o-mini" in selected_OCR_options:
+        st.subheader('Options for :violet[GPT-4o-mini]')
+        default_resolution = st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution']
+
+        st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution'] = st.radio(
+            "Select level of detail for :violet[GPT-4o-mini] OCR. We only recommend 'high' detail in most scenarios.",
+            ["high", "low", ],
+            captions=["$0.50 per 1,000", "\$5 - \$10 per 1,000"])
 
 
     if 'LLaVA' in selected_OCR_options:
+        st.subheader('Options for :red[LLaVA]')
         OCR_option_llava = st.radio(
-            "Select the LLaVA version",
+            "Select the :red[LLaVA] version",
             options_llava,
             index=default_index_llava,
             help="",captions=captions_llava,
@@ -1985,12 +2057,13 @@ def content_ocr_method():
         st.session_state.config['leafmachine']['project']['OCR_option_llava'] = OCR_option_llava
 
         OCR_option_llava_bit = st.radio(
-            "Select the LLaVA quantization level",
+            "Select the :red[LLaVA] quantization level",
             options_llava_bit,
             index=default_index_llava_bit,
             help="",captions=captions_llava_bit,
         )
         st.session_state.config['leafmachine']['project']['OCR_option_llava_bit'] = OCR_option_llava_bit
+    st.write('---')
     
     
 
@@ -2041,7 +2114,6 @@ def show_ocr():
         # st.image(st.session_state["demo_overlay"], caption='OCR Overlay Images', output_format = "JPEG")
 
 def content_collage_overlay():
-    st.markdown("---")
     col_collage, col_overlay = st.columns([4,4])   
     
     

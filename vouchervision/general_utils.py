@@ -10,7 +10,11 @@ import concurrent.futures
 from time import perf_counter
 import torch
 
-from vouchervision.model_maps import ModelMaps
+try:
+    from vouchervision.model_maps import ModelMaps
+except:
+    from model_maps import ModelMaps
+
 
 '''
 TIFF --> DNG
@@ -65,12 +69,12 @@ def add_to_expense_report(dir_home, data):
         
         # If the file does not exist, write the header first
         if not file_exists:
-            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out',])
+            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out','ocr_cost','ocr_tokens_in', 'ocr_tokens_out',])
         
         # Write the data row
         writer.writerow(data)
 
-def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, n_images, dir_home, logger):
+def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, n_images, dir_home, logger):
     if path_api_cost:
         LLM_version = ModelMaps.get_version_mapping_cost(LLM_version0)
 
@@ -78,16 +82,18 @@ def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, t
         csv_file_path = os.path.join(Dirs.path_cost, Dirs.run_name + '.csv')
 
         cost_in, cost_out, total_cost, rate_in, rate_out = calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out)
+
+        total_cost += OCR_cost
         
         # The data to be written to the CSV file
-        data = [Dirs.run_name, get_datetime(),LLM_version, total_cost, n_images, total_tokens_in, total_tokens_out, rate_in, rate_out, cost_in, cost_out,]
+        data = [Dirs.run_name, get_datetime(),LLM_version, total_cost, n_images, total_tokens_in, total_tokens_out, rate_in, rate_out, cost_in, cost_out,OCR_cost, OCR_tokens_in, OCR_tokens_out,]
         
         # Open the file in write mode
         with open(csv_file_path, mode='w', newline='') as file:
             writer = csv.writer(file)
             
             # Write the header
-            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out',])
+            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out','ocr_cost','ocr_tokens_in', 'ocr_tokens_out'])
             
             # Write the data
             writer.writerow(data)
@@ -119,6 +125,11 @@ def summarize_expense_report(path_expense_report):
     cost_in_sum = 0
     cost_out_sum = 0
     n_images_sum = 0
+    # ,'ocr_cost','ocr_tokens_in', 'ocr_tokens_out'
+    ocr_cost_sum = 0
+    ocr_tokens_in_sum = 0
+    ocr_tokens_out_sum = 0
+
     api_version_counts = Counter()
 
     # Try to read the CSV file into a DataFrame
@@ -128,7 +139,7 @@ def summarize_expense_report(path_expense_report):
         # Process each row in the DataFrame
         for index, row in df.iterrows():
             run_count += 1
-            total_cost_sum += row['total_cost']
+            total_cost_sum += row['total_cost'] + row['ocr_cost']
             tokens_in_sum += row['tokens_in']
             tokens_out_sum += row['tokens_out']
             rate_in_sum += row['rate_in']
@@ -136,6 +147,9 @@ def summarize_expense_report(path_expense_report):
             cost_in_sum += row['cost_in']
             cost_out_sum += row['cost_out']
             n_images_sum += row['n_images']
+            ocr_cost_sum += row['ocr_cost']
+            ocr_tokens_in_sum += row['ocr_tokens_in']
+            ocr_tokens_out_sum += row['ocr_tokens_out']
             api_version_counts[row['api_version']] += 1
 
     except FileNotFoundError:
@@ -163,6 +177,9 @@ def summarize_expense_report(path_expense_report):
         'rate_out_sum': rate_out_sum,
         'cost_in_sum': cost_in_sum,
         'cost_out_sum': cost_out_sum,
+        'ocr_cost_sum': ocr_cost_sum,
+        'ocr_tokens_in_sum': ocr_tokens_in_sum,
+        'ocr_tokens_out_sum': ocr_tokens_out_sum,
         'n_images_sum':n_images_sum,
         'api_version_percentages': api_version_percentages,
         'cost_per_image': cost_per_image_dict

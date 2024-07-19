@@ -7,6 +7,8 @@ yolov8x-pose.pt
 yolov8n.pt
 *PRIVATE_DATA*
 
+leafmachine2/
+
 vouchervision/LLM_MistralAI_Azure_endpoints.py
 
 # Prompts

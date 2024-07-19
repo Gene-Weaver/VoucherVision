@@ -7,7 +7,7 @@ import urllib.request
 from tqdm import tqdm
 import subprocess
 
-VERSION = 'v-2-1'
+VERSION = 'v-2-2'
 
 def fetch_data(logger, dir_home, cfg_file_path):
     logger.name = 'Fetch Data'
@@ -102,7 +102,7 @@ def get_weights(dir_home, current, logger):
 
         # Extract the contents of the ZIP file to the current directory
         zipfilename = current + '.zip'
-        with ZipFile(zipfilename, 'r') as zip_file:
+        with ZipFile(os.path.join(dir_home, zipfilename), 'r') as zip_file:
             zip_file.extractall(os.path.join(dir_home,'bin'))
 
         print(f"{bcolors.CGREENBG2}Data extracted to {path_zip}{bcolors.ENDC}")
