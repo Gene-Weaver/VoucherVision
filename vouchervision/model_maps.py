@@ -1,5 +1,5 @@
 class ModelMaps:
-    PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE = ["Version 1", "Version 1 PaLM 2"]
+    PROMPTS_THAT_NEED_DOMAIN_KNOWLEDGE = ['Version 1', 'Version 1 PaLM 2']
     COLORS_EXPENSE_REPORT = {
         'GPT_4': '#32CD32',  # Lime Green
         'GPT_3_5': '#008000',  # Green
@@ -41,49 +41,49 @@ class ModelMaps:
     }
 
     MODELS_OPENAI = [
-                    "GPT 4o 2024-05-13", #GPT_4o_2024_05_13
-                    "GPT 4o mini 2024-07-18",
-                    "GPT 4 Turbo 2024-04-09",#GPT_4_TURBO_2024_04_09
-                    "GPT 4",
-                    "GPT 4 32k",
-                    "GPT 4 Turbo 0125-preview",
-                    "GPT 4 Turbo 1106-preview",
-                    "GPT 3.5 Turbo",
-                    "GPT 3.5 Instruct",
+                    'GPT 4o 2024-05-13', #GPT_4o_2024_05_13
+                    'GPT 4o mini 2024-07-18',
+                    'GPT 4 Turbo 2024-04-09',#GPT_4_TURBO_2024_04_09
+                    'GPT 4',
+                    'GPT 4 32k',
+                    'GPT 4 Turbo 0125-preview',
+                    'GPT 4 Turbo 1106-preview',
+                    'GPT 3.5 Turbo',
+                    'GPT 3.5 Instruct',
                     ]
     
 
     MODELS_OPENAI_AZURE = [
-                    "Azure GPT 4",
-                    #  "Azure GPT 4 32k",
-                    #  "Azure GPT 4 Turbo 0125-preview",
-                    #  "Azure GPT 4 Turbo 1106-preview",
-                    #  "Azure GPT 3.5 Turbo",
-                    #  "Azure GPT 3.5 Instruct",
+                    'Azure GPT 4',
+                    #  'Azure GPT 4 32k',
+                    #  'Azure GPT 4 Turbo 0125-preview',
+                    #  'Azure GPT 4 Turbo 1106-preview',
+                    #  'Azure GPT 3.5 Turbo',
+                    #  'Azure GPT 3.5 Instruct',
                     ]
     
     MODELS_GOOGLE = [
-                    # "PaLM 2 text-bison@001",
-                     "PaLM 2 text-bison@002",
-                     "PaLM 2 text-unicorn@001",
-                     "Gemini 1.0 Pro ",
-                     "Gemini 1.5 Flash",
-                     "Gemini 1.5 Pro",
+                    # 'PaLM 2 text-bison@001',
+                     'PaLM 2 text-bison@002',
+                     'PaLM 2 text-unicorn@001',
+                     'Gemini 1.0 Pro',
+                     'Gemini 1.5 Flash',
+                     'Gemini 1.5 Pro',
                      ]
     
-    MODELS_MISTRAL = ["Mistral Small",
-                      "Mistral Medium",
-                      "Mistral Large",
-                      "Open Mixtral 8x7B",
-                      "Open Mistral 7B",
+    MODELS_MISTRAL = ['Mistral Small',
+                      'Mistral Medium',
+                      'Mistral Large',
+                      'Open Mixtral 8x7B',
+                      'Open Mistral 7B',
                       ]
 
-    MODELS_LOCAL = ["LOCAL Mixtral 8x7B Instruct v0.1",
-                    "LOCAL Mistral 7B Instruct v0.2",
-                    "LOCAL CPU Mistral 7B Instruct v0.2 GGUF",
+    MODELS_LOCAL = ['LOCAL Mixtral 8x7B Instruct v0.1',
+                    'LOCAL Mistral 7B Instruct v0.2',
+                    'LOCAL CPU Mistral 7B Instruct v0.2 GGUF',
                     'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05']
 
-    MODELS_GUI_DEFAULT = "Gemini 1.5 Flash" #"Azure GPT 4" # "GPT 4 Turbo 1106-preview"
+    MODELS_GUI_DEFAULT = 'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
 
     MODEL_FAMILY = {
                     'OpenAI': MODELS_OPENAI,
@@ -95,9 +95,9 @@ class ModelMaps:
     version_mapping_cost = {
         'GPT 4 32k': 'GPT_4_32K',
         'GPT 4': 'GPT_4',
-        "GPT 4o 2024-05-13": 'GPT_4o_2024_05_13',
-        "GPT 4o mini 2024-07-18": 'GPT_4o_mini_2024_07_18',
-        "GPT 4 Turbo 2024-04-09": 'GPT_4_TURBO_2024_04_09',
+        'GPT 4o 2024-05-13': 'GPT_4o_2024_05_13',
+        'GPT 4o mini 2024-07-18': 'GPT_4o_mini_2024_07_18',
+        'GPT 4 Turbo 2024-04-09': 'GPT_4_TURBO_2024_04_09',
         'GPT 4 Turbo 0125-preview': 'GPT_4_TURBO_0125',
         'GPT 4 Turbo 1106-preview': 'GPT_4_TURBO_1106',
         'GPT 3.5 Instruct': 'GPT_3_5_INSTRUCT',
@@ -110,7 +110,7 @@ class ModelMaps:
         # 'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
         # 'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
-        'Gemini 1.0 Pro ': 'GEMINI_PRO',
+        'Gemini 1.0 Pro': 'GEMINI_PRO',
         'Gemini 1.5 Flash': 'GEMINI_1_5_FLASH',  # gemini-1.5-flash
         'Gemini 1.5 Pro': 'GEMINI_1_5_PRO',  # gemini-1.5-pro
 
@@ -136,12 +136,12 @@ class ModelMaps:
     def get_version_has_key(cls, key, has_key_openai, has_key_azure_openai, has_key_google_application_credentials, has_key_mistral):
         # Define the mapping for 'has_key' values
         version_has_key = {
-            "GPT 4 Turbo 2024-04-09": has_key_openai,
+            'GPT 4 Turbo 2024-04-09': has_key_openai,
             'GPT 4 Turbo 1106-preview': has_key_openai,
             'GPT 4 Turbo 0125-preview': has_key_openai,
             'GPT 4':  has_key_openai,
-            "GPT 4o 2024-05-13": has_key_openai, 
-            "GPT 4o mini 2024-07-18": has_key_openai, 
+            'GPT 4o 2024-05-13': has_key_openai, 
+            'GPT 4o mini 2024-07-18': has_key_openai, 
             'GPT 4 32k':  has_key_openai,
             'GPT 3.5 Turbo':  has_key_openai,
             'GPT 3.5 Instruct':  has_key_openai,
@@ -156,9 +156,9 @@ class ModelMaps:
             # 'PaLM 2 text-bison@001':  has_key_google_application_credentials,
             'PaLM 2 text-bison@002':  has_key_google_application_credentials,
             'PaLM 2 text-unicorn@001':  has_key_google_application_credentials,
-            'Gemini 1.0 Pro ':  has_key_google_application_credentials,
+            'Gemini 1.0 Pro':  has_key_google_application_credentials,
             'Gemini 1.5 Flash':  has_key_google_application_credentials,
-            'Gemini 1.5 Pro ':  has_key_google_application_credentials,
+            'Gemini 1.5 Pro':  has_key_google_application_credentials,
 
             'Mistral Small':  has_key_mistral,
             'Mistral Medium':  has_key_mistral,
@@ -178,11 +178,11 @@ class ModelMaps:
     @classmethod
     def get_version_mapping_is_azure(cls, key):
         version_mapping_is_azure = {
-            "GPT 4o 2024-05-13": False, 
-            "GPT 4o mini 2024-07-18": False, 
-            "GPT 4 Turbo 2024-04-09": False,
-            "GPT 4 Turbo 1106-preview": False,
-            "GPT 4 Turbo 0125-preview": False,
+            'GPT 4o 2024-05-13': False, 
+            'GPT 4o mini 2024-07-18': False, 
+            'GPT 4 Turbo 2024-04-09': False,
+            'GPT 4 Turbo 1106-preview': False,
+            'GPT 4 Turbo 0125-preview': False,
             'GPT 4': False,
             'GPT 4 32k':  False,
             'GPT 3.5 Turbo':  False,
@@ -198,9 +198,9 @@ class ModelMaps:
             # 'PaLM 2 text-bison@001':  False,
             'PaLM 2 text-bison@002':  False,
             'PaLM 2 text-unicorn@001':  False,
-            'Gemini 1.0 Pro ':  False,
+            'Gemini 1.0 Pro':  False,
             'Gemini 1.5 Flash':  False,
-            'Gemini 1.5 Pro ':  False,
+            'Gemini 1.5 Pro':  False,
 
             'Mistral Small':  False,
             'Mistral Medium':  False,
@@ -256,39 +256,39 @@ class ModelMaps:
         #     return 'gpt-35-turbo-instruct'
         
         elif key == 'AZURE_GPT_4':
-            return "gpt-4"
+            return 'gpt-4'
     
         # elif key == 'AZURE_GPT_4_TURBO_1106':
-        #     return "gpt-4-1106-preview"
+        #     return 'gpt-4-1106-preview'
         
         # elif key == 'AZURE_GPT_4_TURBO_0125':
         #     return 'gpt-4-0125-preview'
         
         # elif key == 'AZURE_GPT_4_32K':
-        #     return "gpt-4-32k"
+        #     return 'gpt-4-32k'
         
         ### Google
         # elif key == 'PALM2_TB_1':
-        #     return "text-bison@001"
+        #     return 'text-bison@001'
         
         elif key == 'PALM2_TB_2':
-            return "text-bison@002"
+            return 'text-bison@002'
         
         elif key == 'PALM2_TU_1':
-            return "text-unicorn@001"
+            return 'text-unicorn@001'
         
         elif key == 'GEMINI_PRO':
-            return "gemini-1.0-pro" 
+            return 'gemini-1.0-pro' 
         
         elif key == 'GEMINI_1_5_FLASH':
-            return "gemini-1.5-flash" 
+            return 'gemini-1.5-flash' 
 
         elif key == 'GEMINI_1_5_PRO':
-            return "gemini-1.5-pro" 
+            return 'gemini-1.5-pro' 
         
         ### Mistral 
         elif key == 'OPEN_MISTRAL_7B':
-            return "open-mistral-7b"
+            return 'open-mistral-7b'
         
         elif key == 'OPEN_MIXTRAL_8X7B':
             return 'open-mixtral-8x7b'
@@ -323,7 +323,7 @@ class ModelMaps:
 
 
         else:
-            raise ValueError(f"Invalid model name {key}. See model_maps.py") 
+            raise ValueError(f'Invalid model name {key}. See model_maps.py') 
 
     @classmethod
     def get_models_gui_list(cls):
