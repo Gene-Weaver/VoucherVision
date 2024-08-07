@@ -99,12 +99,14 @@ class OCREngine:
 
         
     def set_client(self):
-        if self.is_hf:
-            self.client_beta = vision_beta.ImageAnnotatorClient(credentials=self.get_google_credentials())
-            self.client = vision.ImageAnnotatorClient(credentials=self.get_google_credentials())
-        else:
-            self.client_beta = vision_beta.ImageAnnotatorClient(credentials=self.get_google_credentials()) 
-            self.client = vision.ImageAnnotatorClient(credentials=self.get_google_credentials())
+        # Only init Google Vision if it is needed
+        if 'hand' in self.OCR_option or 'normal' in self.OCR_option:
+            if self.is_hf:
+                self.client_beta = vision_beta.ImageAnnotatorClient(credentials=self.get_google_credentials())
+                self.client = vision.ImageAnnotatorClient(credentials=self.get_google_credentials())
+            else:
+                self.client_beta = vision_beta.ImageAnnotatorClient(credentials=self.get_google_credentials()) 
+                self.client = vision.ImageAnnotatorClient(credentials=self.get_google_credentials())
 
 
     def get_google_credentials(self):
