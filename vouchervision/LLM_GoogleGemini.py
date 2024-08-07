@@ -101,7 +101,10 @@ class GoogleGeminiHandler:
         #                           top_p=self.config.get('top_p'))   
 
         # Set up the retry parser with the runnable
-        self.retry_parser = RetryWithErrorOutputParser.from_llm(parser=self.parser, llm=self.llm_model, max_retries=self.MAX_RETRIES)
+        self.retry_parser = RetryWithErrorOutputParser.from_llm(
+            parser=self.parser, 
+            llm=self.llm_model, 
+            max_retries=self.MAX_RETRIES)
         # Prepare the chain
         self.chain = self.prompt | self.call_google_gemini     
 

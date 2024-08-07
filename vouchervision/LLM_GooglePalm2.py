@@ -1,17 +1,17 @@
 import os, time, json, typing
+from dataclasses import dataclass
 # import vertexai
 from vertexai.language_models import TextGenerationModel
 from vertexai.generative_models._generative_models import HarmCategory, HarmBlockThreshold
 from vertexai.language_models import TextGenerationModel
 # from vertexai.preview.generative_models import GenerativeModel
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain.output_parsers.retry import RetryWithErrorOutputParser
 # from langchain.schema import HumanMessage
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 # from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import VertexAI
 from langchain_core.messages import BaseMessage, HumanMessage
-from langchain_core.prompt_values import PromptValue as BasePromptValue
 
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
@@ -25,6 +25,18 @@ from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys
 # gcloud config set project XXXXXXXXX
 # https://cloud.google.com/docs/authentication
 
+from pydantic import BaseModel
+from langchain_core.prompt_values import PromptValue as BasePromptValue
+
+class PromptValueWrapper(BaseModel):
+    prompt_str: str
+
+    def to_string(self) -> str:
+        return self.prompt_str
+
+    def to_messages(self):
+        return [HumanMessage(content=self.prompt_str)]
+    
 class GooglePalm2Handler: 
 
     RETRY_DELAY = 10  # Wait 10 seconds before retrying
@@ -44,8 +56,6 @@ class GooglePalm2Handler:
         self.JSON_dict_structure = JSON_dict_structure
 
         self.config_vals_for_permutation = config_vals_for_permutation
-
-        
 
         self.monitor = SystemLoadMonitor(logger)
 
@@ -104,19 +114,35 @@ class GooglePalm2Handler:
         self.adjust_temp = self.starting_temp
         self.config['temperature'] = self.starting_temp   
 
+    # def _build_model_chain_parser(self):
+    #     # Instantiate the parser and the retry parser
+    #     # self.llm_model = ChatGoogleGenerativeAI(model=self.model_name)
+    #     self.llm_model = VertexAI(model=self.model_name,
+    #                               max_output_tokens=self.config.get('max_output_tokens'),
+    #                               temperature=self.config.get('temperature'),
+    #                               top_k=self.config.get('top_k'),
+    #                               top_p=self.config.get('top_p'))
+        
+    #     self.retry_parser = RetryWithErrorOutputParser.from_llm(
+    #                                             parser=self.parser,
+    #                                             llm=self.llm_model,
+    #                                             max_retries=self.MAX_RETRIES)
+    #     # Prepare the chain
+    #     self.chain = self.prompt | self.call_google_palm2
     def _build_model_chain_parser(self):
         # Instantiate the parser and the retry parser
-        # self.llm_model = ChatGoogleGenerativeAI(model=self.model_name)
         self.llm_model = VertexAI(model=self.model_name,
                                   max_output_tokens=self.config.get('max_output_tokens'),
                                   temperature=self.config.get('temperature'),
                                   top_k=self.config.get('top_k'),
                                   top_p=self.config.get('top_p'))
-        
+
         self.retry_parser = RetryWithErrorOutputParser.from_llm(
-                                                parser=self.parser,
-                                                llm=self.llm_model,
-                                                max_retries=self.MAX_RETRIES)
+            llm=self.llm_model,
+            parser=self.parser,
+            max_retries=self.MAX_RETRIES
+        )
+
         # Prepare the chain
         self.chain = self.prompt | self.call_google_palm2
 
@@ -148,22 +174,27 @@ class GooglePalm2Handler:
         while ind < self.MAX_RETRIES:
             ind += 1
             try:
-                # model_kwargs = {"temperature": self.adjust_temp}
+                model_kwargs = {"temperature": self.adjust_temp}
                 # Invoke the chain to generate prompt text
-                response = self.chain.invoke({"query": prompt_template})#, "model_kwargs": model_kwargs})
+                response = self.chain.invoke({"query": prompt_template, "model_kwargs": model_kwargs})
 
-                # Use retry_parser to parse the response with retry logic
-                try:
-                    output = self.retry_parser.parse_with_prompt(response, prompt_value=PromptValue(prompt_template))
-                except:
-                    try:
-                        output = self.retry_parser.parse_with_prompt(response, prompt_value=prompt_template)
-                    except:
-                        try:
-                            output = json.loads(response)
-                        except Exception as e:
-                            print(e)
-                            output = None
+                # Clean up the response by removing any Markdown formatting
+                response_text = response.strip('```JSON\n').strip('\n```')
+
+                output = json.loads(response_text)
+                
+                # # Use retry_parser to parse the response with retry logic
+                # try:
+                #     output = self.retry_parser.parse_with_prompt(response, prompt_value=PromptValue(prompt_template))
+                # except:
+                #     try:
+                #         output = self.retry_parser.parse_with_prompt(response, prompt_value=prompt_template)
+                #     except:
+                #         try:
+                #             output = json.loads(response)
+                #         except Exception as e:
+                #             print(e)
+                #             output = None
 
 
                 if output is None:
@@ -215,8 +246,3 @@ class GooglePalm2Handler:
             self.json_report.set_text(text_main=f'LLM call failed')
         return None, nt_in, nt_out, None, None, usage_report
     
-class PromptValue(BasePromptValue):
-    prompt_str: str
-
-    def to_string(self) -> str:
-        return self.prompt_str
