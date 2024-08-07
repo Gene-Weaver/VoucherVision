@@ -1007,7 +1007,8 @@ def create_private_file():
 
         cfg_private['open_cage_geocode'] = {}
         cfg_private['open_cage_geocode']['API_KEY'] =''
-    
+
+        cfg_private['huggingface'] = {}
 
     with col_private:
         st.header("Set API keys")
@@ -1958,11 +1959,20 @@ def content_ocr_method():
     OCR_option_llava_bit = st.session_state.config['leafmachine']['project']['OCR_option_llava_bit']
     double_OCR = st.session_state.config['leafmachine']['project']['double_OCR']
 
-    # Map the OCR option to the index in options list
-    # You need to define the mapping based on your application's logic
     default_index = 0  # Default to 0 if option not found
     default_index_llava = 0  # Default to 0 if option not found
     default_index_llava_bit = 0
+
+    # Map the OCR option to the index in options list
+    # You need to define the mapping for multiple OCR options
+    # based on your application's logic
+    if len(OCR_option) == 1:
+        OCR_option = OCR_option[0]
+        try:
+            default_index = options.index(OCR_option)
+        except ValueError:
+            pass
+
     with c1:
         st.subheader("API Methods (Google Vision)")
         st.write("Using APIs for OCR allows VoucherVision to run on most computers. You can use multiple OCR engines simultaneously.")
@@ -1999,7 +2009,7 @@ def content_ocr_method():
 
         # Map selected options to their corresponding internal representations
         selected_OCR_options = [OCR_options[option] for option in OCR_option_select]
-
+        print('Selected OCR options:',selected_OCR_options)
         # Assuming you need to use these mapped values elsewhere in your application
         st.session_state.config['leafmachine']['project']['OCR_option'] = selected_OCR_options
 
