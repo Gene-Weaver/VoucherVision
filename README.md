@@ -184,14 +184,14 @@ Installation should basically be the same for Linux.
 1. Still inside the VoucherVision directory, show that a venv is currently not active 
     <pre><code class="language-python">python --version</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
-2. Then create the virtual environment (venv_VV is the name of our new virtual environment)  
-    <pre><code class="language-python">python3 -m venv venv_VV</code></pre>
+2. Then create the virtual environment (.venv_VV is the name of our new virtual environment)  
+    <pre><code class="language-python">python3 -m venv .venv_VV</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     Or depending on your Python version...
-    <pre><code class="language-python">python -m venv venv_VV</code></pre>
+    <pre><code class="language-python">python -m venv .venv_VV</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 3. Activate the virtual environment  
-    <pre><code class="language-python">.\venv_VV\Scripts\activate</code></pre>
+    <pre><code class="language-python">.\.venv_VV\Scripts\activate</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 4. Confirm that the venv is active (should be different from step 1)  
     <pre><code class="language-python">python --version</code></pre>
@@ -404,7 +404,7 @@ Now go look in the `../VoucherVision/` directory. You will see a new file called
 ---
 
 # Run VoucherVision
-1. In the terminal, make sure that you `cd` into the `VoucherVision` directory and that your virtual environment is active (you should see venv_VV on the command line). 
+1. In the terminal, make sure that you `cd` into the `VoucherVision` directory and that your virtual environment is active (you should see .venv_VV on the command line). 
 2. Type:
     <pre><code class="language-python">python run_VoucherVision.py</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>

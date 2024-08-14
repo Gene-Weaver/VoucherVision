@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Example usage
     create_mac_shortcut(
         script_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'run_VoucherVision.py'),
-        venv_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'venv_VV'),
+        venv_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), '.venv_VV'),
         app_name='VoucherVision',
         app_dir=os.path.dirname(os.path.realpath(__file__)),
         icon_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img', 'VoucherVision.icns')
