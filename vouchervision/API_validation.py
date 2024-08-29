@@ -318,7 +318,6 @@ class APIvalidation:
             k_OPENAI_API_KEY = self.cfg_private['openai']['OPENAI_API_KEY']
             k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
 
-            k_huggingface = self.cfg_private['huggingface']['hf_token']
 
             k_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
             k_location = self.cfg_private['google']['GOOGLE_LOCATION']
@@ -328,7 +327,9 @@ class APIvalidation:
             k_here = self.cfg_private['here']['API_KEY']
             k_opencage = self.cfg_private['open_cage_geocode']['API_KEY']
 
-            
+            k_huggingface = self.cfg_private['huggingface']['hf_token']
+            os.environ["HUGGING_FACE_KEY"] = k_huggingface
+
 
 
         # Check each key and add to the respective list

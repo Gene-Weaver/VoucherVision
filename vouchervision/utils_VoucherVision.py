@@ -472,6 +472,7 @@ class VoucherVision():
             k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
 
             k_huggingface = self.cfg_private['huggingface']['hf_token']
+            os.environ["HUGGING_FACE_KEY"] = k_huggingface
 
             k_google_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
             k_google_location = self.cfg_private['google']['GOOGLE_LOCATION']

@@ -36,7 +36,12 @@ class LocalMistralHandler:
 
         self.model_name = model_name
         self.model_id = f"mistralai/{self.model_name}"
-        self.model_path = hf_hub_download(repo_id=self.model_id, repo_type="model", filename="config.json", use_auth_token=os.getenv("HUGGING_FACE_KEY"))
+        huggingface_token = os.getenv("HUGGING_FACE_KEY")
+        if not huggingface_token:
+            self.logger.error("Hugging Face token is not set. Please set it using the HUGGING_FACE_KEY environment variable.")
+            raise ValueError("Hugging Face token is not set.")
+        
+        self.model_path = hf_hub_download(repo_id=self.model_id, repo_type="model", filename="config.json", token=huggingface_token)
 
         self.JSON_dict_structure = JSON_dict_structure
         self.starting_temp = float(self.STARTING_TEMP)

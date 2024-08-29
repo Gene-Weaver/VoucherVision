@@ -48,12 +48,18 @@ class LocalCPUMistralHandler:
         self.model_name = "Mistral-7B-Instruct-v0.2-GGUF"  #huggingface-cli download TheBloke/Mistral-7B-Instruct-v0.2-GGUF mistral-7b-instruct-v0.2.Q4_K_M.gguf --local-dir /home/brlab/.cache --local-dir-use-symlinks False
         self.model_id = f"TheBloke/{self.model_name}"
         name_parts = self.model_name.split('-')
+
+        huggingface_token = os.getenv("HUGGING_FACE_KEY")
+        if not huggingface_token:
+            self.logger.error("Hugging Face token is not set. Please set it using the HUGGING_FACE_KEY environment variable.")
+            raise ValueError("Hugging Face token is not set.")
         
         if self.model_name == "Mistral-7B-Instruct-v0.2-GGUF":
             self.model_file = 'mistral-7b-instruct-v0.2.Q4_K_M.gguf'
             self.model_path = hf_hub_download(repo_id=self.model_id,
                                  filename=self.model_file,
-                                 repo_type="model")
+                                 repo_type="model",
+                                 token=huggingface_token)
         else:
             raise f"Unsupported GGUF model name"
 
