@@ -1308,6 +1308,15 @@ def create_specimen_collage(cfg, logger, dir_home, Project, Dirs):
                 validate_dir(os.path.dirname(save_destination))
                 cv2.imwrite(save_destination, cv2.imread(os.path.join(Dirs.save_original, filename)))
                 logger.info(f"Saved original image: {save_destination}")
+        
+        # After processing, delete the original images, leaving only the _collage images
+        # This is used just in case the HF version puts them there
+        for filename in filenames:
+            if not filename.endswith('_collage.jpg'):
+                file_path = os.path.join(Dirs.save_original, filename)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.info(f"Deleted original image: {file_path}")
 
 def crop_component_from_yolo_coords(anno_type, Dirs, analysis, all_detections, full_image, filename, save_per_image, save_per_class, save_list):
     height = analysis['height']
