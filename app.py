@@ -254,7 +254,6 @@ def load_gallery(converted_files, uploaded_file):
 
 
 
-
 def handle_image_upload_and_gallery_hf(uploaded_files):
     SAFE = SafetyCheck(st.session_state['is_hf'])
     if uploaded_files:
@@ -271,37 +270,46 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
                 st.error("Warning: You uploaded an image that violates our terms of service.")
                 return True
 
+            # Save the uploaded file (PDF or image)
+            file_path = save_uploaded_file(st.session_state['dir_uploaded_images'], uploaded_file)
+            
+            if not file_path:
+                st.error(f"Failed to process the file: {uploaded_file.name}")
+                continue  # Skip to the next file
             
             # Determine the file type
             if uploaded_file.name.lower().endswith('.pdf'):
-                # Handle PDF files
-                file_path = save_uploaded_file(st.session_state['dir_uploaded_images'], uploaded_file)
-                # Convert each page of the PDF to an image
-                n_pages = convert_pdf_to_jpg(file_path, st.session_state['dir_uploaded_images'], dpi=200)#st.session_state.config['leafmachine']['project']['dir_images_local'])
-                # Update the input list for each page image
-                converted_files = os.listdir(st.session_state['dir_uploaded_images'])
-                for file_name in converted_files:   
-                    if file_name.split('.')[1].lower() in ['jpg','jpeg']:
-                        ind_small += 1
-                        jpg_file_path = os.path.join(st.session_state['dir_uploaded_images'], file_name)
-                        st.session_state['input_list'].append(jpg_file_path)
+                try:
+                    # Convert each page of the PDF to an image
+                    n_pages = convert_pdf_to_jpg(file_path, st.session_state['dir_uploaded_images'], dpi=200)
+                    if n_pages == 0:
+                        st.error(f"No pages were converted from the PDF: {uploaded_file.name}")
+                        continue  # Skip to the next file
 
-                        if ind_small < MAX_GALLERY_IMAGES +5:
-                            # Optionally, create a thumbnail for the gallery
-                            img = Image.open(jpg_file_path)
-                            img.thumbnail((GALLERY_IMAGE_SIZE, GALLERY_IMAGE_SIZE), Image.Resampling.LANCZOS)
-                            try:
-                                file_path_small = save_uploaded_file(st.session_state['dir_uploaded_images_small'], file_name, img)
-                            except:
-                                file_path_small = save_uploaded_file_local(st.session_state['dir_uploaded_images_small'],st.session_state['dir_uploaded_images_small'], file_name, img)
-                            st.session_state['input_list_small'].append(file_path_small)
-                
+                    # Update the input list for each page image
+                    converted_files = os.listdir(st.session_state['dir_uploaded_images'])
+                    for file_name in converted_files:   
+                        if file_name.split('.')[1].lower() in ['jpg', 'jpeg']:
+                            ind_small += 1
+                            jpg_file_path = os.path.join(st.session_state['dir_uploaded_images'], file_name)
+                            st.session_state['input_list'].append(jpg_file_path)
+
+                            if ind_small < MAX_GALLERY_IMAGES + 5:
+                                # Create a thumbnail for the gallery
+                                img = Image.open(jpg_file_path)
+                                img.thumbnail((GALLERY_IMAGE_SIZE, GALLERY_IMAGE_SIZE), Image.Resampling.LANCZOS)
+                                file_path_small = save_uploaded_file(st.session_state['dir_uploaded_images_small'], jpg_file_path, img)
+                                st.session_state['input_list_small'].append(file_path_small)
+
+                except Exception as e:
+                    st.error(f"Failed to process PDF file {uploaded_file.name}. Error: {e}")
+                    continue  # Skip to the next file
+
             else:
-                ind_small += 1
                 # Handle JPG/JPEG files (existing process)
-                file_path = save_uploaded_file(st.session_state['dir_uploaded_images'], uploaded_file)
+                ind_small += 1
                 st.session_state['input_list'].append(file_path)
-                if ind_small < MAX_GALLERY_IMAGES +5:
+                if ind_small < MAX_GALLERY_IMAGES + 5:
                     img = Image.open(file_path)
                     img.thumbnail((GALLERY_IMAGE_SIZE, GALLERY_IMAGE_SIZE), Image.Resampling.LANCZOS)
                     file_path_small = save_uploaded_file(st.session_state['dir_uploaded_images_small'], uploaded_file, img)
@@ -313,14 +321,79 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
     
     if st.session_state['input_list_small']:
         if len(st.session_state['input_list_small']) > MAX_GALLERY_IMAGES:
-            # Only take the first 100 images from the list
             images_to_display = st.session_state['input_list_small'][:MAX_GALLERY_IMAGES]
         else:
-            # If there are less than 100 images, take them all
             images_to_display = st.session_state['input_list_small']
         show_gallery_small_hf(images_to_display)
     
     return False
+
+# def handle_image_upload_and_gallery_hf(uploaded_files): # not working with pdfs
+#     SAFE = SafetyCheck(st.session_state['is_hf'])
+#     if uploaded_files:
+        
+#         # Clear input image gallery and input list
+#         clear_image_uploads()
+
+#         ind_small = 0
+#         for uploaded_file in uploaded_files:
+
+#             if SAFE.check_for_inappropriate_content(uploaded_file):
+#                 clear_image_uploads()
+#                 report_violation(uploaded_file.name, is_hf=st.session_state['is_hf'])
+#                 st.error("Warning: You uploaded an image that violates our terms of service.")
+#                 return True
+
+            
+#             # Determine the file type
+#             if uploaded_file.name.lower().endswith('.pdf'):
+#                 # Handle PDF files
+#                 file_path = save_uploaded_file(st.session_state['dir_uploaded_images'], uploaded_file)
+#                 # Convert each page of the PDF to an image
+#                 n_pages = convert_pdf_to_jpg(file_path, st.session_state['dir_uploaded_images'], dpi=200)#st.session_state.config['leafmachine']['project']['dir_images_local'])
+#                 # Update the input list for each page image
+#                 converted_files = os.listdir(st.session_state['dir_uploaded_images'])
+#                 for file_name in converted_files:   
+#                     if file_name.split('.')[1].lower() in ['jpg','jpeg']:
+#                         ind_small += 1
+#                         jpg_file_path = os.path.join(st.session_state['dir_uploaded_images'], file_name)
+#                         st.session_state['input_list'].append(jpg_file_path)
+
+#                         if ind_small < MAX_GALLERY_IMAGES +5:
+#                             # Optionally, create a thumbnail for the gallery
+#                             img = Image.open(jpg_file_path)
+#                             img.thumbnail((GALLERY_IMAGE_SIZE, GALLERY_IMAGE_SIZE), Image.Resampling.LANCZOS)
+#                             try:
+#                                 file_path_small = save_uploaded_file(st.session_state['dir_uploaded_images_small'], file_name, img)
+#                             except:
+#                                 file_path_small = save_uploaded_file_local(st.session_state['dir_uploaded_images_small'],st.session_state['dir_uploaded_images_small'], file_name, img)
+#                             st.session_state['input_list_small'].append(file_path_small)
+                
+#             else:
+#                 ind_small += 1
+#                 # Handle JPG/JPEG files (existing process)
+#                 file_path = save_uploaded_file(st.session_state['dir_uploaded_images'], uploaded_file)
+#                 st.session_state['input_list'].append(file_path)
+#                 if ind_small < MAX_GALLERY_IMAGES +5:
+#                     img = Image.open(file_path)
+#                     img.thumbnail((GALLERY_IMAGE_SIZE, GALLERY_IMAGE_SIZE), Image.Resampling.LANCZOS)
+#                     file_path_small = save_uploaded_file(st.session_state['dir_uploaded_images_small'], uploaded_file, img)
+#                     st.session_state['input_list_small'].append(file_path_small)
+
+#         # After processing all files
+#         st.session_state.config['leafmachine']['project']['dir_images_local'] = st.session_state['dir_uploaded_images']
+#         st.info(f"Processing images from {st.session_state.config['leafmachine']['project']['dir_images_local']}")
+    
+#     if st.session_state['input_list_small']:
+#         if len(st.session_state['input_list_small']) > MAX_GALLERY_IMAGES:
+#             # Only take the first 100 images from the list
+#             images_to_display = st.session_state['input_list_small'][:MAX_GALLERY_IMAGES]
+#         else:
+#             # If there are less than 100 images, take them all
+#             images_to_display = st.session_state['input_list_small']
+#         show_gallery_small_hf(images_to_display)
+    
+#     return False
 
 
 def handle_image_upload_and_gallery():
@@ -371,6 +444,7 @@ def handle_image_upload_and_gallery():
 
 
 def content_input_images(col_left, col_right):
+    
     st.write('---')
     # col1, col2 = st.columns([2,8])
     with col_left:
@@ -385,11 +459,11 @@ def content_input_images(col_left, col_right):
             pass
     
     with col_left:
-        if st.session_state.is_hf:
-            st.session_state['dir_uploaded_images'] = os.path.join(st.session_state.dir_home,'uploads')
-            st.session_state['dir_uploaded_images_small'] = os.path.join(st.session_state.dir_home,'uploads_small')
-            uploaded_files = st.file_uploader("Upload Images", type=['jpg', 'jpeg','pdf'], accept_multiple_files=True, key=st.session_state['uploader_idk'])
-            st.button("Use Test Image",help="This will clear any uploaded images and load the 1 provided test image.",on_click=use_test_image)
+        # if st.session_state.is_hf:
+        st.session_state['dir_uploaded_images'] = os.path.join(st.session_state.dir_home,'uploads')
+        st.session_state['dir_uploaded_images_small'] = os.path.join(st.session_state.dir_home,'uploads_small')
+        uploaded_files = st.file_uploader("Upload Images", type=['jpg', 'jpeg','pdf'], accept_multiple_files=True, key=st.session_state['uploader_idk'])
+        st.button("Use Test Image",help="This will clear any uploaded images and load the 1 provided test image.",on_click=use_test_image)
     
     with col_right:
         if st.session_state.is_hf:
@@ -1061,7 +1135,7 @@ def create_private_file():
                                 fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_5.PNG'))
             
             st.subheader("Getting a Google JSON authentication key")
-            st.write("Google uses a JSON file to store additional authentication information. Save this file in a safe, private location and assign the `GOOGLE_APPLICATION_CREDENTIALS` value to the file path. For Hugging Face, copy the contents of the JSON file including the `\{\}` and paste it as the secret value.")
+            st.write(f"Google uses a JSON file to store additional authentication information. Save this file in a safe, private location and assign the `GOOGLE_APPLICATION_CREDENTIALS` value to the file path. For Hugging Face, copy the contents of the JSON file including the curly brackets and paste it as the secret value.")
             st.write("To download your JSON key...")
             blog_text_and_image(text="Open the navigation menu. Click on the hamburger menu (three horizontal lines) in the top left corner. Go to IAM & Admin. ", 
                                 fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_7.PNG'),width=300)
@@ -2053,7 +2127,7 @@ def content_ocr_method():
         st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution'] = st.radio(
             "Select level of detail for :violet[GPT-4o-mini] OCR. We only recommend 'high' detail in most scenarios.",
             ["high", "low", ],
-            captions=["$0.50 per 1,000", "\$5 - \$10 per 1,000"])
+            captions=[f"$0.50 per 1,000", f"$5 - $10 per 1,000"])
 
 
     if 'LLaVA' in selected_OCR_options:

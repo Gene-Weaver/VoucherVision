@@ -55,7 +55,7 @@ def create_shortcut():
     streamlit_exe = os.path.join(venv_path, "Scripts","streamlit")
     print(script_dir)
     print(streamlit_exe)
-    activate_path = os.path.join(script_dir,".venv_VV","Scripts")
+    activate_path = os.path.join(script_dir,"\.venv_VV","Scripts")
     print(activate_path)
     shortcut.Arguments = f'/K cd /D ""{activate_path}"" && activate && cd /D ""{script_dir}"" && python run_VoucherVision.py'
     # Set the icon of the shortcut

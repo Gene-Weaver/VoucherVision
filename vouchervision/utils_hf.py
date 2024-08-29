@@ -68,57 +68,106 @@ def save_uploaded_file_local(directory_in, directory_out, img_file_name, image=N
             except:
                 pass
             
-
-def save_uploaded_file(directory, img_file, image=None):
+def save_uploaded_file(directory, uploaded_file, image=None):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    full_path = os.path.join(directory, img_file.name) ########## TODO THIS MUST BE MOVED TO conditional specific location
+    full_path = os.path.join(directory, uploaded_file.name)
 
-    # Assuming the uploaded file is an image
-    if img_file.name.lower().endswith('.pdf'):
-        with open(full_path, 'wb') as out_file:
-            # If img_file is a file-like object (e.g., Django's UploadedFile),
-            # you can use copyfileobj or read chunks.
-            # If it's a path, you'd need to open and then save it.
-            if hasattr(img_file, 'read'):
-                # This is a file-like object
-                copyfileobj(img_file, out_file)
-            else:
-                # If img_file is a path string
-                with open(img_file, 'rb') as fd:
-                    copyfileobj(fd, out_file)    
+    # Handle PDF and Image files differently
+    if uploaded_file.name.lower().endswith('.pdf'):
+        # Save PDF file
+        try:
+            with open(full_path, 'wb') as out_file:
+                if hasattr(uploaded_file, 'read'):
+                    # This is a file-like object
+                    out_file.write(uploaded_file.read())
+                else:
+                    # If uploaded_file is a path string
+                    with open(uploaded_file, 'rb') as fd:
+                        out_file.write(fd.read())
+            if os.path.getsize(full_path) == 0:
+                raise ValueError(f"The file {uploaded_file.name} is empty.")
             return full_path
+        except Exception as e:
+            st.error(f"Failed to save PDF file {uploaded_file.name}. Error: {e}")
+            return None
     else:
+        # Handle image files
         if image is None:
             try:
-                with Image.open(img_file) as image:
-                    full_path = os.path.join(directory, img_file.name)
+                with Image.open(uploaded_file) as image:
                     image.save(full_path, "JPEG")
-                # Return the full path of the saved image
-                return full_path
-            except:
-                try:
-                    with Image.open(os.path.join(directory,img_file)) as image:
-                        full_path = os.path.join(directory, img_file)
-                        image.save(full_path, "JPEG")
-                    # Return the full path of the saved image
-                    return full_path
-                except:
-                    with Image.open(img_file.name) as image:
-                        full_path = os.path.join(directory, img_file.name)
-                        image.save(full_path, "JPEG")
-                    # Return the full path of the saved image
-                    return full_path
+            except Exception as e:
+                st.error(f"Failed to save image file {uploaded_file.name}. Error: {e}")
+                return None
         else:
             try:
-                full_path = os.path.join(directory, img_file.name)
                 image.save(full_path, "JPEG")
-                return full_path
-            except:
-                full_path = os.path.join(directory, img_file)
-                image.save(full_path, "JPEG")
-                return full_path
+            except Exception as e:
+                st.error(f"Failed to save processed image file {uploaded_file.name}. Error: {e}")
+                return None
+
+        if os.path.getsize(full_path) == 0:
+            st.error(f"The image file {uploaded_file.name} is empty.")
+            return None
+
+    return full_path
+
+
+# def save_uploaded_file(directory, img_file, image=None): # not working with pdfs
+#     if not os.path.exists(directory):
+#         os.makedirs(directory)
+
+#     full_path = os.path.join(directory, img_file.name) ########## TODO THIS MUST BE MOVED TO conditional specific location
+
+#     # Assuming the uploaded file is an image
+#     if img_file.name.lower().endswith('.pdf'):
+#         with open(full_path, 'wb') as out_file:
+#             # If img_file is a file-like object (e.g., Django's UploadedFile),
+#             # you can use copyfileobj or read chunks.
+#             # If it's a path, you'd need to open and then save it.
+#             if hasattr(img_file, 'read'):
+#                 # This is a file-like object
+#                 copyfileobj(img_file, out_file)
+#             else:
+#                 # If img_file is a path string
+#                 with open(img_file, 'rb') as fd:
+#                     copyfileobj(fd, out_file)    
+#             return full_path
+#     else:
+#         if image is None:
+#             try:
+#                 with Image.open(img_file) as image:
+#                     full_path = os.path.join(directory, img_file.name)
+#                     image.save(full_path, "JPEG")
+#                 # Return the full path of the saved image
+#                 return full_path
+#             except:
+#                 try:
+#                     with Image.open(os.path.join(directory,img_file)) as image:
+#                         full_path = os.path.join(directory, img_file)
+#                         image.save(full_path, "JPEG")
+#                     # Return the full path of the saved image
+#                     return full_path
+#                 except:
+#                     with Image.open(img_file.name) as image:
+#                         full_path = os.path.join(directory, img_file.name)
+#                         image.save(full_path, "JPEG")
+#                     # Return the full path of the saved image
+#                     return full_path
+#         else:
+#             try:
+#                 full_path = os.path.join(directory, img_file.name)
+#                 image.save(full_path, "JPEG")
+#                 return full_path
+#             except:
+#                 full_path = os.path.join(directory, img_file)
+#                 image.save(full_path, "JPEG")
+#                 return full_path
+            
+
+
 # def save_uploaded_file(directory, uploaded_file, image=None):
 #     if not os.path.exists(directory):
 #         os.makedirs(directory)
