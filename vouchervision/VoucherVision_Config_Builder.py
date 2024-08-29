@@ -53,7 +53,7 @@ def build_VV_config(loaded_cfg=None):
 
         LLM_version_user = 'Gemini 1.5 Flash' # 'Azure GPT 4' #'Azure GPT 4 Turbo 1106-preview'
         prompt_version = 'SLTPvM_long.yaml' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
-        use_LeafMachine2_collage_images = True # Use LeafMachine2 collage images
+        use_LeafMachine2_collage_images = 0 # Use LeafMachine2 collage images [0, 1, 2]
         do_create_OCR_helper_image = True
 
         batch_size = 500
@@ -65,6 +65,8 @@ def build_VV_config(loaded_cfg=None):
         path_domain_knowledge = '' #os.path.join(dir_home,'domain_knowledge','SLTP_UM_AllAsiaMinimalInRegion.xlsx')
         embeddings_database_name = '' #os.path.splitext(os.path.basename(path_domain_knowledge))[0]
 
+        specimen_rotate = False # False = counter clock, True = clock
+
         #############################################
         #############################################
         ########## DO NOT EDIT BELOW HERE ###########
@@ -75,7 +77,7 @@ def build_VV_config(loaded_cfg=None):
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
                         prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
-                        tool_GEO, tool_WFO, tool_wikipedia,
+                        tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
     else:
         dir_home = os.path.dirname(os.path.dirname(__file__))
@@ -103,6 +105,8 @@ def build_VV_config(loaded_cfg=None):
         tool_WFO = loaded_cfg['leafmachine']['project']['tool_WFO']
         tool_wikipedia = loaded_cfg['leafmachine']['project']['tool_wikipedia']
 
+        specimen_rotate = loaded_cfg['leafmachine']['project']['specimen_rotate']
+
         pdf_conversion_dpi = loaded_cfg['leafmachine']['project']['pdf_conversion_dpi']
 
         LLM_version_user = loaded_cfg['leafmachine']['LLM_version']
@@ -125,7 +129,7 @@ def build_VV_config(loaded_cfg=None):
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
                         prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations,
-                        tool_GEO, tool_WFO, tool_wikipedia,
+                        tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
 
 
@@ -134,7 +138,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
                     prompt_version, do_create_OCR_helper_image_user, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
                     OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
-                    tool_GEO, tool_WFO, tool_wikipedia,
+                    tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
                     check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False):
     
 
@@ -191,6 +195,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
         'tool_GEO': tool_GEO, 
         'tool_WFO': tool_WFO, 
         'tool_wikipedia': tool_wikipedia,
+        'specimen_rotate': specimen_rotate,
     }
 
     modules_section = {

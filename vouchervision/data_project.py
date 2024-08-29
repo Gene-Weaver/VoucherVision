@@ -116,14 +116,24 @@ class Project_Info():
         n_total = len(os.listdir(dir_images))
         for file in tqdm(os.listdir(dir_images), desc=f'{bcolors.HEADER}     Copying images to working directory{bcolors.ENDC}', colour="white", position=0, total=n_total):
             source = os.path.join(dir_images, file)
+            
+            # Split the filename and the extension
+            filename, ext = os.path.splitext(file)
+            
+            # Convert the extension to lower case
+            ext_lower = ext.lower()
+            
+            # Reconstruct the file name with the lower-cased extension
+            file_with_lower_ext = f"{filename}{ext_lower}"
+
             # Check if file is a PDF
-            if file.lower().endswith('.pdf'):
+            if ext_lower == '.pdf':
                 # Convert PDF pages to JPG images
                 n_pages = convert_pdf_to_jpg(source, Dirs.save_original)
                 self.logger.info(f"Converted {n_pages} pages to JPG from PDF: {file}")
             else:
-                # Copy non-PDF files directly
-                destination = os.path.join(Dirs.save_original, file)
+                # Copy non-PDF files directly, using the filename with the lower-cased extension
+                destination = os.path.join(Dirs.save_original, file_with_lower_ext)
                 shutil.copy(source, destination)
         
     def make_file_names_custom(self, dir_images, cfg, Dirs): 

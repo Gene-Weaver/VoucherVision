@@ -113,7 +113,7 @@ def detect_plant_components(cfg, logger, dir_home, Project, Dirs):
     
 
 def detect_archival_components(cfg, logger, dir_home, Project, Dirs, is_real_run=False, progress_report=None):
-    if not cfg['leafmachine']['use_RGB_label_images']:
+    if cfg['leafmachine']['use_RGB_label_images'] != 0:
         logger.name = 'Skipping LeafMachine2 Label Detection'
         logger.info(f"Full image will be used instead of the label collage")  
         if is_real_run:

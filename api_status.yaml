@@ -1,4 +1,4 @@
-date: July 12, 2024
+date: August 29, 2024
 missing_keys: []
 present_keys:
 - Google OCR Print (Valid)
@@ -20,6 +20,6 @@ present_keys:
 - Palm2 (Valid)
 - Palm2 LangChain (Valid)
 - Gemini (Valid)
-- Mistral (Valid)
+- Mistral (Invalid)
 - HERE Geocode (Valid)
 - OpenCage Geocode (Valid)

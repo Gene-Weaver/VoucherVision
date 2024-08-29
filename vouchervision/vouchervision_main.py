@@ -8,7 +8,7 @@ from time import perf_counter
 # sys.path.append(parentdir)
 # sys.path.append(currentdir)
 from vouchervision.component_detector.component_detector import detect_plant_components, detect_archival_components
-from vouchervision.general_utils import save_token_info_as_csv, print_main_start, check_for_subdirs_VV, load_config_file, load_config_file_testing, report_config, save_config_file, crop_detections_from_images_VV
+from vouchervision.general_utils import create_specimen_collage, save_token_info_as_csv, print_main_start, check_for_subdirs_VV, load_config_file, load_config_file_testing, report_config, save_config_file, crop_detections_from_images_VV
 from vouchervision.directory_structure_VV import Dir_Structure
 from vouchervision.data_project import Project_Info
 from vouchervision.LM2_logger import start_logging
@@ -61,6 +61,10 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
 
     # Save cropped detections
     crop_detections_from_images_VV(cfg, logger, dir_home, Project, Dirs)
+
+    
+    create_specimen_collage(cfg, logger, dir_home, Project, Dirs)
+
 
     # Process labels
     Voucher_Vision = VoucherVision(cfg, logger, dir_home, path_custom_prompts, Project, Dirs, is_hf)

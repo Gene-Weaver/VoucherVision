@@ -9,6 +9,7 @@ import numpy as np
 import concurrent.futures
 from time import perf_counter
 import torch
+from collections import defaultdict
 
 try:
     from vouchervision.model_maps import ModelMaps
@@ -928,6 +929,7 @@ def crop_detections_from_images(cfg, logger, dir_home, Project, Dirs, batch_size
 def crop_detections_from_images_VV(cfg, logger, dir_home, Project, Dirs, batch_size=50):
     t2_start = perf_counter()
     logger.name = 'Crop Components'
+
     
     if cfg['leafmachine']['cropped_components']['do_save_cropped_annotations']:
         detections = cfg['leafmachine']['cropped_components']['save_cropped_annotations']
@@ -1152,6 +1154,7 @@ def crop_component_from_yolo_coords_VV(anno_type, Dirs, analysis, all_detections
                 # print(f'detection_class: {detection_class} not in save_list: {save_list}')
                 pass
 
+    ### Below creates the LM2 Label Collage image
     # Initialize a list to hold all the acceptable cropped images
     acceptable_cropped_images = []
 
@@ -1243,7 +1246,68 @@ def crop_component_from_yolo_coords_VV(anno_type, Dirs, analysis, all_detections
         original_image_name = '.'.join([filename,'jpg'])
         cv2.imwrite(os.path.join(Dirs.save_original, original_image_name), full_image)
         
+def create_specimen_collage(cfg, logger, dir_home, Project, Dirs):
+    if cfg['leafmachine']['use_RGB_label_images'] == 2:
+        # Get all filenames in the save_original directory that end with .jpg or .jpeg
+        filenames = [f for f in os.listdir(Dirs.save_original) if f.lower().endswith(('.jpg', '.jpeg'))]
 
+        # Dictionary to group filenames by their file stem (e.g., FMNH_6238)
+        grouped_filenames = defaultdict(list)
+
+        for filename in filenames:
+            parts = filename.rsplit('_', 1)
+            if len(parts) == 2 and parts[1][0].isalnum():
+                file_stem = parts[0]
+                grouped_filenames[file_stem].append(filename)
+            else:
+                logger.warning(f"Filename {filename} does not match expected pattern. Skipping.")
+
+        # Process each group of images
+        for file_stem, group in grouped_filenames.items():
+            # Load all cropped images for the current group
+            cropped_images = [cv2.imread(os.path.join(Dirs.save_original, filename)) for filename in group]
+
+            if not cropped_images:
+                logger.error(f"No images found for {file_stem}. Skipping collage creation.")
+                continue
+
+            # Rotate images so that width is greater than height
+            for i, img in enumerate(cropped_images):
+                if img.shape[0] > img.shape[1]:  # height > width
+                    if cfg['leafmachine']['project']['specimen_rotate']:
+                        cropped_images[i] = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+                    else:
+                        cropped_images[i] = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+            # Calculate the maximum width and total height required for the collage
+            max_width = max(img.shape[1] for img in cropped_images)
+            total_height = sum(img.shape[0] for img in cropped_images)
+
+            # Create a black image with the required dimensions
+            collage_image = np.zeros((total_height, max_width, 3), dtype=np.uint8)
+
+            # Stack images on top of each other
+            y_offset = 0
+            for img in cropped_images:
+                collage_image[y_offset:y_offset+img.shape[0], :img.shape[1]] = img
+                y_offset += img.shape[0]
+
+            # Generate the combined filename from the file stem
+            collage_filename = f"{file_stem}_collage.jpg"
+            
+            # Save the collage image
+            collage_destination = os.path.join(Dirs.save_per_annotation_class, 'label', collage_filename)
+            validate_dir(os.path.dirname(collage_destination))
+            cv2.imwrite(collage_destination, collage_image)
+            logger.info(f"Saved collage image: {collage_destination}")
+
+            # Save each individual image separately
+            for filename in group:
+                original_image_name = os.path.basename(filename)
+                save_destination = os.path.join(Dirs.save_original, original_image_name)
+                validate_dir(os.path.dirname(save_destination))
+                cv2.imwrite(save_destination, cv2.imread(os.path.join(Dirs.save_original, filename)))
+                logger.info(f"Saved original image: {save_destination}")
 
 def crop_component_from_yolo_coords(anno_type, Dirs, analysis, all_detections, full_image, filename, save_per_image, save_per_class, save_list):
     height = analysis['height']

@@ -468,11 +468,11 @@ def content_input_images(col_left, col_right):
             pass
     
     with col_left:
-        # if st.session_state.is_hf:
-        st.session_state['dir_uploaded_images'] = os.path.join(st.session_state.dir_home,'uploads')
-        st.session_state['dir_uploaded_images_small'] = os.path.join(st.session_state.dir_home,'uploads_small')
-        uploaded_files = st.file_uploader("Upload Images", type=['jpg', 'jpeg','pdf'], accept_multiple_files=True, key=st.session_state['uploader_idk'])
-        st.button("Use Test Image",help="This will clear any uploaded images and load the 1 provided test image.",on_click=use_test_image)
+        if st.session_state.is_hf:
+            st.session_state['dir_uploaded_images'] = os.path.join(st.session_state.dir_home,'uploads')
+            st.session_state['dir_uploaded_images_small'] = os.path.join(st.session_state.dir_home,'uploads_small')
+            uploaded_files = st.file_uploader("Upload Images", type=['jpg', 'jpeg','pdf'], accept_multiple_files=True, key=st.session_state['uploader_idk'])
+            st.button("Use Test Image",help="This will clear any uploaded images and load the 1 provided test image.",on_click=use_test_image)
     
     with col_right:
         if st.session_state.is_hf:
@@ -2218,11 +2218,52 @@ def content_collage_overlay():
         st.markdown("Prior to transcription, use LeafMachine2 to crop all labels from input images to create label collages for each specimen image. Showing just the text labels to the OCR algorithms significantly improves performance. This runs slowly on the free Hugging Face Space, but runs quickly with a fast CPU or any GPU.")
         st.markdown("Images that are mostly text (like a scanned notecard, or already cropped images) do not require LM2 collage.")
 
-        if st.session_state.is_hf:
-            st.session_state.config['leafmachine']['use_RGB_label_images'] = st.checkbox(":rainbow[Use LeafMachine2 label collage for transcriptions]", st.session_state.config['leafmachine'].get('use_RGB_label_images', False), key='do make collage hf')
-        else:
-            st.session_state.config['leafmachine']['use_RGB_label_images'] = st.checkbox(":rainbow[Use LeafMachine2 label collage for transcriptions]", st.session_state.config['leafmachine'].get('use_RGB_label_images', True), key='do make collage local')
+        # if st.session_state.is_hf:
+        #     st.session_state.config['leafmachine']['use_RGB_label_images'] = st.checkbox(":rainbow[Use LeafMachine2 label collage for transcriptions]", st.session_state.config['leafmachine'].get('use_RGB_label_images', False), key='do make collage hf')
+        # else:
+        #     st.session_state.config['leafmachine']['use_RGB_label_images'] = st.checkbox(":rainbow[Use LeafMachine2 label collage for transcriptions]", st.session_state.config['leafmachine'].get('use_RGB_label_images', True), key='do make collage local')
+        # Set the options for the radio button
+        # Set the options for the radio button with corresponding indices
+        # Set the options for the transcription method radio button
+        options = {
+            0: "Use LeafMachine2 label collage for transcriptions",
+            1: "Use original images for transcriptions",
+            2: "Use specimen collage for transcriptions"
+        }
 
+        # Determine the default index based on the current configuration
+        default_index = st.session_state.config['leafmachine'].get('use_RGB_label_images', 0)
+
+        # Create the radio button for transcription method selection
+        selected_option = st.radio(
+            "Select the transcription method:",
+            options=list(options.values()),
+            index=default_index
+        )
+
+        # Update the session state based on the selected option
+        selected_index = list(options.values()).index(selected_option)
+        st.session_state.config['leafmachine']['use_RGB_label_images'] = selected_index
+
+        # If "Use specimen collage for transcriptions" is selected, show another radio button for rotation options
+        if selected_index == 2:
+            rotation_options = {
+                True: "Rotate clockwise",
+                False: "Rotate counterclockwise"
+            }
+            
+            # Determine the default rotation direction
+            default_rotation = st.session_state.config['leafmachine']['project'].get('specimen_rotate', True)
+            
+            # Create the radio button for rotation direction selection
+            selected_rotation = st.radio(
+                "Select the rotation direction:",
+                options=list(rotation_options.values()),
+                index=0 if default_rotation else 1
+            )
+            
+            # Update the configuration based on the selected rotation direction
+            st.session_state.config['leafmachine']['project']['specimen_rotate'] = selected_rotation == "Rotate clockwise"
 
         option_selected_crops = st.multiselect(label="Components to crop",  
                 options=['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',

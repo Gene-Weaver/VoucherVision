@@ -1576,8 +1576,22 @@ def content_collage_overlay():
     with col_cropped_1:
         default_crops = st.session_state.config['leafmachine']['cropped_components']['save_cropped_annotations']
         st.write("Prior to transcription, use LeafMachine2 to crop all labels from input images to create label collages for each specimen image. (Requires GPU)")
-        st.session_state.config['leafmachine']['use_RGB_label_images'] = st.checkbox("Use LeafMachine2 label collage for transcriptions", st.session_state.config['leafmachine'].get('use_RGB_label_images', False))
+        # Set the options for the radio button
+        options = {
+            "Use LeafMachine2 label collage for transcriptions": "use_RGB_label_images",
+            "Use specimen collage for transcriptions": "use_specimen_collage"
+        }
 
+        # Create the radio button with the available options
+        selected_option = st.radio(
+            "Select the transcription method:",
+            options=list(options.keys()),
+            index=0 if st.session_state.config['leafmachine'].get('use_RGB_label_images', False) else 1
+        )
+
+        # Update the session state based on the selected option
+        st.session_state.config['leafmachine']['use_RGB_label_images'] = (selected_option == "Use LeafMachine2 label collage for transcriptions")
+        st.session_state.config['leafmachine']['project']['use_specimen_collage'] = (selected_option == "Use specimen collage for transcriptions")
 
         option_selected_crops = st.multiselect(label="Components to crop",  
                 options=['ruler', 'barcode','label', 'colorcard','map','envelope','photo','attached_item','weights',
