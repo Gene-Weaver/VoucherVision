@@ -73,24 +73,24 @@ def save_uploaded_file(directory, uploaded_file, image=None):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    full_path = os.path.join(directory, uploaded_file.name)
-
+    # Check if we're working with an UploadedFile or just a file path
+    if isinstance(uploaded_file, str):
+        full_path = os.path.join(directory, os.path.basename(uploaded_file))
+    else:
+        full_path = os.path.join(directory, uploaded_file.name)
+        
     # Handle PDF and Image files differently
-    if uploaded_file.name.lower().endswith('.pdf'):
-        # Check if the uploaded file has content
-        if len(uploaded_file.getvalue()) == 0:
-            st.error(f"The uploaded PDF file {uploaded_file.name} is empty.")
-            return None
-
+    if uploaded_file.name.lower().endswith('.pdf') if not isinstance(uploaded_file, str) else full_path.lower().endswith('.pdf'):
         # Save PDF file
         try:
-            with open(full_path, 'wb') as out_file:
-                out_file.write(uploaded_file.getvalue())
+            if not isinstance(uploaded_file, str):
+                with open(full_path, 'wb') as out_file:
+                    out_file.write(uploaded_file.getvalue())
             if os.path.getsize(full_path) == 0:
                 raise ValueError(f"The file {uploaded_file.name} is empty after saving.")
             return full_path
         except Exception as e:
-            st.error(f"Failed to save PDF file {uploaded_file.name}. Error: {e}")
+            st.error(f"Failed to save PDF file {uploaded_file.name if not isinstance(uploaded_file, str) else full_path}. Error: {e}")
             return None
     else:
         # Handle image files
