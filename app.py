@@ -269,6 +269,15 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
                 report_violation(uploaded_file.name, is_hf=st.session_state['is_hf'])
                 st.error("Warning: You uploaded an image that violates our terms of service.")
                 return True
+            
+            # Print out details of the uploaded file for debugging
+            st.write(f"Uploaded file: {uploaded_file.name}")
+            st.write(f"File size: {len(uploaded_file.getvalue())} bytes")
+
+            # Check if the uploaded file is not empty
+            if len(uploaded_file.getvalue()) == 0:
+                st.error(f"The uploaded file {uploaded_file.name} is empty.")
+                continue
 
             # Save the uploaded file (PDF or image)
             file_path = save_uploaded_file(st.session_state['dir_uploaded_images'], uploaded_file)

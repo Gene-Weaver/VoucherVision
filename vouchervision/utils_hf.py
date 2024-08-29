@@ -77,18 +77,17 @@ def save_uploaded_file(directory, uploaded_file, image=None):
 
     # Handle PDF and Image files differently
     if uploaded_file.name.lower().endswith('.pdf'):
+        # Check if the uploaded file has content
+        if len(uploaded_file.getvalue()) == 0:
+            st.error(f"The uploaded PDF file {uploaded_file.name} is empty.")
+            return None
+
         # Save PDF file
         try:
             with open(full_path, 'wb') as out_file:
-                if hasattr(uploaded_file, 'read'):
-                    # This is a file-like object
-                    out_file.write(uploaded_file.read())
-                else:
-                    # If uploaded_file is a path string
-                    with open(uploaded_file, 'rb') as fd:
-                        out_file.write(fd.read())
+                out_file.write(uploaded_file.getvalue())
             if os.path.getsize(full_path) == 0:
-                raise ValueError(f"The file {uploaded_file.name} is empty.")
+                raise ValueError(f"The file {uploaded_file.name} is empty after saving.")
             return full_path
         except Exception as e:
             st.error(f"Failed to save PDF file {uploaded_file.name}. Error: {e}")
