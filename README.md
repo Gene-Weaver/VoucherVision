@@ -245,10 +245,11 @@ Installation should basically be the same for Linux.
 > If your CUDA version < 11.8, then you should probably upgrade to 12.1
 > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 
-4. To run LLMs locally also install `pip install flash-attn==1.0.9`. Windows is not yet compatible with newer versions. If the rest of the installation process has been successful but you get an error like this:
-> `error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/`
-then you need to install some Windows development tools first. Go to [https://visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and install all packages that mention C++. Restart your PC, then `pip install flash-attn==1.0.9` should work as expected.
-For Linux, you can try `pip install flash-attn --no-build-isolation` and use a 2.X version.
+4. To run LLMs locally also install `pip install flash-attn==1.0.9`.
+    - Windows is not yet compatible with newer versions. If the rest of the installation process has been successful but you get an error like this:
+    > `error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/`
+    - Then you need to install some Windows development tools first. Go to [https://visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and install all packages that mention C++. Restart your PC, then `pip install flash-attn==1.0.9` should work as expected.
+    - For Linux, you can try `pip install flash-attn --no-build-isolation` and use a 2.X version.
 ---
 
 # Installing VoucherVision (using conda)
