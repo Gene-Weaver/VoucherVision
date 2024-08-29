@@ -271,8 +271,8 @@ def handle_image_upload_and_gallery_hf(uploaded_files):
                 return True
             
             # Print out details of the uploaded file for debugging
-            st.write(f"Uploaded file: {uploaded_file.name}")
-            st.write(f"File size: {len(uploaded_file.getvalue())} bytes")
+            # st.write(f"Uploaded file: {uploaded_file.name}")
+            # st.write(f"File size: {len(uploaded_file.getvalue())} bytes")
 
             # Check if the uploaded file is not empty
             if len(uploaded_file.getvalue()) == 0:
