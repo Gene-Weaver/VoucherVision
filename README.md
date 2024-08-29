@@ -242,8 +242,9 @@ Installation should basically be the same for Linux.
     - Verify the installation 
     - Now we should have the right PyTorch version. Check to see if `torch.cuda.is_available()` returns `True` by following the same procedure as above
 
-> If your CUDA version < 11.8, then you should probably upgrade to 12.1
-> If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
+    > If your CUDA version < 11.8, then you should probably upgrade to 12.1
+    
+    > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 
 4. To run LLMs locally also install `pip install flash-attn==1.0.9`.
     - Windows is not yet compatible with newer versions. If the rest of the installation process has been successful but you get an error like this:
