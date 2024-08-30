@@ -102,6 +102,10 @@ MISTRAL_SMALL:
 ################
 # Local Models
 ################
+#  mistralai/Mistral-Nemo-Instruct-2407
+LOCAL_MISTRAL_NEMO_INSTRUCT_2407:
+  in: 0.0
+  out: 0.0
 LOCAL_MIXTRAL_8X7B_INSTRUCT_V01:
   in: 0.0
   out: 0.0

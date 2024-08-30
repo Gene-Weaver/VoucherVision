@@ -2226,13 +2226,13 @@ def content_collage_overlay():
         # Set the options for the radio button with corresponding indices
         # Set the options for the transcription method radio button
         options = {
-            0: "Use LeafMachine2 label collage for transcriptions",
-            1: "Use original images for transcriptions",
+            0: "Use original images for transcriptions",
+            1: "Use LeafMachine2 label collage for transcriptions",
             2: "Use specimen collage for transcriptions"
         }
 
         # Determine the default index based on the current configuration
-        default_index = st.session_state.config['leafmachine'].get('use_RGB_label_images', 0)
+        default_index = st.session_state.config['leafmachine'].get('use_RGB_label_images', 1)
 
         # Create the radio button for transcription method selection
         selected_option = st.radio(
