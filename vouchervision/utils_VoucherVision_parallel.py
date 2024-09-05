@@ -704,8 +704,8 @@ class VoucherVision():
             json_report.set_text(text_main='Sending batch to OCR and LLM')
 
         num_files = len(self.img_paths)
-        # num_threads = min(num_files, 128)
-        num_threads = 128
+        num_threads = min(num_files, 128)
+        # num_threads = 128
         counter = AtomicCounter()
 
         # Setup for parallel execution

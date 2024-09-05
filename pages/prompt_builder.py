@@ -19,6 +19,20 @@ def create_download_button_yaml(file_path, selected_yaml_file, key_val):
         )
 
 
+# def upload_local_prompt_to_server(dir_prompt):
+#     uploaded_file = st.file_uploader("Upload a custom prompt file", type=['yaml'])
+#     if uploaded_file is not None:
+#         # Check the file extension
+#         file_name = uploaded_file.name
+#         if file_name.endswith('.yaml'):
+#             file_path = os.path.join(dir_prompt, file_name)
+            
+#             # Save the file
+#             with open(file_path, 'wb') as f:
+#                 f.write(uploaded_file.getbuffer())
+#             st.success(f"Saved file {file_name} in {dir_prompt}")
+#         else:
+#             st.error("Please upload a .yaml file that you previously created using this Prompt Builder tool.")
 def upload_local_prompt_to_server(dir_prompt):
     uploaded_file = st.file_uploader("Upload a custom prompt file", type=['yaml'])
     if uploaded_file is not None:
@@ -31,8 +45,12 @@ def upload_local_prompt_to_server(dir_prompt):
             with open(file_path, 'wb') as f:
                 f.write(uploaded_file.getbuffer())
             st.success(f"Saved file {file_name} in {dir_prompt}")
+            
+            # Update the prompt list
+            st.session_state['yaml_files'] = [f for f in os.listdir(dir_prompt) if f.endswith('.yaml')]
         else:
             st.error("Please upload a .yaml file that you previously created using this Prompt Builder tool.")
+
 
 
 def save_prompt_yaml(filename, col):
@@ -206,6 +224,9 @@ def build_LLM_prompt_config():
                 # Create the download button
                 st.write('##')
                 create_download_button_yaml(download_file_path, st.session_state['selected_yaml_file'],key_val=345798)
+
+
+        upload_local_prompt_to_server(dir_prompt)
 
         # Prompt Author Information
         st.write("---")

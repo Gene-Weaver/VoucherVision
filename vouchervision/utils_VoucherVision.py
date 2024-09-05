@@ -164,7 +164,7 @@ class VoucherVision():
 
 
     def map_dir_labels(self):
-        if self.cfg['leafmachine']['use_RGB_label_images']:
+        if self.cfg['leafmachine']['use_RGB_label_images'] in [1,2]:
             self.dir_labels = os.path.join(self.Dirs.save_per_annotation_class,'label')
         else:
             self.dir_labels = self.Dirs.save_original
@@ -353,7 +353,7 @@ class VoucherVision():
             elif header.value == "path_to_crop":
                 sheet.cell(row=next_row, column=i, value=path_to_crop)
             elif header.value == "path_to_original":
-                if self.cfg['leafmachine']['use_RGB_label_images']:
+                if self.cfg['leafmachine']['use_RGB_label_images'] in [1,2]:
                     fname = os.path.basename(path_to_crop)
                     base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(path_to_crop))))
                     path_to_original = os.path.join(base, 'Original_Images', fname)

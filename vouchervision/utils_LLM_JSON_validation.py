@@ -12,8 +12,8 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
                 data[key] = ''
             elif isinstance(value, str):
                 if value.lower() in ['unknown','not provided', 'missing', 'na', 'none', 'n/a', 'null', 'unspecified',
-                                     'TBD',
-                                    'not provided in the text', 'not found in the text', 
+                                     'TBD', 'tbd',
+                                    'not provided in the text', 'not found in the text', 'Not found in OCR text', 'not found in ocr text',
                                     'not in the text', 'not provided', 'not found',
                                     'not provided in the ocr', 'not found in the ocr', 
                                     'not in the ocr', 
@@ -29,7 +29,7 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
                                     'not in the ocr text', 
                                     'Not provided in ocr text',
                                     'not provided in ocr text',
-                                    'n/a n/a','n/a, n/a',
+                                    'n/a n/a','n/a, n/a','Not applicable','not applicable',
                                     'n/a, n/a, n/a','n/a n/a, n/a','n/a, n/a n/a','n/a n/a n/a',
                                     'n/a, n/a, n/a, n/a','n/a n/a n/a n/a','n/a n/a, n/a, n/a','n/a, n/a n/a, n/a','n/a, n/a, n/a n/a',
                                     'n/a n/a n/a, n/a','n/a, n/a n/a n/a',

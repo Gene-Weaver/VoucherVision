@@ -34,6 +34,8 @@ class ModelMaps:
 
         'LOCAL_MIXTRAL_8X7B_INSTRUCT_V01': '#000000',  # Black
         'LOCAL_MISTRAL_7B_INSTRUCT_V02': '#4a4a4a',  # Gray
+        #  mistralai/Mistral-Nemo-Instruct-2407
+        'LOCAL_MISTRAL_NEMO_INSTRUCT_2407': '#000000',  # Black
 
         'LOCAL_CPU_MISTRAL_7B_INSTRUCT_V02_GGUF': '#bababa',  # Gray
 
@@ -78,7 +80,8 @@ class ModelMaps:
                       'Open Mistral 7B',
                       ]
 
-    MODELS_LOCAL = ['LOCAL Mixtral 8x7B Instruct v0.1',
+    MODELS_LOCAL = ['LOCAL Mistral Nemo Instruct 2407', 
+                    'LOCAL Mixtral 8x7B Instruct v0.1',
                     'LOCAL Mistral 7B Instruct v0.2',
                     'LOCAL CPU Mistral 7B Instruct v0.2 GGUF',
                     'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05']
@@ -124,6 +127,7 @@ class ModelMaps:
         'Open Mixtral 8x7B': 'OPEN_MIXTRAL_8X7B',
         'Open Mistral 7B': 'OPEN_MISTRAL_7B',
 
+        'LOCAL Mistral Nemo Instruct 2407': 'LOCAL_MISTRAL_NEMO_INSTRUCT_2407', 
         'LOCAL Mixtral 8x7B Instruct v0.1': 'LOCAL_MIXTRAL_8X7B_INSTRUCT_V01',
         'LOCAL Mistral 7B Instruct v0.2': 'LOCAL_MISTRAL_7B_INSTRUCT_V02',
 
@@ -166,6 +170,7 @@ class ModelMaps:
             'Open Mixtral 8x7B':  has_key_mistral,
             'Open Mistral 7B':  has_key_mistral,
 
+            'LOCAL Mistral Nemo Instruct 2407': True, 
             'LOCAL Mixtral 8x7B Instruct v0.1':  True,
             'LOCAL Mistral 7B Instruct v0.2':  True,
 
@@ -208,6 +213,7 @@ class ModelMaps:
             'Open Mixtral 8x7B':  False,
             'Open Mistral 7B':  False,
 
+            'LOCAL Mistral Nemo Instruct 2407':  False, 
             'LOCAL Mixtral 8x7B Instruct v0.1':  False,
             'LOCAL Mistral 7B Instruct v0.2':  False,
 
@@ -304,11 +310,15 @@ class ModelMaps:
         
 
         ### Mistral LOCAL
+        #LOCAL_MISTRAL_NEMO_INSTRUCT_2407  'LOCAL Mistral Nemo Instruct 2407 mistralai/Mistral-Nemo-Instruct-2407
+        elif key == 'LOCAL_MISTRAL_NEMO_INSTRUCT_2407':
+            return 'Mistral-Nemo-Instruct-2407'
+        
         elif key == 'LOCAL_MIXTRAL_8X7B_INSTRUCT_V01':
             return 'Mixtral-8x7B-Instruct-v0.1'
         
         elif key == 'LOCAL_MISTRAL_7B_INSTRUCT_V02':
-            return 'Mistral-7B-Instruct-v0.2'
+            return 'Mistral-7B-Instruct-v0.3'
         
         ### Mistral LOCAL CPU
         elif key == 'LOCAL_CPU_MISTRAL_7B_INSTRUCT_V02_GGUF':
