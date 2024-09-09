@@ -1,4 +1,4 @@
-import random, os, base64, io, json
+import random, os, base64, io, json, torch
 from PIL import Image
 import copy
 import matplotlib.pyplot as plt  
@@ -99,7 +99,7 @@ Please populate the following JSON dictionary based on the rules and the unforma
 """
 
 class Qwen2VLOCR:
-    def __init__(self, logger, model_id='Qwen/Qwen2-VL-7B-Instruct'):
+    def __init__(self, logger, model_id='Qwen/Qwen2-VL-7B-Instruct', ocr_text=None):
         self.MAX_TOKENS = 1024
         self.MAX_PX = 1536
         self.MIN_PX = 256
@@ -122,7 +122,7 @@ class Qwen2VLOCR:
 
 
         self.model = Qwen2VLForConditionalGeneration.from_pretrained(
-            self.model_id, torch_dtype="auto", device_map="auto"
+            self.model_id, torch_dtype=torch.float16, device_map="auto"
         )
 
         # Resize image
@@ -155,7 +155,7 @@ class Qwen2VLOCR:
         # Convert the image to base64 and embed it in the message
         encoded_image = self.encode_image_base64(image)
         base64_image_str = f"data:image/jpeg;base64,{encoded_image}"
-
+        
         # Prepare image and prompt
         messages = [
             {
@@ -204,10 +204,10 @@ def main():
     image = Image.open(img_path)
 
     # Create the HFVLMOCR object with a model ID
-    ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct')
+    # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct')
     ### ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int8')
     # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int4')
-    # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-AWQ')
+    ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-AWQ')
 
     # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-2B-Instruct')
     # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8')
