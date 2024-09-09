@@ -1,4 +1,4 @@
-import os, yaml, datetime, argparse, re, cv2, random, shutil, tiktoken, json, csv
+import os, yaml, datetime, argparse, re, cv2, random, shutil, tiktoken, json, csv, platform, subprocess
 import streamlit as st
 from collections import Counter
 import pandas as pd
@@ -1367,6 +1367,35 @@ def yolo_to_position_ruler(annotation, height, width):
         int(annotation[3] * width) + int((annotation[1] * width) - ((annotation[3] * width) / 2)), 
         int(annotation[4] * height) + int((annotation[2] * height) - ((annotation[4] * height) / 2))]
 
+def install_qwen_requirements():
+    # Find the current file directory and move up one level to find .venv_VV
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    venv_path = os.path.abspath(os.path.join(current_dir, "..", ".venv_VV"))
+
+    # Determine the pip executable based on the operating system
+    pip_executable = None
+    if platform.system() == "Windows":
+        pip_executable = os.path.join(venv_path, "Scripts", "pip.exe")
+    elif platform.system() in ["Linux", "Darwin"]:  # Darwin is macOS
+        pip_executable = os.path.join(venv_path, "bin", "pip")
+    else:
+        raise EnvironmentError(f"Unsupported operating system: {platform.system()}")
+
+    # Verify if pip exists
+    if not os.path.isfile(pip_executable):
+        raise FileNotFoundError(f"pip not found in the virtual environment: {pip_executable}")
+
+    # Run pip install in the detected environment
+    try:
+        subprocess.check_call([pip_executable, "install", "-U", "optimum"])
+        subprocess.check_call([pip_executable, "install", "-U", "git+https://github.com/huggingface/transformers"])
+        subprocess.check_call([pip_executable, "install", "qwen-vl-utils"])
+        subprocess.check_call([pip_executable, "install", "auto-gptq>=0.7.1"])
+        subprocess.check_call([pip_executable, "install", "autoawq>=0.2.6"])
+         
+        print("Qwen dependencies installed.")
+    except Exception as e:
+        print(f"Error installing Qwen dependencies: {e}")
 
 class bcolors:
     HEADER = '\033[95m'

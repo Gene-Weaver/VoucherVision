@@ -11,7 +11,7 @@ from annotated_text import annotated_text
 from vouchervision.LeafMachine2_Config_Builder import write_config_file
 from vouchervision.VoucherVision_Config_Builder import build_VV_config, TestOptionsGPT, TestOptionsPalm, check_if_usable
 from vouchervision.vouchervision_main import voucher_vision
-from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report, validate_dir
+from vouchervision.general_utils import test_GPU, get_cfg_from_full_path, summarize_expense_report, validate_dir, install_qwen_requirements
 from vouchervision.model_maps import ModelMaps
 from vouchervision.API_validation import APIvalidation
 from vouchervision.utils_hf import setup_streamlit_config, save_uploaded_file, save_uploaded_local, save_uploaded_file_local, report_violation
@@ -148,6 +148,12 @@ if 'model_annotations' not in st.session_state:
     st.session_state['model_annotations'] = None
 if 'date_of_check' not in st.session_state:
     st.session_state['date_of_check'] = None
+
+
+if 'support_qwen' not in st.session_state:
+    st.session_state['support_qwen'] = False
+if 'support_qwen_check' not in st.session_state:
+    st.session_state['support_qwen_check'] = False
 
 
 if 'json_report' not in st.session_state:
@@ -1968,6 +1974,47 @@ def adjust_ocr_options_based_on_capability(capability_score, model_name='llava')
                 # Assuming the model option is the last in your list
                 return False  # Indicate model is not supported
             return True  # Indicate model is supported
+        
+    elif model_name == 'Qwen7B':
+        Qwen_models_requirements = {
+            "Qwen/Qwen2-VL-7B-Instruct": {"full": 22,},
+            "Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int8": {"full": 16,},
+            "Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int4": {"full": 12,},
+            "Qwen/Qwen2-VL-7B-Instruct-AWQ": {"full": 12},
+        }
+        if capability_score == 'no_gpu':
+            return False
+        else:
+            capability_score_n = int(capability_score.split("_")[1].split("GB")[0])
+            supported_models = [model for model, reqs in Qwen_models_requirements.items()
+                                if reqs["full"] <= capability_score_n]
+
+            # If no models are supported, disable the model option
+            if not supported_models:
+                # Assuming the model option is the last in your list
+                return False  # Indicate model is not supported
+            return True  # Indicate model is supported
+        
+    elif model_name == 'Qwen2B':
+        Qwen_models_requirements = {
+            "Qwen/Qwen2-VL-2B-Instruct": {"full": 10,},
+            "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8": {"full": 8,},
+            "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int4": {"full": 8,},
+            "Qwen/Qwen2-VL-2B-Instruct-AWQ": {"full": 8},
+        }
+        if capability_score == 'no_gpu':
+            return False
+        else:
+            capability_score_n = int(capability_score.split("_")[1].split("GB")[0])
+            supported_models = [model for model, reqs in Qwen_models_requirements.items()
+                                if reqs["full"] <= capability_score_n]
+
+            # If no models are supported, disable the model option
+            if not supported_models:
+                # Assuming the model option is the last in your list
+                return False  # Indicate model is not supported
+            return True  # Indicate model is supported
+    
 
 
 
@@ -2007,16 +2054,61 @@ def content_ocr_method():
         # Check if LLaVA models are supported based on capability score
         llava_supported = adjust_ocr_options_based_on_capability(st.session_state.capability_score, model_name='llava')
         florence_supported = adjust_ocr_options_based_on_capability(st.session_state.capability_score, model_name='florence-2')
+        Qwen7B_supported = adjust_ocr_options_based_on_capability(st.session_state.capability_score, model_name='Qwen7B')
+        Qwen2B_supported = adjust_ocr_options_based_on_capability(st.session_state.capability_score, model_name='Qwen2B')
 
         if llava_supported:
             st.success("LLaVA models are supported on this computer. A GPU with at least 12 GB of VRAM is available.")
         else:
             st.warning("LLaVA models are NOT supported on this computer. Requires a GPU with at least 12 GB of VRAM.")
 
-        if llava_supported:
+        if florence_supported:
             st.success("Florence-2 models are supported on this computer. A GPU with at least 12 GB of VRAM is available.")
         else:
             st.warning("Florence-2 models are NOT supported on this computer. Requires a GPU with at least 12 GB of VRAM.")
+
+        if Qwen7B_supported:
+            st.success("Qwen-7B models are supported on this computer. A GPU with at least 12 GB of VRAM is available.")
+            if not st.session_state.is_hf:
+                if not st.session_state.support_qwen_check:
+
+                    try:
+                        from transformers import Qwen2VLForConditionalGeneration
+                        st.session_state.support_qwen = True
+                    except ImportError:
+                        st.session_state.support_qwen = False
+                    st.session_state.support_qwen_check = True
+
+                if not st.session_state.support_qwen:
+                    st.warning("Qwen models require a dev verison of the transformers package. Click the button to install, then restart VoucherVision.")
+                    if st.button('Install packages required for Qwen-7B Models',help="As of 9 Sept. 2024 Qwen requires a dev version of the transformers package. Click the button to install it. Then restart VoucherVision."):
+                        with st.spinner('Running: [pip install -U "git+https://github.com/huggingface/transformers"] AND [pip install "qwen-vl-utils"]'):
+                            install_qwen_requirements()
+                        st.error("Please restart VoucherVision to use Qwen models")
+        else:
+            st.warning("Qwen-7B models are NOT supported on this computer. Requires a GPU with at least 12 GB of VRAM.")
+
+        if Qwen2B_supported:
+            st.success("Qwen-2B models are supported on this computer. A GPU with at least 8 GB of VRAM is available.")
+            if not st.session_state.is_hf:
+                if not st.session_state.support_qwen_check:
+
+                    try:
+                        from transformers import Qwen2VLForConditionalGeneration
+                        st.session_state.support_qwen = True
+                    except ImportError:
+                        st.session_state.support_qwen = False
+                    st.session_state.support_qwen_check = True
+
+                if not st.session_state.support_qwen:
+                    st.warning("Qwen models require a dev verison of the transformers package. Click the button to install, then restart VoucherVision.")
+                    if st.button('Install packages required for Qwen-2B Models',help="As of 9 Sept. 2024 Qwen requires a dev version of the transformers package. Click the button to install it. Then restart VoucherVision."):
+                        with st.spinner('Running: [pip install -U "git+https://github.com/huggingface/transformers"] AND [pip install "qwen-vl-utils"]'):
+                            install_qwen_requirements()
+                        st.error("Please restart VoucherVision to use Qwen models")
+        else:
+            st.warning("Qwen-2B models are NOT supported on this computer. Requires a GPU with at least 8 GB of VRAM.")
+            
 
     demo_text_h = f"Google_OCR_Handwriting:\nHERBARIUM OF MARCUS W. LYON , JR . Tracaulon sagittatum Indiana : Porter Co. incal Springs edge wet subdunal woods 1927 TX 11 Ilowers pink UNIVERSITE HERBARIUM MICH University of Michigan Herbarium 1439649 copyright reserved PERSICARIA FEB 2 6 1965 cm "
     demo_text_tr = f"trOCR:\nherbarium of marcus w. lyon jr. : : : tracaulon sagittatum indiana porter co. incal springs TX 11 Ilowers pink  1439649 copyright reserved D H U Q "
@@ -2095,6 +2187,9 @@ def content_ocr_method():
         print('Selected OCR options:',selected_OCR_options)
         # Assuming you need to use these mapped values elsewhere in your application
         st.session_state.config['leafmachine']['project']['OCR_option'] = selected_OCR_options
+
+
+        
 
 
 

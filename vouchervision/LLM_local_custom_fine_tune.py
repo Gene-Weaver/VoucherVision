@@ -108,9 +108,17 @@ class LocalFineTuneHandler:
             return_tensors="pt"
         ).to(self.device)
 
-        outputs = self.local_model.generate(**self.inputs, max_new_tokens = 512, use_cache = True)
-        self.tokenizer.batch_decode(outputs)
+        # Generate the output with the model
+        outputs = self.model.generate(
+            input_ids=self.inputs["input_ids"], 
+            max_new_tokens=512,  # Adjust max length as needed
+            eos_token_id=self.eos_token_id,
+            use_cache=True
+        )
 
+        # Decode the generated output
+        generated_text = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        
         ind = 0
         while ind < self.MAX_RETRIES:
             ind += 1
