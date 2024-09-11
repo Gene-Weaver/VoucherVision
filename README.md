@@ -251,6 +251,20 @@ Installation should basically be the same for Linux.
     > `error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/`
     - Then you need to install some Windows development tools first. Go to [https://visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and install all packages that mention C++. Restart your PC, then `pip install flash-attn==1.0.9` should work as expected.
     - For Linux, you can try `pip install flash-attn --no-build-isolation` and use a 2.X version.
+
+5. To use Qwen models, install:
+<pre><code class="language-python">pip install -U "optimum"</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+<pre><code class="language-python">pip install -U "git+https://github.com/huggingface/transformers"</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+<pre><code class="language-python">pip install "qwen-vl-utils" "auto-gptq>=0.7.1" "autoawq>=0.2.6"</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+and then you might need to reinstall torch
+<pre><code class="language-python">pip install "torch==2.3.1" "torchvision==0.18.1" "torchaudio==2.3.1" --index-url "https://download.pytorch.org/whl/cu121"</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+
+6. Some bleeding edge models require dev versions of libraries or require flash-attention-2 to run efficiently. flash-attention-2 is NOT easy to install on Windows as of Fall 2024, so you need to use Linux to use flash-attention-2 AND need a GPU that supports it, which include Nvidia Ada chips and newer (NVIDIA A100, NVIDIA A6000 Ada, NVIDIA H100). Florence-2 needs flash-attention but we can get away with flash-attention-1.X instead of using flash-attention-2. 
+
 ---
 
 # Installing VoucherVision (using conda)

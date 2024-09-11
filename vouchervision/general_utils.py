@@ -1372,6 +1372,11 @@ def install_qwen_requirements():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     venv_path = os.path.abspath(os.path.join(current_dir, "..", ".venv_VV"))
 
+    commit_hash = "f745e7d3f902601686b83c7cce2660c2a94509f0" # last known working commit Sept. 10, 2024
+    repo_url = "https://github.com/huggingface/transformers.git"
+
+    # Build the pip install command
+
     # Determine the pip executable based on the operating system
     pip_executable = None
     if platform.system() == "Windows":
@@ -1388,7 +1393,7 @@ def install_qwen_requirements():
     # Run pip install in the detected environment
     try:
         subprocess.check_call([pip_executable, "install", "-U", "optimum"])
-        subprocess.check_call([pip_executable, "install", "-U", "git+https://github.com/huggingface/transformers"])
+        subprocess.check_call([pip_executable, "install", f"git+{repo_url}@{commit_hash}"])
         subprocess.check_call([pip_executable, "install", "qwen-vl-utils"])
         subprocess.check_call([pip_executable, "install", "auto-gptq>=0.7.1"])
         subprocess.check_call([pip_executable, "install", "autoawq>=0.2.6"])

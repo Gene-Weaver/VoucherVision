@@ -30,6 +30,7 @@ def resolve_path(path):
 
 
 if __name__ == "__main__":
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
     dir_home = os.path.dirname(__file__)
 
     start_port = 8532
