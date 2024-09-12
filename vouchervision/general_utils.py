@@ -194,8 +194,8 @@ def calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out
     # Get the rates for the specified LLM version
     if LLM_version in cost_data:
         rates = cost_data[LLM_version]
-        cost_in = rates['in'] * (total_tokens_in/1000)
-        cost_out = rates['out'] * (total_tokens_out/1000)
+        cost_in = rates['in'] * (total_tokens_in/1000000)
+        cost_out = rates['out'] * (total_tokens_out/1000000)
         total_cost = cost_in + cost_out
     else:
         raise ValueError(f"LLM version {LLM_version} not found in the cost data")

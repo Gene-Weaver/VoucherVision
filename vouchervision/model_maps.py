@@ -5,6 +5,7 @@ class ModelMaps:
         'GPT_3_5': '#008000',  # Green
         'GPT_4_TURBO_2024_04_09': '#32CD32',  # Lime Green
         'GPT_4o_2024_05_13': '#3CB371',  # Lime Green gpt-4o-2024-05-13
+        'GPT_4o_2024_08_06': '#3CB371',  # Lime Green gpt-4o-2024-05-13
         'GPT_4o_mini_2024_07_18': '#115730',  # Lime Green gpt-4o-2024-05-13
         'GPT_3_5_INSTRUCT': '#3CB371',  # Medium Sea Green
         'GPT_4_TURBO_1106': '#228B22',  # Forest Green
@@ -43,9 +44,11 @@ class ModelMaps:
     }
 
     MODELS_OPENAI = [
+                    'GPT 4o 2024-08-06',
                     'GPT 4o 2024-05-13', #GPT_4o_2024_05_13
                     'GPT 4o mini 2024-07-18',
                     'GPT 4 Turbo 2024-04-09',#GPT_4_TURBO_2024_04_09
+
                     'GPT 4',
                     'GPT 4 32k',
                     'GPT 4 Turbo 0125-preview',
@@ -99,6 +102,8 @@ class ModelMaps:
         'GPT 4 32k': 'GPT_4_32K',
         'GPT 4': 'GPT_4',
         'GPT 4o 2024-05-13': 'GPT_4o_2024_05_13',
+        'GPT 4o 2024-08-06': 'GPT_4o_2024_08_06',
+
         'GPT 4o mini 2024-07-18': 'GPT_4o_mini_2024_07_18',
         'GPT 4 Turbo 2024-04-09': 'GPT_4_TURBO_2024_04_09',
         'GPT 4 Turbo 0125-preview': 'GPT_4_TURBO_0125',
@@ -145,6 +150,7 @@ class ModelMaps:
             'GPT 4 Turbo 0125-preview': has_key_openai,
             'GPT 4':  has_key_openai,
             'GPT 4o 2024-05-13': has_key_openai, 
+            'GPT 4o 2024-08-06': has_key_openai, 
             'GPT 4o mini 2024-07-18': has_key_openai, 
             'GPT 4 32k':  has_key_openai,
             'GPT 3.5 Turbo':  has_key_openai,
@@ -184,6 +190,7 @@ class ModelMaps:
     def get_version_mapping_is_azure(cls, key):
         version_mapping_is_azure = {
             'GPT 4o 2024-05-13': False, 
+            'GPT 4o 2024-08-06': False, 
             'GPT 4o mini 2024-07-18': False, 
             'GPT 4 Turbo 2024-04-09': False,
             'GPT 4 Turbo 1106-preview': False,
@@ -192,7 +199,7 @@ class ModelMaps:
             'GPT 4 32k':  False,
             'GPT 3.5 Turbo':  False,
             'GPT 3.5 Instruct':  False,
-           
+                                       
             # 'Azure GPT 3.5 Turbo': True,
             # 'Azure GPT 3.5 Instruct': True,
             'Azure GPT 4': True,
@@ -242,6 +249,9 @@ class ModelMaps:
         elif key == 'GPT_4o_2024_05_13':
             return 'gpt-4o-2024-05-13'
         
+        elif key == 'GPT_4o_2024_08_06':
+            return 'gpt-4o-2024-08-06'
+
         elif key == 'GPT_4o_mini_2024_07_18':
             return 'gpt-4o-mini-2024-07-18'
         

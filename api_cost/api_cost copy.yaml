@@ -1,120 +1,93 @@
 # ALL COSTS REPORTED PER 1,000,000 TOKENS
-# UPDATED: 2024-09-12 14:40:04
 GPT_4_32K:
-  in: 60.0
-  out: 120.0
-# UPDATED: 2024-09-12 14:53:10
+  in: 60
+  out: 120
 GPT_4:
   in: 30
   out: 60
-# UPDATED: 2024-09-12 15:35:03
 GPT_4o_2024_08_06:
   in: 2.5
   out: 10
-# UPDATED: 2024-09-12 15:35:03
 GPT_4o_2024_05_13:
   in: 5
   out: 15
-# UPDATED: 2024-09-12 14:38:32
 GPT_4o_mini_2024_07_18:
   in: 0.15
   out: 0.6
-# UPDATED: 2024-09-12 15:35:03
 GPT_4_TURBO_2024_04_09:
   in: 10
   out: 30
-# UPDATED: 2024-09-12 14:38:32
 GPT_4_TURBO_0125:
   in: 10
   out: 30
-# UPDATED: 2024-09-12 14:38:32
 GPT_4_TURBO_1106:
   in: 10
   out: 30
-# UPDATED: 2024-09-12 15:35:03
 GPT_3_5_INSTRUCT:
   in: 1.5
   out: 2
-# UPDATED: 2024-09-12 14:38:32
 GPT_3_5:
-  in: 0.5
-  out: 1.5
+  in: 1
+  out: 2
 
 # Azure
-# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_4_32K:
   in: 60
   out: 120
-# UPDATED: 2024-09-12 14:38:32
 AZURE_GPT_4:
-  in: 30.0
-  out: 60.0
-# UPDATED: 2024-09-12 16:01:10
+  in: 30
+  out: 60
 AZURE_GPT_4_TURBO_1106:
   in: 10
   out: 30
-# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_4_TURBO_0125:
   in: 10
   out: 30
-# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_3_5_INSTRUCT:
   in: 1.5
   out: 2
-# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_3_5:
-  in: 0.5
-  out: 1.5
+  in: 1
+  out: 2
 
 # Google Gemini
 # https://ai.google.dev/pricing
-# UPDATED: 2024-09-12 14:38:32
 GEMINI_PRO:
   in: 0.5
   out: 1.5
-# UPDATED: 2024-09-12 14:38:32
 GEMINI_1_5_FLASH:
   in: 0.075
   out: 0.3
-# UPDATED: 2024-09-12 14:38:32
 GEMINI_1_5_PRO:
   in: 3.5
   out: 10.5
 
 # Google PaLM 2 (text-bison, text-unicorn)
 # https://cloud.google.com/vertex-ai/docs/generative-ai/pricing
-# UPDATED: 2024-09-12 14:38:32
 PALM2_TU_1:
   in: 0.25
   out: 0.2
-# UPDATED: 2024-09-12 14:38:32
 PALM2_TB_1:
   in: 0.25
   out: 0.5
-# UPDATED: 2024-09-12 14:38:32
 PALM2_TB_2:
   in: 0.25
   out: 0.5
 
 # Mistral AI 
 # https://docs.mistral.ai/platform/pricing/
-# UPDATED: 2024-09-12 14:38:32
 OPEN_MIXTRAL_8X7B:
   in: 0.7
   out: 0.7
-# UPDATED: 2024-09-12 14:38:32
 OPEN_MISTRAL_7B:
   in: 0.25
   out: 0.25
-# UPDATED: 2024-09-12 16:01:10
 MISTRAL_LARGE:
   in: 8
   out: 24
-# UPDATED: 2024-09-12 14:38:32
 MISTRAL_MEDIUM:
   in: 2.7
   out: 8.1
-# UPDATED: 2024-09-12 16:01:10
 MISTRAL_SMALL:
   in: 2
   out: 6
@@ -123,23 +96,18 @@ MISTRAL_SMALL:
 # Local Models
 ################
 #  mistralai/Mistral-Nemo-Instruct-2407
-# UPDATED: 2024-09-12 14:38:32
 LOCAL_MISTRAL_NEMO_INSTRUCT_2407:
   in: 0.0
   out: 0.0
-# UPDATED: 2024-09-12 14:38:32
 LOCAL_MIXTRAL_8X7B_INSTRUCT_V01:
   in: 0.0
   out: 0.0
-# UPDATED: 2024-09-12 14:38:32
 LOCAL_MISTRAL_7B_INSTRUCT_V02: 
   in: 0.0
   out: 0.0
-# UPDATED: 2024-09-12 14:38:32
 LOCAL_CPU_MISTRAL_7B_INSTRUCT_V02_GGUF:
   in: 0.0
   out: 0.0
-# UPDATED: 2024-09-12 14:38:32
 phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05:
   in: 0.0
   out: 0.0

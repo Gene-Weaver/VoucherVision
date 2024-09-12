@@ -1489,7 +1489,7 @@ def convert_cost_dict_to_table(cost, name):
 
 
     # Apply color gradient
-    cm = sns.light_palette("green", as_cmap=True)
+    cm = sns.light_palette("green", as_cmap=True, reverse=True)
     styled_df = df.style.background_gradient(cmap=cm, subset=['Input', 'Output'])
     return styled_df
 
@@ -1759,7 +1759,7 @@ def content_llm_cost():
     calculator_1,calculator_2,calculator_3,calculator_4,calculator_5 = st.columns([1,1,1,1,1])     
 
     st.subheader('Cost Matrix')
-    st.markdown('The table shows the cost of each LLM API per 1,000 tokens. An average VoucherVision call uses 2,000 input tokens and receives 500 output tokens.')
+    st.markdown('The table shows the $USD cost of each LLM API per 1 million tokens. An average VoucherVision call uses 2,000 input tokens and receives 500 output tokens.')
     col_cost_1, col_cost_2, col_cost_3, col_cost_4, col_cost_5 = st.columns([1,1,1,1,1])    
 
     # Load all cost tables if not already done
@@ -1811,11 +1811,11 @@ def content_llm_cost():
     input_value, output_value = find_model_values(selected_model, 
                                                 [st.session_state['cost_openai'], st.session_state['cost_azure'], st.session_state['cost_google'], st.session_state['cost_mistral'], st.session_state['cost_local']])
     if input_value is not None and output_value is not None:
-        cost = (n_in/1000 * input_value + n_out/1000 * output_value) * n_img
+        cost = (n_in/1000000 * input_value + n_out/1000000 * output_value) * n_img
     with calculator_5:
         st.text_input("Total Cost", f"${round(cost,2)}") # selected_model
     
-    rounding = 4
+    rounding = 2
     with col_cost_1:
         show_cost_matrix_1(rounding)
     with col_cost_2:
@@ -2588,7 +2588,7 @@ def render_expense_report_summary():
         # Update traces for custom text in hoverinfo, displaying cost with a dollar sign and two decimal places
         cost_pie_chart.update_traces(
             marker=dict(colors=colors),
-            text=[f"${value:.4f}" for value in cost_values],  # Formats the cost as a string with a dollar sign and two decimals
+            text=[f"${value:.2f}" for value in cost_values],  # Formats the cost as a string with a dollar sign and two decimals
             textinfo='percent+label',
             hoverinfo='label+percent+text'  # Adds custom text (formatted cost) to the hover information
         )
@@ -2619,7 +2619,7 @@ def render_expense_report_summary():
         # Update traces for custom text in hoverinfo
         cost_pie_chart.update_traces(
             marker=dict(colors=colors),
-            text=[f"${cost:.4f}" for cost in total_cost_by_version.values()],  # This will format the cost to 2 decimal places
+            text=[f"${cost:.2f}" for cost in total_cost_by_version.values()],  # This will format the cost to 2 decimal places
             textinfo='percent+label',
             hoverinfo='label+percent+text'  # This tells Plotly to show the label, percent, and custom text (cost) on hover
         )
