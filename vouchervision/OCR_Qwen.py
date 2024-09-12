@@ -244,9 +244,11 @@ class Qwen2VLOCR:
 
 def main():
     
-    img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
+    # img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
     # img_path = 'C:/Users/willwe/Desktop/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     # img_path = 'C:/Users/willwe/Desktop/stewart.jpg'
+    img_path = 'C:/Users/willwe/Desktop/Cryptocarya_botelhensis_4603317652_label.jpg'
+    
     image = Image.open(img_path)
 
     # Create the HFVLMOCR object with a model ID
