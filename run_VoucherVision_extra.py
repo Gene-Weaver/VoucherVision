@@ -26,30 +26,23 @@ def find_available_port(start_port, end_port):
 def find_app_path():
     # Check if we're running from within a PyInstaller bundle
     if getattr(sys, 'frozen', False):
-        # If we are running in a PyInstaller bundle
         bundle_dir = sys._MEIPASS
-        app_path = os.path.join(bundle_dir, 'app.py')
+        app_path = os.path.join(bundle_dir, 'app.py')  # Adjust to relative path in bundle
     else:
-        # If we're not frozen, use the original app.py path
-        app_path = os.path.join(os.getcwd(), 'app.py')
+        app_path = os.path.join(os.getcwd(), 'app.py')  # Original path for non-frozen case
 
     if not os.path.exists(app_path):
         raise FileNotFoundError(f"app.py not found at {app_path}")
 
     return app_path
 
+
 def run_streamlit(port):
     app_path = "app.py"  # Assuming app.py is in the root directory
 
-    # Check if we're running from within a PyInstaller bundle
-    if getattr(sys, 'frozen', False):
-        bundle_dir = sys._MEIPASS
-        python_executable = os.path.join(bundle_dir, "python.exe")
-    else:
-        python_executable = sys.executable
 
     cmd = [
-        python_executable,
+        sys.executable,
         "-m", "streamlit",
         "run",
         app_path,
