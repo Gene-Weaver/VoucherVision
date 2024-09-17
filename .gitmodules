@@ -7,3 +7,6 @@
 [submodule "vouchervision/quick-diff"]
 	path = vouchervision/quick-diff
 	url = https://github.com/Gene-Weaver/VoucherVision-quick-diff.git
+[submodule "vouchervision/VoucherVision-quick-diff"]
+	path = vouchervision/VoucherVision-quick-diff
+	url = https://github.com/Gene-Weaver/VoucherVision-quick-diff.git
