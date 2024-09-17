@@ -37,7 +37,8 @@ def resolve_path(path):
 def start_yarn_dev(dir_home):
     sub_command = ["git", "submodule", "update", "--init", "--recursive"]
     yarn_command1 = ["yarn", "install"]
-    yarn_command2 = ["yarn", "dev"]
+    yarn_command2 = ["yarn", "cache", "clean"]
+    yarn_command3 = ["yarn", "dev"]
 
     quick_diff_path = os.path.join(dir_home, "VoucherVision-quick-diff")
     quick_diff_path = uppercase_drive_letter(quick_diff_path)
@@ -55,6 +56,11 @@ def start_yarn_dev(dir_home):
     )
     subprocess.Popen(
         yarn_command2,
+        cwd=quick_diff_path,
+        shell=True
+    )
+    subprocess.Popen(
+        yarn_command3,
         cwd=quick_diff_path,
         shell=True
     )
