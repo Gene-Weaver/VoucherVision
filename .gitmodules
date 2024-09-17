@@ -4,3 +4,6 @@
 [submodule "vouchervision/SLTP"]
 	path = vouchervision/SLTP
 	url = https://github.com/Gene-Weaver/SLTP.git
+[submodule "vouchervision/quick-diff"]
+	path = vouchervision/quick-diff
+	url = https://github.com/Gene-Weaver/VoucherVision-quick-diff.git
