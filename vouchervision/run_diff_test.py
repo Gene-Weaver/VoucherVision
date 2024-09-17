@@ -4,6 +4,9 @@ import sys
 import socket
 import subprocess
 
+# git clone https://github.com/Gene-Weaver/VoucherVision.git
+# git submodule update --init --recursive
+
 def uppercase_drive_letter(path):
     if os.name == 'nt' and len(path) >= 2 and path[1] == ':':
         path = path[0].upper() + path[1:]
@@ -32,12 +35,26 @@ def resolve_path(path):
 
 # Function to start the Yarn dev server
 def start_yarn_dev(dir_home):
-    yarn_command = ["yarn", "dev"]
-    quick_diff_path = os.path.join(dir_home, "quick-diff")
+    sub_command = ["git", "submodule", "update", "--init", "--recursive"]
+    yarn_command1 = ["yarn", "install"]
+    yarn_command2 = ["yarn", "dev"]
+
+    quick_diff_path = os.path.join(dir_home, "VoucherVision-quick-diff")
     quick_diff_path = uppercase_drive_letter(quick_diff_path)
     print(quick_diff_path)
+    
     subprocess.Popen(
-        yarn_command,
+        sub_command,
+        cwd=quick_diff_path,
+        shell=True
+    )
+    subprocess.Popen(
+        yarn_command1,
+        cwd=quick_diff_path,
+        shell=True
+    )
+    subprocess.Popen(
+        yarn_command2,
         cwd=quick_diff_path,
         shell=True
     )
