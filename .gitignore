@@ -230,3 +230,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 VoucherVision.yaml
+node_modules/
+yarn.lock
