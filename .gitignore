@@ -19,6 +19,9 @@ vouchervision/LLM_MistralAI_Azure_endpoints.py
 !/custom_prompts/SLTPvB_long.yaml
 !/custom_prompts/SLTPvB_medium.yaml
 !/custom_prompts/SLTPvB_short.yaml
+!/custom_prompts/SLTPvM_long.yaml
+!/custom_prompts/SLTPvM_default.yaml
+!/custom_prompts/SLTPvM_default_chromosome.yaml
 
 # Dirs
 custom_prompts_deprecated/
