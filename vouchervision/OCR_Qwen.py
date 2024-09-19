@@ -8,6 +8,7 @@ import numpy as np
 import warnings
 from transformers import AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
+from general_utils import install_qwen_requirements
 
 try:
     from vouchervision.utils_LLM import SystemLoadMonitor
@@ -102,6 +103,10 @@ class Qwen2VLOCR:
         self.MAX_PX = 1536
         self.MIN_PX = 256
 
+        # Resize image
+        self.min_pixels = self.MIN_PX * 28 * 28
+        self.max_pixels = self.MAX_PX * 28 * 28
+
         self.logger = logger
         self.model_id = model_id
 
@@ -112,21 +117,22 @@ class Qwen2VLOCR:
             from qwen_vl_utils import process_vision_info
             print("Qwen environment detected, using Qwen model.")
         except ImportError:
-            assert False, (
-                'Install the Qwen required packages before trying to use the Qwen models. '
-                'Either run pip install -U "git+https://github.com/huggingface/transformers" '
-                'and pip install "qwen-vl-utils" or click the Install Qwen button in the GUI.'
-            )
+            try:
+                install_qwen_requirements()
+            except:
+                assert False, (
+                    'Install the Qwen required packages before trying to use the Qwen models. '
+                    'Either run pip install -U "git+https://github.com/huggingface/transformers" '
+                    'and pip install "qwen-vl-utils" or click the Install Qwen button in the GUI.'
+                )
+        
+        # if self.model_id == 'Qwen/Qwen2-VL-7B-Instruct-AWQ':
+            # self.model = Qwen2VLForConditionalGeneration.from_pretrained(self.model_id, torch_dtype="auto", device_map="auto")
+        # else:
+        self.model = Qwen2VLForConditionalGeneration.from_pretrained(self.model_id, torch_dtype=torch.float16, device_map="auto")
 
-
-        self.model = Qwen2VLForConditionalGeneration.from_pretrained(
-            self.model_id, torch_dtype=torch.float16, device_map="auto"
-        )
-
-        # Resize image
-        min_pixels = self.MIN_PX * 28 * 28
-        max_pixels = self.MAX_PX * 28 * 28
-        self.processor = AutoProcessor.from_pretrained(self.model_id, min_pixels=min_pixels, max_pixels=max_pixels)
+        
+        self.processor = AutoProcessor.from_pretrained(self.model_id, min_pixels=self.min_pixels, max_pixels=self.max_pixels)
 
     def encode_image_base64(self, image):
         """Encode the image to base64 format."""
@@ -246,16 +252,16 @@ def main():
     
     # img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
     # img_path = 'C:/Users/willwe/Desktop/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
-    # img_path = 'C:/Users/willwe/Desktop/stewart.jpg'
-    img_path = 'C:/Users/willwe/Desktop/Cryptocarya_botelhensis_4603317652_label.jpg'
+    img_path = 'C:/Users/willwe/Desktop/stewart.jpg'
+    # img_path = 'C:/Users/willwe/Desktop/Cryptocarya_botelhensis_4603317652_label.jpg'
     
     image = Image.open(img_path)
 
     # Create the HFVLMOCR object with a model ID
-    # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct')
+    ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct')
     ### ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int8')
     # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int4')
-    ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-AWQ')
+    # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-7B-Instruct-AWQ')
 
     # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-2B-Instruct')
     # ocr = Qwen2VLOCR(logger=None, model_id='Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8')
