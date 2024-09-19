@@ -168,7 +168,10 @@ Our public demo, while lacking several quality control and reliability features 
     <pre><code class="language-python">git clone https://github.com/Gene-Weaver/VoucherVision.git</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 4. Move into the VoucherVision directory by running `cd VoucherVision` in the terminal.
-5. To run VoucherVision we need to install its dependencies inside of a python virtual environmnet. Follow the instructions below for your operating system. 
+5. Update submodules
+    <pre><code class="language-python">git submodule update --init --recursive</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+6. To run VoucherVision we need to install its dependencies inside of a python virtual environmnet. Follow the instructions below for your operating system. 
 
 ## About Python Virtual Environments
 A virtual environment is a tool to keep the dependencies required by different projects in separate places, by creating isolated python virtual environments for them. This avoids any conflicts between the packages that you have installed for different projects. It makes it easier to maintain different versions of packages for different projects.
@@ -295,6 +298,9 @@ and then you might need to reinstall torch
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     Move into the VoucherVision home directory
     <pre><code class="language-python">cd VoucherVision</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+9. Update submodules
+    <pre><code class="language-python">git submodule update --init --recursive</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 <!--
 9. Then we need to install some packages using our `environment.yaml`. Use Mamba for a faster installation process.
