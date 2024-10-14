@@ -53,8 +53,6 @@ mapping:
   - genus
   - specificEpithet
   - speciesNameAuthorship
-  - collectedBy
-  - collectorNumber
   - identifiedBy
   - identifiedDate
   - identifiedConfidence
@@ -72,6 +70,8 @@ mapping:
   - maximumElevationInMeters
   - elevationUnits
   COLLECTING:
+  - collectedBy
+  - collectorNumber
   - verbatimCollectionDate
   - collectionDate
   - collectionDateEnd
