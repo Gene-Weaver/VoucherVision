@@ -56,6 +56,10 @@ mapping:
   - collectedBy
   - collectorNumber
   - identifiedBy
+  - identifiedDate
+  - identifiedConfidence
+  - identifiedRemarks
+  - identificationHistory
   GEOGRAPHY:
   - country
   - stateProvince
@@ -73,4 +77,5 @@ mapping:
   - collectionDateEnd
   - cultivated
   - habitat
-  - occurrenceRemarks
+  - specimenDescription
+  - additionalText

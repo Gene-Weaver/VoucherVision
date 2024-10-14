@@ -1,5 +1,5 @@
 import openai
-import os, json, glob, shutil, yaml, torch, logging
+import os, json, glob, shutil, yaml, torch, logging, gc
 import openpyxl
 from openpyxl import Workbook, load_workbook
 import vertexai
@@ -651,7 +651,8 @@ class VoucherVision():
     ##################################################################################################################################
     ##################################################     OCR      ##################################################################
     ##################################################################################################################################
-    def perform_OCR_and_save_results(self, image_index, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds):
+    def perform_OCR_and_save_results(self, image_index, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds, path_to_crop, OCR_Engine):
+        
         self.logger.info(f'Working on {image_index + 1}/{len(self.img_paths)} --- Starting OCR')
         # self.OCR - None
         self.OCR_cost = 0.0
@@ -659,32 +660,31 @@ class VoucherVision():
         self.OCR_tokens_out = 0
 
         ### Process_image() runs the OCR for text, handwriting, trOCR AND creates the overlay image
-        ocr_google = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, self.path_to_crop, self.cfg, self.trOCR_model_version, self.trOCR_model, self.trOCR_processor, self.device)  
-        ocr_google.process_image(self.do_create_OCR_helper_image, self.logger)
-        self.OCR = ocr_google.OCR
+        OCR_Engine.process_image(self.do_create_OCR_helper_image, path_to_crop, self.logger)
+        self.OCR = OCR_Engine.OCR
 
-        self.OCR_cost = ocr_google.cost
-        self.OCR_tokens_in = ocr_google.tokens_in
-        self.OCR_tokens_out = ocr_google.tokens_out
+        self.OCR_cost = OCR_Engine.cost
+        self.OCR_tokens_in = OCR_Engine.tokens_in
+        self.OCR_tokens_out = OCR_Engine.tokens_out
 
         self.logger.info(f"Complete OCR text for LLM prompt:\n\n{self.OCR}\n\n")
 
-        self.write_json_to_file(txt_file_path_OCR, ocr_google.OCR_JSON_to_file)
+        self.write_json_to_file(txt_file_path_OCR, OCR_Engine.OCR_JSON_to_file)
         
         self.logger.info(f'Working on {image_index + 1}/{len(self.img_paths)} --- Finished OCR')
 
         if len(self.OCR) > 0:
-            ocr_google.overlay_image.save(jpg_file_path_OCR_helper)
+            OCR_Engine.overlay_image.save(jpg_file_path_OCR_helper)
 
             OCR_bounds = {}
-            if ocr_google.hand_text_to_box_mapping is not None:
-                OCR_bounds['OCR_bounds_handwritten'] = ocr_google.hand_text_to_box_mapping
+            if OCR_Engine.hand_text_to_box_mapping is not None:
+                OCR_bounds['OCR_bounds_handwritten'] = OCR_Engine.hand_text_to_box_mapping
 
-            if ocr_google.normal_text_to_box_mapping is not None:
-                OCR_bounds['OCR_bounds_printed'] = ocr_google.normal_text_to_box_mapping
+            if OCR_Engine.normal_text_to_box_mapping is not None:
+                OCR_bounds['OCR_bounds_printed'] = OCR_Engine.normal_text_to_box_mapping
 
-            if ocr_google.trOCR_text_to_box_mapping is not None:
-                OCR_bounds['OCR_bounds_trOCR'] = ocr_google.trOCR_text_to_box_mapping
+            if OCR_Engine.trOCR_text_to_box_mapping is not None:
+                OCR_bounds['OCR_bounds_trOCR'] = OCR_Engine.trOCR_text_to_box_mapping
 
             self.write_json_to_file(txt_file_path_OCR_bounds, OCR_bounds)
             self.logger.info(f'Working on {image_index + 1}/{len(self.img_paths)} --- Saved OCR Overlay Image')
@@ -718,6 +718,8 @@ class VoucherVision():
             json_report.set_JSON({}, {}, {})
         llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm, self.config_vals_for_permutation)
 
+        OCR_Engine = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, self.cfg, self.trOCR_model_version, self.trOCR_model, self.trOCR_processor, self.device)  
+
         for i, path_to_crop in enumerate(self.img_paths):
             self.update_progress_report_batch(progress_report, i)
 
@@ -731,7 +733,7 @@ class VoucherVision():
             filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt = paths
             if json_report:
                 json_report.set_text(text_main='Starting OCR')
-            self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds)
+            self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds, self.path_to_crop, OCR_Engine)
             if json_report:
                 json_report.set_text(text_main='Finished OCR')
 
@@ -784,6 +786,10 @@ class VoucherVision():
             
             if json_report:
                 json_report.set_JSON(final_JSON_response, final_WFO_record, final_GEO_record)
+
+        del OCR_Engine
+        torch.cuda.empty_cache()
+        gc.collect()
 
         self.update_progress_report_final(progress_report)
         final_JSON_response = self.parse_final_json_response(final_JSON_response)

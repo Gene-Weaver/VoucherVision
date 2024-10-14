@@ -9,6 +9,7 @@ from tqdm import tqdm
 from google.oauth2 import service_account
 from OCR_Florence_2 import FlorenceOCR
 from OCR_GPT4oMini import GPT4oMiniOCR
+from OCR_Qwen import Qwen2VLOCR
 ### LLaVA should only be installed if the user will actually use it.
 ### It requires the most recent pytorch/Python and can mess with older systems
 
@@ -35,13 +36,12 @@ class OCREngine:
 
     BBOX_COLOR = "black"
 
-    def __init__(self, logger, json_report, dir_home, is_hf, path, cfg, trOCR_model_version, trOCR_model, trOCR_processor, device):
+    def __init__(self, logger, json_report, dir_home, is_hf, cfg, trOCR_model_version, trOCR_model, trOCR_processor, device):
         self.is_hf = is_hf
         self.logger = logger
 
         self.json_report = json_report
 
-        self.path = path
         self.cfg = cfg
         self.do_use_trOCR = self.cfg['leafmachine']['project']['do_use_trOCR']
         self.do_use_florence = self.cfg['leafmachine']['project']['do_use_florence']
@@ -91,6 +91,7 @@ class OCREngine:
         self.set_client()
         self.init_florence()
         self.init_gpt_4o_mini()
+        self.init_Qwen2VL()
         self.init_craft()
 
         self.multimodal_prompt = """I need you to transcribe all of the text in this image. 
@@ -137,6 +138,11 @@ class OCREngine:
     def init_gpt_4o_mini(self):
         if 'GPT-4o-mini' in self.OCR_option:
             self.GPTmini = GPT4oMiniOCR(api_key = os.getenv('OPENAI_API_KEY'))
+
+    def init_Qwen2VL(self):
+        if 'Qwen-2-VL' in self.OCR_option:
+            self.Qwen2VL = Qwen2VLOCR(logger=self.logger, model_id=self.cfg['leafmachine']['project']['qwen_model_path'])
+            
 
     def init_llava(self):
         if 'LLaVA' in self.OCR_option:
@@ -695,7 +701,8 @@ class OCREngine:
         return self.hand_cleaned_text
 
 
-    def process_image(self, do_create_OCR_helper_image, logger):
+    def process_image(self, do_create_OCR_helper_image, path_to_crop, logger):
+        self.path = path_to_crop
         if 'hand' not in self.OCR_option and 'normal' not in self.OCR_option:
             do_create_OCR_helper_image = False
             
@@ -740,6 +747,20 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}" + f"\nFlorence-2 OCR:\n{results_text}"
             else:
                 self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}"
+
+        if 'Qwen-2-VL' in self.OCR_option: # This option does not produce an OCR helper image
+            if self.json_report:
+                self.json_report.set_text(text_main=f'Working on Qwen-2-VL [{self.Qwen2VL.model_id}] OCR :construction:')
+
+            self.logger.info(f"Qwen-2-VL Usage Report for Model [{self.Qwen2VL.model_id}]")
+            results_text, usage_report = self.Qwen2VL.ocr_with_vlm(self.path, workflow_option=1)
+
+            self.OCR_JSON_to_file['OCR_Qwen2VL'] = results_text
+
+            if self.double_OCR:
+                self.OCR = self.OCR + f"\nQwen2VL OCR:\n{results_text}" + f"\nnQwen2VL OCR:\n{results_text}"
+            else:
+                self.OCR = self.OCR + f"\nQwen2VL OCR:\n{results_text}"
 
         if 'GPT-4o-mini' in self.OCR_option: # This option does not produce an OCR helper image
             if self.json_report:

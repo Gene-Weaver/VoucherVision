@@ -39,6 +39,7 @@ def build_VV_config(loaded_cfg=None):
         do_use_florence = False
         trOCR_model_path = "microsoft/trocr-large-handwritten"
         florence_model_path = "microsoft/Florence-2-large"
+        qwen_model_path = "Qwen/Qwen2-VL-7B-Instruct"
         OCR_option = 'hand'
         OCR_option_llava = 'llava-v1.6-mistral-7b' # "llava-v1.6-mistral-7b", "llava-v1.6-34b", "llava-v1.6-vicuna-13b", "llava-v1.6-vicuna-7b",
         OCR_option_llava_bit = 'full' # full or 4bit
@@ -75,7 +76,8 @@ def build_VV_config(loaded_cfg=None):
         return assemble_config(dir_home, run_name, dir_images_local,dir_output,
                         prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
+                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, 
+                        trOCR_model_path, florence_model_path, qwen_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
                         tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
@@ -95,6 +97,7 @@ def build_VV_config(loaded_cfg=None):
         do_use_florence = loaded_cfg['leafmachine']['project']['do_use_florence']
         trOCR_model_path = loaded_cfg['leafmachine']['project']['trOCR_model_path']
         florence_model_path = loaded_cfg['leafmachine']['project']['florence_model_path']
+        qwen_model_path = loaded_cfg['leafmachine']['project']['qwen_model_path']
         OCR_option = loaded_cfg['leafmachine']['project']['OCR_option']
         OCR_option_llava = loaded_cfg['leafmachine']['project']['OCR_option_llava']
         OCR_option_llava_bit  = loaded_cfg['leafmachine']['project']['OCR_option_llava_bit']
@@ -127,7 +130,8 @@ def build_VV_config(loaded_cfg=None):
         return assemble_config(dir_home, run_name, dir_images_local,dir_output,
                         prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                         path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
+                        prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, 
+                        trOCR_model_path, florence_model_path, qwen_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations,
                         tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
@@ -136,7 +140,8 @@ def build_VV_config(loaded_cfg=None):
 def assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     prefix_removal,suffix_removal,catalog_numerical_only,LLM_version_user,batch_size,num_workers,
                     path_domain_knowledge,embeddings_database_name,use_LeafMachine2_collage_images,
-                    prompt_version, do_create_OCR_helper_image_user, do_use_trOCR, do_use_florence, trOCR_model_path, florence_model_path, OCR_option, OCR_option_llava, 
+                    prompt_version, do_create_OCR_helper_image_user, do_use_trOCR, do_use_florence, 
+                    trOCR_model_path, florence_model_path, qwen_model_path, OCR_option, OCR_option_llava, 
                     OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
                     tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
                     check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False):
@@ -186,6 +191,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
         'do_use_florence': do_use_florence,
         'trOCR_model_path': trOCR_model_path,
         'florence_model_path': florence_model_path,
+        'qwen_model_path': qwen_model_path,
         'OCR_option': OCR_option,
         'OCR_option_llava': OCR_option_llava,
         'OCR_option_llava_bit': OCR_option_llava_bit,

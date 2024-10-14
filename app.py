@@ -2118,7 +2118,7 @@ def content_ocr_method():
     demo_text_trh = demo_text_h + '\n' + demo_text_tr
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
-    options = ["Google Vision Handwritten", "Google Vision Printed", "Florence-2", "GPT-4o-mini", "CRAFT + trOCR","LLaVA", ]
+    options = ["Google Vision Handwritten", "Google Vision Printed", "Qwen-2-VL", "Florence-2", "GPT-4o-mini", "CRAFT + trOCR","LLaVA", ]
     options_llava = ["llava-v1.6-mistral-7b", "llava-v1.6-34b", "llava-v1.6-vicuna-13b", "llava-v1.6-vicuna-7b",]
     options_llava_bit = ["full", "4bit",]
     captions_llava = [
@@ -2176,10 +2176,11 @@ def content_ocr_method():
         OCR_options = {
             "Google Vision Handwritten": 'hand',
             "Google Vision Printed": 'normal',
+            "Qwen-2-VL": "Qwen-2-VL",
+            "GPT-4o-mini": "GPT-4o-mini",
+            "Florence-2": 'Florence-2',
             "CRAFT + trOCR": 'CRAFT',
             "LLaVA": 'LLaVA',
-            "Florence-2": 'Florence-2',
-            "GPT-4o-mini": "GPT-4o-mini",
         }
 
         # Map selected options to their corresponding internal representations
@@ -2215,6 +2216,15 @@ def content_ocr_method():
                     st.session_state.config['leafmachine']['project']['trOCR_model_path'] = user_input_trOCR_model_path
 
 
+    if "Qwen-2-VL" in selected_OCR_options:
+        st.subheader('Options for :blue[Qwen-2-VL]')
+        default_qwen_model_path = st.session_state.config['leafmachine']['project']['qwen_model_path']
+
+        st.session_state.config['leafmachine']['project']['qwen_model_path'] = st.radio(
+            "Select :blue[Qwen-2-VL] version.",
+            ["Qwen/Qwen2-VL-7B-Instruct", "Qwen/Qwen2-VL-7B-Instruct-AWQ", ],
+            captions=["Qwen2-VL-7B-Instruct requires at least 24GB of VRAM", "Qwen2-VL-7B-Instruct-AWQ requires 16GB of VRAM."])
+    
     if "Florence-2" in selected_OCR_options:
         st.subheader('Options for :green[Florence-2]')
         default_florence_model_path = st.session_state.config['leafmachine']['project']['florence_model_path']

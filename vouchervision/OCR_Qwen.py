@@ -18,12 +18,13 @@ except:
 
 warnings.filterwarnings("ignore", category=UserWarning, message="TypedStorage is deprecated")
 
-### additionalText instead of occurrenceRemarks
-PROMPT_OCR_ONLY_1 = """I cannot read the text in this image. Without explanation, please read me all of the text in this image."""
-PROMPT_OCR_ONLY_2 = """Perform OCR on this image. Return only the verbatim text without any explanation."""
-PROMPT_OCR_ONLY_3 = """Perform OCR on this image and return all of the text contained within the image. Return only the verbatim OCR text without any explanation."""
+class Qwen2VLOCR:
+    def __init__(self, logger, model_id='Qwen/Qwen2-VL-7B-Instruct', ocr_text=None):
+        self.PROMPT_OCR_ONLY_1 = """I cannot read the text in this image. Without explanation, please read me all of the text in this image."""
+        self.PROMPT_OCR_ONLY_2 = """Perform OCR on this image. Return only the verbatim text without any explanation."""
+        self.PROMPT_OCR_ONLY_3 = """Perform OCR on this image and return all of the text contained within the image. Return only the verbatim OCR text without any explanation."""
 
-PROMPT_PARSE = """Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
+        self.PROMPT_PARSE = """Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
 The rules are:
 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below. 2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules. 3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text. 4. Duplicate dictionary fields are not allowed. 5. Ensure all JSON keys are in camel case. 6. Ensure new JSON field values follow sentence case capitalization. 7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template. 8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys. 9. Only return a JSON dictionary represented as a string. You should not explain your answer.
 This section provides rules for formatting each JSON value organized by the JSON key.
@@ -59,7 +60,7 @@ Please populate the following JSON dictionary based on the rules and the unforma
 }
 """
 
-PROMPT_OCR_AND_PARSE = """Perform OCR on this image. Return only the verbatim text without any explanation. Then complete the following task:
+        self.PROMPT_OCR_AND_PARSE = """Perform OCR on this image. Return only the verbatim text without any explanation. Then complete the following task:
 Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
 The rules are:
 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below. 2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules. 3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text. 4. Duplicate dictionary fields are not allowed. 5. Ensure all JSON keys are in camel case. 6. Ensure new JSON field values follow sentence case capitalization. 7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template. 8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys. 9. Only return a JSON dictionary represented as a string. You should not explain your answer.
@@ -95,10 +96,6 @@ Please populate the following JSON dictionary based on the rules and the unforma
 "additionalText": "",
 }
 """
-
-
-class Qwen2VLOCR:
-    def __init__(self, logger, model_id='Qwen/Qwen2-VL-7B-Instruct', ocr_text=None):
         self.MAX_TOKENS = 1024
         self.MAX_PX = 1536
         self.MIN_PX = 256
@@ -126,10 +123,10 @@ class Qwen2VLOCR:
                     'and pip install "qwen-vl-utils" or click the Install Qwen button in the GUI.'
                 )
         
-        # if self.model_id == 'Qwen/Qwen2-VL-7B-Instruct-AWQ':
-            # self.model = Qwen2VLForConditionalGeneration.from_pretrained(self.model_id, torch_dtype="auto", device_map="auto")
-        # else:
-        self.model = Qwen2VLForConditionalGeneration.from_pretrained(self.model_id, torch_dtype=torch.float16, device_map="auto")
+        if self.model_id == 'Qwen/Qwen2-VL-7B-Instruct-AWQ':
+            self.model = Qwen2VLForConditionalGeneration.from_pretrained(self.model_id, torch_dtype=torch.float16, device_map="auto", revision="9d72ae62396aaa1817b006e07ddbbd121024f50d")
+        else:
+            self.model = Qwen2VLForConditionalGeneration.from_pretrained(self.model_id, torch_dtype=torch.float16, device_map="auto")
 
         
         self.processor = AutoProcessor.from_pretrained(self.model_id, min_pixels=self.min_pixels, max_pixels=self.max_pixels)
@@ -163,13 +160,13 @@ class Qwen2VLOCR:
         # Workflow selection
         if workflow_option == 1:
             # Option 1: Use TEXT_OCR and image to return OCR text
-            text_prompt = PROMPT_OCR_ONLY_3
+            text_prompt = self.PROMPT_OCR_ONLY_3
         elif workflow_option == 2:
             # Option 2: Use TEXT_OCR and image to generate OCR text, then pass the text with TEXT2 to generate JSON
-            text_prompt = PROMPT_OCR_ONLY_3  # First generate the text
+            text_prompt = self.PROMPT_OCR_ONLY_3  # First generate the text
         elif workflow_option == 3:
             # Option 3: Use TEXT with the image to directly return structured JSON
-            text_prompt = PROMPT_OCR_AND_PARSE
+            text_prompt = self.PROMPT_OCR_AND_PARSE
         else:
             raise ValueError("Invalid workflow_option. Please provide 1, 2, or 3.")
 
@@ -210,7 +207,7 @@ class Qwen2VLOCR:
 
         # If Option 2: Pass the generated OCR text (final_text) as input to TEXT2 for JSON generation
         if workflow_option == 2:
-            text_prompt = PROMPT_PARSE
+            text_prompt = self.PROMPT_PARSE
             messages = [
                 {
                     "role": "user",

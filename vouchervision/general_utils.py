@@ -1372,7 +1372,8 @@ def install_qwen_requirements():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     venv_path = os.path.abspath(os.path.join(current_dir, "..", ".venv_VV"))
 
-    commit_hash = "f745e7d3f902601686b83c7cce2660c2a94509f0" # last known working commit Sept. 10, 2024
+    # commit_hash = "f745e7d3f902601686b83c7cce2660c2a94509f0" # last known working commit Sept. 10, 2024
+    commit_hash = "14561209291255e51c55260306c7d00c159381a5"
     repo_url = "https://github.com/huggingface/transformers.git"
 
     # Build the pip install command
