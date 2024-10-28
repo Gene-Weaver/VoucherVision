@@ -47,17 +47,6 @@ rules:
   additionalText: All remaining OCR text and text that is not part of the main label, secondary text, background and supporting information. 
 
 mapping:
-  TAXONOMY:
-  - catalogNumber
-  - scientificName
-  - genus
-  - specificEpithet
-  - speciesNameAuthorship
-  - identifiedBy
-  - identifiedDate
-  - identifiedConfidence
-  - identifiedRemarks
-  - identificationHistory
   GEOGRAPHY:
   - country
   - stateProvince
@@ -69,6 +58,17 @@ mapping:
   - minimumElevationInMeters
   - maximumElevationInMeters
   - elevationUnits
+  TAXONOMY:
+  - catalogNumber
+  - scientificName
+  - genus
+  - specificEpithet
+  - speciesNameAuthorship
+  - identifiedBy
+  - identifiedDate
+  - identifiedConfidence
+  - identifiedRemarks
+  - identificationHistory
   COLLECTING:
   - collectedBy
   - collectorNumber
