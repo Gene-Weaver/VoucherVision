@@ -433,16 +433,22 @@ def handle_image_upload_and_gallery():
         has_pdf = False
         clear_image_uploads()
 
-        for input_file in os.listdir(st.session_state.config['leafmachine']['project']['dir_images_local']):
-            if input_file.split('.')[1].lower() in ['jpg','jpeg']:
-                pass
-            elif input_file.split('.')[1].lower() in ['pdf',]:
-                has_pdf = True
-                # Handle PDF files
-                file_path = save_uploaded_file_local(st.session_state.config['leafmachine']['project']['dir_images_local'], st.session_state['dir_uploaded_images'], input_file)
-                # Convert each page of the PDF to an image
-                n_pages = convert_pdf_to_jpg(file_path, st.session_state['dir_uploaded_images'], dpi=200)#st.session_state.config['leafmachine']['project']['dir_images_local'])
+        directory = st.session_state.config['leafmachine']['project']['dir_images_local']
+        for input_file in os.listdir():
+            fpath = os.path.join(directory, input_file)
 
+            if os.path.isfile(fpath):
+                if input_file.split('.')[1].lower() in ['jpg','jpeg']:
+                    pass
+                
+                elif input_file.split('.')[1].lower() in ['pdf',]:
+                    has_pdf = True
+                    # Handle PDF files
+                    file_path = save_uploaded_file_local(st.session_state.config['leafmachine']['project']['dir_images_local'], st.session_state['dir_uploaded_images'], input_file)
+                    # Convert each page of the PDF to an image
+                    n_pages = convert_pdf_to_jpg(file_path, st.session_state['dir_uploaded_images'], dpi=200)#st.session_state.config['leafmachine']['project']['dir_images_local'])
+                else:
+                    pass
             else:
                 pass
                 # st.warning("Inputs must be '.PDF' or '.jpg' or '.jpeg'")
