@@ -47,6 +47,7 @@ rules:
 
 mapping:
   GEOGRAPHY:
+  - catalogNumber
   - country
   - stateProvince
   - county
@@ -58,7 +59,6 @@ mapping:
   - maximumElevationInMeters
   - elevationUnits
   TAXONOMY:
-  - catalogNumber
   - scientificName
   - genus
   - specificEpithet
