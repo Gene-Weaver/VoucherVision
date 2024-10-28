@@ -31,24 +31,31 @@ def resolve_path(path):
 
 if __name__ == "__main__":
     os.environ['PYTHONIOENCODING'] = 'utf-8'
-    dir_home = os.path.dirname(__file__)
+    start_port = 8501
+    end_port = 8599
+    retry_count = 0
 
-    start_port = 8532
     try:
-        free_port = find_available_port(start_port)
+        free_port = find_available_port(start_port, end_port)
         sys.argv = [
-            "streamlit",
-            "run",
-            resolve_path(os.path.join(os.path.dirname(__file__),"app.py")),
-            # resolve_path(os.path.join(dir_home,"vouchervision", "VoucherVision_GUI.py")),
-            "--global.developmentMode=false",
-            # "--server.port=8545",
-            f"--server.port={free_port}",
-            f"--server.maxUploadSize=51200",
-            # Toggle below for HF vs Local
-            # "--is_hf=1",
-            # "--is_hf=0",
+            'streamlit',
+            'run',
+            resolve_path(os.path.join(os.path.dirname(__file__),'app.py')),
+            '--global.developmentMode=false',
+            f'--server.maxUploadSize=51200',
+            f'--server.enableStaticServing=true',
+            f'--server.runOnSave=true',
+            f'--server.port={free_port}',
+            f'--theme.primaryColor=#16a616',
+            f'--theme.backgroundColor=#1a1a1a',
+            f'--theme.secondaryBackgroundColor=#303030',
+            f'--theme.textColor=cccccc',
         ]
         sys.exit(stcli.main())
+
     except ValueError as e:
-        print(e)
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    else:
+        print("Failed to start the application after multiple attempts.")
