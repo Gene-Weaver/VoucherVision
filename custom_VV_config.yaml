@@ -1,0 +1,150 @@
+# NOTES:
+#     - If you are using the LM2 label collage as recommended, DO NOT run this on your only copy of the images. 
+#       As part of the preprocessing steps, all input images are rotated to have a portrait orientation and all illegal
+#       character presnet in the filenames will be replaced with '_' or '-'. These preprocessing steps can be disabled, 
+#       but the performance of VV may be unstable for odd input images.
+
+leafmachine:
+  # See class ModelMaps: in the /vouchervision/model_maps.py file for all options. 
+  # The are in MODELS_OPENAI, MODELS_OPENAI_AZURE, MODELS_GOOGLE, MODELS_MISTRAL, MODELS_LOCAL
+  # Use the name verbatim
+  # Most popular LLMs are:
+  #            Gemini 1.5 Flash
+  #            Gemini 1.5 Pro
+  #            Azure GPT 4
+  #            GPT 4o 2024-08-06
+  #            GPT 4o mini 2024-07-18
+  #            LOCAL Mistral 7B Instruct v0.2
+  LLM_version: Gemini 1.5 Pro
+
+  # options = {
+  #           0: "Use original images for transcriptions",
+  #           1: "Use LeafMachine2 label collage for transcriptions",
+  #           2: "Use specimen collage for transcriptions"
+  #       }
+  use_RGB_label_images: 1
+
+  project:
+    dir_images_local: c:\Users\willwe\Documents\VoucherVision\demo\demo_images
+
+    dir_output: S:/VoucherVision/Unassigned
+    run_name: test
+
+    prompt_version: SLTPvM_default.yaml
+
+
+
+    double_OCR: false
+    # ['hand', 'Qwen-2-VL', 'Florence-2', 'GPT-4o-mini', 'normal']
+    # 'hand' = Google Vision API handwritten optimized 
+    # 'normal' = Default Google Vision API
+    # 'Qwen-2-VL' = Qwen-2-VL model for OCR
+    # 'Florence-2' = Florence-2 model for OCR
+    # 'GPT-4o-mini' = GPT-4o-mini model for OCR
+    OCR_option:
+    - hand
+    # - Florence-2
+    # - GPT-4o-mini
+    - Qwen-2-VL
+
+    # If GPT-4o-mini is in OCR_option, then choose from:
+    #         high
+    #         low
+    OCR_GPT_4o_mini_resolution: high
+
+    # If Qwen-2-VL is in OCR_option, then choose from:
+    #         Qwen/Qwen2-VL-7B-Instruct-AWQ
+    #         Qwen/Qwen2-VL-7B-Instruct
+    qwen_model_path: Qwen/Qwen2-VL-7B-Instruct-AWQ
+
+    # If Qwen-2-VL is in OCR_option, then choose from:
+    # do_use_florence: false
+    #         microsoft/Florence-2-large   
+    #         microsoft/Florence-2-base
+    florence_model_path: microsoft/Florence-2-large
+
+    # Technically supported, but the installation instructions will not include all required packages for CRAFT, please contact us if you need to use this
+    do_use_trOCR: false
+    trOCR_model_path: microsoft/trocr-large-handwritten
+    OCR_option_llava: llava-v1.6-mistral-7b
+    OCR_option_llava_bit: full
+
+    tool_GEO: false
+    tool_WFO: false
+    tool_wikipedia: false
+    
+    # For the LM2 label collages. Should not be a problem for most use cases
+    batch_size: 50000
+
+    catalog_numerical_only: false
+    continue_run_from_partial_xlsx: ''
+    delete_all_temps: false
+    delete_temps_keep_VVE: false
+    image_location: local
+    num_workers: 8
+    pdf_conversion_dpi: 100
+    prefix_removal: ''
+    suffix_removal: ''
+    specimen_rotate: false
+    use_domain_knowledge: false
+
+  archival_component_detector:
+    detector_iteration: PREP_final
+    detector_type: Archival_Detector
+    detector_version: PREP_final
+    detector_weights: best.pt
+    do_save_prediction_overlay_images: true
+    ignore_objects_for_overlay: []
+    minimum_confidence_threshold: 0.5
+  cropped_components:
+    binarize_labels: false
+    binarize_labels_skeletonize: false
+    do_save_cropped_annotations: true
+    save_cropped_annotations:
+    - label
+    - barcode
+    save_per_annotation_class: true
+    save_per_image: false
+  data:
+    do_apply_conversion_factor: false
+    include_darwin_core_data_from_combined_file: false
+    save_individual_csv_files_landmarks: false
+    save_individual_csv_files_measurements: false
+    save_individual_csv_files_rulers: false
+    save_individual_efd_files: false
+    save_json_measurements: false
+    save_json_rulers: false
+  do:
+    check_for_corrupt_images_make_vertical: true
+    check_for_illegal_filenames: true
+    skip_vertical: false
+  do_create_OCR_helper_image: true
+  logging:
+    log_level: null
+  modules:
+    specimen_crop: true
+  overlay:
+    alpha_transparency_archival: 0.3
+    alpha_transparency_plant: 0
+    alpha_transparency_seg_partial_leaf: 0.3
+    alpha_transparency_seg_whole_leaf: 0.4
+    ignore_archival_detections_classes: []
+    ignore_landmark_classes: []
+    ignore_plant_detections_classes:
+    - leaf_whole
+    - specimen
+    line_width_archival: 12
+    line_width_efd: 12
+    line_width_plant: 12
+    line_width_seg: 12
+    overlay_background_color: black
+    overlay_dpi: 300
+    save_overlay_to_jpgs: true
+    save_overlay_to_pdf: false
+    show_archival_detections: true
+    show_landmarks: true
+    show_plant_detections: true
+    show_segmentations: true
+  print:
+    optional_warnings: true
+    verbose: true

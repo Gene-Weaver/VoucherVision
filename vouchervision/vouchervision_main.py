@@ -1,7 +1,7 @@
 '''
 VoucherVision - based on LeafMachine2 Processes
 '''
-import os, inspect, sys, shutil
+import os, inspect, sys, shutil, yaml
 from time import perf_counter
 # currentdir = os.path.dirname(os.path.dirname(inspect.getfile(inspect.currentframe())))
 # parentdir = os.path.dirname(currentdir)
@@ -23,7 +23,11 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     # Load config file
     report_config(dir_home, cfg_file_path, system='VoucherVision')
 
-    if cfg_test is None:
+    if isinstance(cfg_file_path, dict):
+        cfg = cfg_file_path
+    elif cfg_file_path is not None: # Using custom config from CLI
+        cfg = load_custom_cfg(cfg_file_path)
+    elif cfg_test is None:
         cfg = load_config_file(dir_home, cfg_file_path, system='VoucherVision')  # For VoucherVision
     else:
         cfg = cfg_test 
@@ -113,6 +117,16 @@ def make_zipfile(base_dir, output_filename):
     # Return the full path of the created zip file
     return os.path.join(base_dir, output_filename + '.zip')
 
+def load_custom_cfg(full_path_to_cfg):
+    if not os.path.isabs(full_path_to_cfg):
+        raise ValueError("The configuration path must be an absolute path.")
+
+    try:
+        with open(full_path_to_cfg, "r") as ymlfile:
+            cfg = yaml.full_load(ymlfile)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Configuration file not found at {full_path_to_cfg}")
+    return cfg
 
 def voucher_vision_OCR_test(cfg_file_path, dir_home, cfg_test, path_to_crop):
     # get_n_overall = progress_report.get_n_overall()

@@ -7,64 +7,64 @@ GPT_4_32K:
 GPT_4:
   in: 30
   out: 60
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-09-12 15:35:03
 GPT_4o_2024_08_06:
   in: 2.5
-  out: 999
-# UPDATED: 2024-09-12 14:38:32
+  out: 10
+# UPDATED: 2024-09-12 15:35:03
 GPT_4o_2024_05_13:
-  in: 999
-  out: 999
+  in: 5
+  out: 15
 # UPDATED: 2024-09-12 14:38:32
 GPT_4o_mini_2024_07_18:
   in: 0.15
   out: 0.6
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-09-12 15:35:03
 GPT_4_TURBO_2024_04_09:
-  in: 999
-  out: 999
+  in: 10
+  out: 30
 # UPDATED: 2024-09-12 14:38:32
 GPT_4_TURBO_0125:
-  in: 999
-  out: 999
+  in: 10
+  out: 30
 # UPDATED: 2024-09-12 14:38:32
 GPT_4_TURBO_1106:
-  in: 999
-  out: 999
-# UPDATED: 2024-09-12 14:38:32
+  in: 10
+  out: 30
+# UPDATED: 2024-09-12 15:35:03
 GPT_3_5_INSTRUCT:
   in: 1.5
-  out: 999
+  out: 2
 # UPDATED: 2024-09-12 14:38:32
 GPT_3_5:
-  in: 999
-  out: 999
+  in: 0.5
+  out: 1.5
 
 # Azure
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_4_32K:
-  in: 999
-  out: 999
+  in: 60
+  out: 120
 # UPDATED: 2024-09-12 14:38:32
 AZURE_GPT_4:
   in: 30.0
   out: 60.0
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_4_TURBO_1106:
-  in: 999
-  out: 999
-# UPDATED: 2024-09-12 14:38:32
+  in: 10
+  out: 30
+# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_4_TURBO_0125:
-  in: 999
-  out: 999
-# UPDATED: 2024-09-12 14:38:32
+  in: 10
+  out: 30
+# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_3_5_INSTRUCT:
   in: 1.5
-  out: 999
-# UPDATED: 2024-09-12 14:38:32
+  out: 2
+# UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_3_5:
-  in: 999
-  out: 999
+  in: 0.5
+  out: 1.5
 
 # Google Gemini
 # https://ai.google.dev/pricing
@@ -106,18 +106,18 @@ OPEN_MIXTRAL_8X7B:
 OPEN_MISTRAL_7B:
   in: 0.25
   out: 0.25
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-09-12 16:01:10
 MISTRAL_LARGE:
-  in: 999
-  out: 999
+  in: 8
+  out: 24
 # UPDATED: 2024-09-12 14:38:32
 MISTRAL_MEDIUM:
   in: 2.7
   out: 8.1
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-09-12 16:01:10
 MISTRAL_SMALL:
-  in: 999
-  out: 999
+  in: 2
+  out: 6
 
 ################
 # Local Models

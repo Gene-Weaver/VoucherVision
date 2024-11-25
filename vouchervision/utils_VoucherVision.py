@@ -68,9 +68,9 @@ class VoucherVision():
 
         self.trOCR_model_version = self.cfg['leafmachine']['project']['trOCR_model_path']
 
-        self.db_name = self.cfg['leafmachine']['project']['embeddings_database_name']
-        self.path_domain_knowledge = self.cfg['leafmachine']['project']['path_to_domain_knowledge_xlsx']
-        self.build_new_db = self.cfg['leafmachine']['project']['build_new_embeddings_database']
+        # self.db_name = self.cfg['leafmachine']['project']['embeddings_database_name']
+        # self.path_domain_knowledge = self.cfg['leafmachine']['project']['path_to_domain_knowledge_xlsx']
+        # self.build_new_db = self.cfg['leafmachine']['project']['build_new_embeddings_database']
 
         self.continue_run_from_partial_xlsx = self.cfg['leafmachine']['project']['continue_run_from_partial_xlsx']
 

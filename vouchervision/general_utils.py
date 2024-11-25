@@ -337,6 +337,8 @@ def test_GPU():
 #             cfg = yaml.full_load(ymlfile)
 #     return cfg
 
+
+
 def load_cfg(pathToCfg, system='LeafMachine2'):
     if system not in ['LeafMachine2', 'VoucherVision', 'SpecimenCrop']:
         raise ValueError("Invalid system. Expected 'LeafMachine2', 'VoucherVision' or 'SpecimenCrop'.")
@@ -409,8 +411,8 @@ def check_for_subdirs_VV(cfg):
     run_name = []
     has_subdirs = False
     if os.path.isdir(original_in):
-        dirs_list.append(original_in)
-        run_name.append(os.path.basename(os.path.normpath(original_in)))
+        # dirs_list.append(original_in)
+        # run_name.append(os.path.basename(os.path.normpath(original_in)))
         # list contents of the directory
         contents = os.listdir(original_in)
         

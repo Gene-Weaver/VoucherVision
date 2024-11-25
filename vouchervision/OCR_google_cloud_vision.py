@@ -44,7 +44,7 @@ class OCREngine:
 
         self.cfg = cfg
         self.do_use_trOCR = self.cfg['leafmachine']['project']['do_use_trOCR']
-        self.do_use_florence = self.cfg['leafmachine']['project']['do_use_florence']
+        # self.do_use_florence = self.cfg['leafmachine']['project']['do_use_florence']
         self.OCR_option = self.cfg['leafmachine']['project']['OCR_option']
         self.double_OCR = self.cfg['leafmachine']['project']['double_OCR']
         self.dir_home = dir_home
