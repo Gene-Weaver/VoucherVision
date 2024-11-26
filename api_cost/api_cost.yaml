@@ -128,6 +128,55 @@ MISTRAL_SMALL:
   out: 6
 
 ################
+# Hyperbolic Models  https://docs.hyperbolic.xyz/docs/hyperbolic-ai-inference-pricing
+################
+Hyperbolic_VLM_Pixtral_12B:
+  in: 0.1
+  out: 0.1
+Hyperbolic_VLM_Qwen2_VL_7B_Instruct:
+  in: 0.1
+  out: 0.1
+Hyperbolic_VLM_Qwen2_VL_72B_Instruct:
+  in: 0.4
+  out: 0.4
+Hyperbolic_VLM_Llama_3_2_90B_Vision_Instruct:
+  in: 0.4
+  out: 0.4
+
+
+Hyperbolic_LLM_Llama_3_1_8B:
+  in: 0.1
+  out: 0.1
+Hyperbolic_LLM_Llama_3_1_70B:
+  in: 0.4
+  out: 0.4
+Hyperbolic_LLM_Llama_3_70B:
+  in: 0.4
+  out: 0.4
+Hyperbolic_LLM_Hermes_3_70B:
+  in: 0.4
+  out: 0.4
+Hyperbolic_LLM_Llama_3_1_405B:
+  in: 4
+  out: 4
+Hyperbolic_LLM_Llama_3_1_405B_FP8:
+  in: 2
+  out: 2
+Hyperbolic_LLM_DeepSeek_V2_5:
+  in: 2
+  out: 2
+Hyperbolic_LLM_Qwen_2_5_72B:
+  in: 0.4
+  out: 0.4
+Hyperbolic_LLM_Llama_3_2_3B:
+  in: 0.1
+  out: 0.1
+Hyperbolic_LLM_Qwen_2_5_Coder_32B:
+  in: 0.2
+  out: 0.2
+
+
+################
 # Local Models
 ################
 #  mistralai/Mistral-Nemo-Instruct-2407

@@ -1513,6 +1513,7 @@ def get_all_cost_tables():
     cost_google = {}
     cost_mistral = {}
     cost_local = {}
+    cost_hyper = {}
     for key, value in cost_names.items():
         parts = value.split("_")
         if 'LOCAL' in parts:
@@ -1523,6 +1524,8 @@ def get_all_cost_tables():
             cost_openai[key] = cost_data.get(value,'')
         elif 'PALM2' in parts or 'GEMINI' in parts:
             cost_google[key] = cost_data.get(value,'')
+        elif 'Hyperbolic' in parts:
+            cost_hyper[key] = cost_data.get(value,'')
         elif ('MISTRAL' in parts) or ('MIXTRAL' in parts):
             cost_mistral[key] = cost_data.get(value,'')
 
@@ -1531,8 +1534,9 @@ def get_all_cost_tables():
     styled_cost_google = convert_cost_dict_to_table(cost_google, "Google (VertexAI)")
     styled_cost_mistral = convert_cost_dict_to_table(cost_mistral, "MistralAI")
     styled_cost_local = convert_cost_dict_to_table(cost_local, "Local Models")
+    styled_cost_hyper = convert_cost_dict_to_table(cost_hyper, "Hyperbolic Hosted Models")
 
-    return cost_openai, styled_cost_openai, cost_azure, styled_cost_azure, cost_google, styled_cost_google, cost_mistral, styled_cost_mistral, cost_local, styled_cost_local
+    return cost_openai, styled_cost_openai, cost_azure, styled_cost_azure, cost_google, styled_cost_google, cost_mistral, styled_cost_mistral, cost_local, styled_cost_local, cost_hyper, styled_cost_hyper
 
 
 def content_header():
@@ -1766,17 +1770,17 @@ def content_llm_cost():
 
     st.subheader('Cost Matrix')
     st.markdown('The table shows the $USD cost of each LLM API per 1 million tokens. An average VoucherVision call uses 2,000 input tokens and receives 500 output tokens.')
-    col_cost_1, col_cost_2, col_cost_3, col_cost_4, col_cost_5 = st.columns([1,1,1,1,1])    
+    col_cost_1, col_cost_2, col_cost_3, col_cost_4 = st.columns([1,1,1,1])    
 
     # Load all cost tables if not already done
     if 'all_llm_cost' not in st.session_state:
         st.session_state['all_llm_cost'] = True
-        st.session_state['cost_openai'], st.session_state['styled_cost_openai'], st.session_state['cost_azure'], st.session_state['styled_cost_azure'], st.session_state['cost_google'], st.session_state['styled_cost_google'], st.session_state['cost_mistral'], st.session_state['styled_cost_mistral'], st.session_state['cost_local'], st.session_state['styled_cost_local'] = get_all_cost_tables()
+        st.session_state['cost_openai'], st.session_state['styled_cost_openai'], st.session_state['cost_azure'], st.session_state['styled_cost_azure'], st.session_state['cost_google'], st.session_state['styled_cost_google'], st.session_state['cost_mistral'], st.session_state['styled_cost_mistral'], st.session_state['cost_local'], st.session_state['styled_cost_local'], st.session_state['cost_hyper'], st.session_state['styled_cost_hyper'] = get_all_cost_tables()
 
     with calculator_1:
         # Combine all model names into a single list
         model_names = []
-        for df in [st.session_state['cost_openai'], st.session_state['cost_azure'], st.session_state['cost_google'], st.session_state['cost_mistral'], st.session_state['cost_local']]:
+        for df in [st.session_state['cost_openai'], st.session_state['cost_azure'], st.session_state['cost_google'], st.session_state['cost_mistral'], st.session_state['cost_local'], st.session_state['cost_hyper']]:
             for key in df.keys():
                 model_names.append(key)
 
@@ -1813,6 +1817,9 @@ def content_llm_cost():
     @st.cache_data
     def show_cost_matrix_5(rounding):
         st.dataframe(st.session_state.styled_cost_local.format(precision=rounding), hide_index=True,)
+    @st.cache_data
+    def show_cost_matrix_6(rounding):
+        st.dataframe(st.session_state.styled_cost_hyper.format(precision=rounding), hide_index=True,)
 
     input_value, output_value = find_model_values(selected_model, 
                                                 [st.session_state['cost_openai'], st.session_state['cost_azure'], st.session_state['cost_google'], st.session_state['cost_mistral'], st.session_state['cost_local']])
@@ -1826,11 +1833,11 @@ def content_llm_cost():
         show_cost_matrix_1(rounding)
     with col_cost_2:
         show_cost_matrix_2(rounding)
-    with col_cost_3:
         show_cost_matrix_3(rounding)
+    with col_cost_3:
+        show_cost_matrix_6(rounding)
     with col_cost_4:
         show_cost_matrix_4(rounding)
-    with col_cost_5:
         show_cost_matrix_5(rounding)
 
 
