@@ -41,14 +41,22 @@ GPT_3_5:
   out: 1.5
 
 # Azure
+# UPDATED: 2024-11-25 22:43:39
+AZURE_GPT_4o:
+  in: 2.5
+  out: 10
+# UPDATED: 2024-11-25 22:43:39
+AZURE_GPT_4o_mini:
+  in: 0.15
+  out: 0.6
 # UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_4_32K:
   in: 60
   out: 120
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-11-25 22:45:42
 AZURE_GPT_4:
-  in: 30.0
-  out: 60.0
+  in: 10
+  out: 30
 # UPDATED: 2024-09-12 16:01:10
 AZURE_GPT_4_TURBO_1106:
   in: 10

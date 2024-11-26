@@ -59,6 +59,10 @@ def update_api_costs(test_mode=True):
         'gpt-4o-mini': 'GPT_4o_mini_2024_07_18',
 
         # OpenAI GPT-4o Variants
+        'gpt-4o-2024-08-06': 'AZURE_GPT_4o',
+        'gpt-4o-mini': 'AZURE_GPT_4o_mini',
+        'gpt-4-turbo-2024-04-09': 'AZURE_GPT_4',
+
         'gpt-4-32k': 'AZURE_GPT_4_32K',
         'gpt-4-0125-preview': 'AZURE_GPT_4_TURBO_0125',
         'gpt-4-1106-preview': 'AZURE_GPT_4_TURBO_1106',

@@ -21,6 +21,8 @@ class ModelMaps:
         
 
         'AZURE_GPT_4': '#800080',  # Purple
+        'AZURE_GPT_4o': '#800080',  # Purple
+        'AZURE_GPT_4o_mini': '#800080',  # Purple
         # 'AZURE_GPT_4_TURBO_1106': '#9370DB',  # Medium Purple
         # 'AZURE_GPT_4_TURBO_0125': '#9370DB',  # Medium Purple
         # 'AZURE_GPT_4_32K': '#8A2BE2',  # Blue Violet
@@ -60,6 +62,8 @@ class ModelMaps:
 
     MODELS_OPENAI_AZURE = [
                     'Azure GPT 4',
+                    'Azure GPT 4o',
+                    'Azure GPT 4o mini',
                     #  'Azure GPT 4 32k',
                     #  'Azure GPT 4 Turbo 0125-preview',
                     #  'Azure GPT 4 Turbo 1106-preview',
@@ -113,6 +117,8 @@ class ModelMaps:
 
         # 'Azure GPT 4 32k': 'AZURE_GPT_4_32K',
         'Azure GPT 4': 'AZURE_GPT_4',
+        'Azure GPT 4o': 'AZURE_GPT_4o',
+        'Azure GPT 4o mini': 'AZURE_GPT_4o_mini',
         # 'Azure GPT 4 Turbo 0125-preview': 'AZURE_GPT_4_TURBO_0125',
         # 'Azure GPT 4 Turbo 1106-preview': 'AZURE_GPT_4_TURBO_1106',
         # 'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
@@ -159,6 +165,8 @@ class ModelMaps:
             # 'Azure GPT 3.5 Turbo': has_key_azure_openai,
             # 'Azure GPT 3.5 Instruct': has_key_azure_openai,
             'Azure GPT 4': has_key_azure_openai,
+            'Azure GPT 4o': has_key_azure_openai,
+            'Azure GPT 4o mini': has_key_azure_openai,
             # 'Azure GPT 4 Turbo 1106-preview': has_key_azure_openai,
             # 'Azure GPT 4 Turbo 0125-preview': has_key_azure_openai,
             # 'Azure GPT 4 32k': has_key_azure_openai,
@@ -203,6 +211,8 @@ class ModelMaps:
             # 'Azure GPT 3.5 Turbo': True,
             # 'Azure GPT 3.5 Instruct': True,
             'Azure GPT 4': True,
+            'Azure GPT 4o': True,
+            'Azure GPT 4o mini': True,
             # 'Azure GPT 4 Turbo 1106-preview': True,
             # 'Azure GPT 4 Turbo 0125-preview': True,
             # 'Azure GPT 4 32k': True,
@@ -273,7 +283,11 @@ class ModelMaps:
         
         elif key == 'AZURE_GPT_4':
             return 'gpt-4'
-    
+        elif key == 'AZURE_GPT_4o':
+            return 'gpt-4o'
+        elif key == 'AZURE_GPT_4o_mini':
+            return 'gpt-4o-mini'
+
         # elif key == 'AZURE_GPT_4_TURBO_1106':
         #     return 'gpt-4-1106-preview'
         
