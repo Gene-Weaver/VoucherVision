@@ -10,6 +10,7 @@ from google.oauth2 import service_account
 from OCR_Florence_2 import FlorenceOCR
 from OCR_GPT4oMini import GPT4oMiniOCR
 from OCR_Qwen import Qwen2VLOCR
+from OCR_Hyperbolic_VLMs import HyperbolicOCR
 ### LLaVA should only be installed if the user will actually use it.
 ### It requires the most recent pytorch/Python and can mess with older systems
 
@@ -91,6 +92,7 @@ class OCREngine:
         self.set_client()
         self.init_florence()
         self.init_gpt_4o_mini()
+        self.init_hyperbolic()
         self.init_Qwen2VL()
         self.init_craft()
 
@@ -132,15 +134,25 @@ class OCREngine:
                 self.craft_net = load_craftnet_model(weight_path=os.path.join(self.dir_home,'vouchervision','craft','craft_mlt_25k.pth'), cuda=False)
 
     def init_florence(self):
-        if 'Florence-2' in self.OCR_option:
+        if 'LOCAL Florence-2' in self.OCR_option:
             self.Florence = FlorenceOCR(logger=self.logger, model_id=self.cfg['leafmachine']['project']['florence_model_path'])
 
     def init_gpt_4o_mini(self):
         if 'GPT-4o-mini' in self.OCR_option:
             self.GPTmini = GPT4oMiniOCR(api_key = os.getenv('OPENAI_API_KEY'))
 
+    def init_hyperbolic(self):
+        if 'Pixtral-12B-2409' in self.OCR_option:
+            self.Hyperbolic_Pixtral_12B = HyperbolicOCR(api_key = os.getenv('HYPERBOLIC_API_KEY'), model_id="mistralai/Pixtral-12B-2409")
+        if 'Llama-3.2-90B-Vision-Instruct' in self.OCR_option:
+            self.Hyperbolic_Llama_2_2_90B_Vision = HyperbolicOCR(api_key = os.getenv('HYPERBOLIC_API_KEY'), model_id="Llama-3.2-90B-Vision-Instruct")
+        if 'Qwen2-VL-72B-Instruct' in self.OCR_option:
+            self.Hyperbolic_Qwen2_VL_72B = HyperbolicOCR(api_key = os.getenv('HYPERBOLIC_API_KEY'), model_id="Qwen/Qwen2-VL-72B-Instruct")
+        if 'Qwen2-VL-7B-Instruct' in self.OCR_option:
+            self.Hyperbolic_Qwen2_VL_7B = HyperbolicOCR(api_key = os.getenv('HYPERBOLIC_API_KEY'), model_id="Qwen/Qwen2-VL-7B-Instruct")
+
     def init_Qwen2VL(self):
-        if 'Qwen-2-VL' in self.OCR_option:
+        if 'LOCAL Qwen-2-VL' in self.OCR_option:
             self.Qwen2VL = Qwen2VLOCR(logger=self.logger, model_id=self.cfg['leafmachine']['project']['qwen_model_path'])
             
 
@@ -700,6 +712,28 @@ class OCREngine:
         self.hand_characters = characters
         return self.hand_cleaned_text
 
+    def hyperbolic_ocr(self, ocr_option, ocr_helper, json_key, logger_message):
+        # Update the JSON report
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Working on {ocr_option} OCR :construction:')
+
+        # Log usage
+        self.logger.info(f"{logger_message} Usage Report")
+
+        # Perform OCR
+        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, self.tokens_in, self.tokens_out = ocr_helper.ocr_hyperbolic(
+            self.path, max_tokens=1024
+        )
+        self.cost += total_cost
+
+        # Store results in JSON
+        self.OCR_JSON_to_file[json_key] = results_text
+
+        # Update the OCR string
+        if self.double_OCR:
+            self.OCR += f"\n{ocr_option} OCR:\n{results_text}" * 2
+        else:
+            self.OCR += f"\n{ocr_option} OCR:\n{results_text}"
 
     def process_image(self, do_create_OCR_helper_image, path_to_crop, logger):
         self.path = path_to_crop
@@ -776,6 +810,38 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}" + f"\nGPT-4o-mini OCR:\n{results_text}"
             else:
                 self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}"
+
+        # Process each OCR option dynamically
+        if 'Qwen2-VL-7B-Instruct' in self.OCR_option: # This option does not produce an OCR helper image
+            self.hyperbolic_ocr(ocr_option='Qwen2-VL-7B-Instruct',
+                ocr_helper=self.Hyperbolic_Qwen2_VL_7B,
+                json_key='OCR_Hyperbolic_VLM_Qwen2_VL_7B_Instruct',
+                logger_message='Qwen2-VL-7B-Instruct'
+            )
+
+        if 'Qwen2-VL-72B-Instruct' in self.OCR_option: # This option does not produce an OCR helper image
+            self.hyperbolic_ocr(
+                ocr_option='Qwen2-VL-72B-Instruct',
+                ocr_helper=self.Hyperbolic_Qwen2_VL_72B,
+                json_key='OCR_Hyperbolic_VLM_Qwen2_VL_72B_Instruct',
+                logger_message='Qwen2-VL-72B-Instruct'
+            )
+
+        if 'Llama-3.2-90B-Vision-Instruct' in self.OCR_option: # This option does not produce an OCR helper image
+            self.hyperbolic_ocr(
+                ocr_option='Llama-3.2-90B-Vision-Instruct',
+                ocr_helper=self.Hyperbolic_Llama_2_2_90B_Vision,
+                json_key='OCR_Hyperbolic_VLM_Llama_3_2_90B_Vision_Instruct',
+                logger_message='Llama-3.2-90B-Vision-Instruct'
+            )
+
+        if 'Pixtral-12B-2409' in self.OCR_option: # This option does not produce an OCR helper image
+            self.hyperbolic_ocr(
+                ocr_option='Pixtral-12B-2409',
+                ocr_helper=self.Hyperbolic_Pixtral_12B,
+                json_key='OCR_Hyperbolic_VLM_Pixtral_12B',
+                logger_message='Pixtral-12B-2409'
+            )
 
         if 'normal' in self.OCR_option or 'hand' in self.OCR_option:
             if 'normal' in self.OCR_option:

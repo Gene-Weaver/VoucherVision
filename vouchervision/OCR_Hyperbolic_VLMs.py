@@ -5,6 +5,7 @@ from io import BytesIO
 from PIL import Image
 
 from OCR_resize_for_VLMs import resize_image_to_min_max_pixels
+from general_utils import calculate_cost
 
 PROMPT_SIMPLE = """Please perform OCR on this scientific image and extract all of the words and text verbatim. Do not explain your answer, only return the verbatim text:"""
 PROMPT_OCR_AND_PARSE = """Perform OCR on this image. Return only the verbatim text without any explanation. Then complete the following task:
@@ -54,15 +55,17 @@ class HyperbolicOCR:
     def __init__(self, api_key, model_id):
         self.api_key = api_key
         self.api_url = "https://api.hyperbolic.xyz/v1/chat/completions"
-        self.PROMPT = PROMPT_OCR_AND_PARSE
+        # self.PROMPT = PROMPT_OCR_AND_PARSE
+        self.PROMPT = PROMPT_SIMPLE
         self.model_id = model_id
+        self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
 
     def encode_image(self, image):
         buffered = BytesIO()
         image.save(buffered, format="JPEG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-    def ocr_hyperbolic(self, image_path, max_tokens=2048):
+    def ocr_hyperbolic(self, image_path, max_tokens=2048, temperature=0.1, top_p=0.001):
         # Open and resize the image
         image = Image.open(image_path)
         resized_image = resize_image_to_min_max_pixels(image)
@@ -93,24 +96,44 @@ class HyperbolicOCR:
                 }
             ],
             "max_tokens": max_tokens,
-            "temperature": 0.1,
-            "top_p": 0.001,
+            "temperature": temperature,
+            "top_p": top_p,
         }
 
         response = requests.post(self.api_url, headers=headers, json=payload)
-        response_json = response.json()
+        try:
+            response_json = response.json()
 
-        if "choices" in response_json:
-            parsed_answer = response_json["choices"][0]["message"]["content"]
-        else:
-            parsed_answer = None
+            if "choices" in response_json:
+                parsed_answer = response_json["choices"][0]["message"]["content"]
+            else:
+                parsed_answer = None
 
-        if "usage" in response_json:
-            usage = response_json["usage"]
-        else:
-            usage = None
+            if "usage" in response_json:
+                usage = response_json["usage"]
+            else:
+                usage = None
 
-        return parsed_answer, response_json, usage
+            tokens_in = usage["prompt_tokens"]
+            tokens_out = usage["completion_tokens"]
+
+            if self.model_id == "mistralai/Pixtral-12B-2409": 
+                total_cost = calculate_cost('Hyperbolic_VLM_Pixtral_12B', self.path_api_cost, tokens_in, tokens_out)
+            elif self.model_id == "Llama-3.2-90B-Vision-Instruct":
+                total_cost = calculate_cost('Hyperbolic_VLM_Llama_3_2_90B_Vision_Instruct', self.path_api_cost, tokens_in, tokens_out)
+            elif self.model_id == "Qwen/Qwen2-VL-72B-Instruct":
+                total_cost = calculate_cost('Hyperbolic_VLM_Qwen2_VL_72B_Instruct', self.path_api_cost, tokens_in, tokens_out)
+            elif self.model_id == "Qwen/Qwen2-VL-7B-Instruct":
+                total_cost = calculate_cost('Hyperbolic_VLM_Qwen2_VL_7B_Instruct', self.path_api_cost, tokens_in, tokens_out)
+            else:
+                print("invalid model_id for HyperbolicOCR") # Very impressive OCR
+
+            cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
+
+            return parsed_answer, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out
+        except Exception as e:
+            print(f"Error with OCR: {e}")
+            return None, 0, 0, 0, None, None, 0, 0
 
 def main():
     # Example image path
@@ -126,11 +149,10 @@ def main():
     
     ocr = HyperbolicOCR(API_KEY,model_id=model_id)
     
-    parsed_answer, response, usage = ocr.ocr_hyperbolic(img_path, 
-                                                        max_tokens=1024)
+    parsed_answer, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr.ocr_hyperbolic(img_path, 
+                                                                                                                max_tokens=1024)
     print(f"Parsed Answer:\n{parsed_answer}")
-    print(f"Usage:\n{usage}\n\n\n")
-    print(response)
+    print(f"Usage:\ntokens_in:{tokens_in}\ntokens_out:{tokens_out}\n\n")
 
 if __name__ == '__main__':
     main()

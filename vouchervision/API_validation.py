@@ -114,6 +114,43 @@ class APIvalidation:
             except Exception as e:  # Use a more specific exception if possible
                 return False
         
+    def check_hyperbolic_api_key(self):
+        try:
+            import requests
+
+            if not self.is_hf:
+                api_key=self.cfg_private['hyperbolic']['HYPERBOLIC_API_KEY']
+            else:
+                api_key=os.getenv('HYPERBOLIC_API_KEY')
+
+            
+            url = "https://api.hyperbolic.xyz/v1/chat/completions"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            }
+            data = {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "hello"
+                    }
+                ],
+                "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+                "max_tokens": 1,
+                "temperature": 0.7,
+                "top_p": 0.9
+            }
+            
+            response = requests.post(url, headers=headers, json=data)
+            if "choices" in response:
+                return True
+            else:
+                return False
+
+        except Exception as e:  # Replace with a more specific exception if possible
+            return False
+        
     def check_mistral_api_key(self):
         try:
             if not self.is_hf:
@@ -322,7 +359,8 @@ class APIvalidation:
             k_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
             k_location = self.cfg_private['google']['GOOGLE_LOCATION']
             k_google_application_credentials = self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS']
-            
+  
+            k_hyperbolic = self.cfg_private['hyperbolic']['HYPERBOLIC_API_KEY']
             k_mistral = self.cfg_private['mistral']['MISTRAL_API_KEY']
             k_here = self.cfg_private['here']['API_KEY']
             k_opencage = self.cfg_private['open_cage_geocode']['API_KEY']
@@ -411,6 +449,16 @@ class APIvalidation:
             missing_keys.append('Google VertexAI/GenAI')
 
         
+        # hyperbolic key check
+        if self.has_API_key(k_hyperbolic):
+            is_valid = self.check_hyperbolic_api_key()
+            if is_valid:
+                present_keys.append('Hyperbolic (Valid)')
+            else:
+                present_keys.append('Hyperbolic (Invalid)')
+        else:
+            missing_keys.append('Hyperbolic')
+
 
         # Mistral key check
         if self.has_API_key(k_mistral):

@@ -141,7 +141,7 @@ class VoucherVision():
         # Get the required values from ModelMaps
         self.model_name = ModelMaps.get_version_mapping_cost(self.chat_version)
         self.is_azure = ModelMaps.get_version_mapping_is_azure(self.chat_version)
-        self.has_key = ModelMaps.get_version_has_key(self.chat_version, self.has_key_openai, self.has_key_azure_openai, self.has_key_google_application_credentials, self.has_key_mistral)
+        self.has_key = ModelMaps.get_version_has_key(self.chat_version, self.has_key_openai, self.has_key_azure_openai, self.has_key_google_application_credentials, self.has_key_mistral, self.has_key_hyperbolic)
 
         # Check if the version is supported
         if self.model_name is None:
@@ -460,6 +460,7 @@ class VoucherVision():
             k_google_location = os.getenv('GOOGLE_LOCATION')
             k_google_application_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
+            k_hyperbolic = os.getenv('HYPERBOLIC_API_KEY')
             k_mistral = os.getenv('MISTRAL_API_KEY')
             k_here = os.getenv('HERE_API_KEY')
             k_opencage = os.getenv('open_cage_geocode')
@@ -478,6 +479,7 @@ class VoucherVision():
             k_google_location = self.cfg_private['google']['GOOGLE_LOCATION']
             k_google_application_credentials = self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS']
             
+            k_hyperbolic = self.cfg_private['hyperbolic']['HYPERBOLIC_API_KEY']
             k_mistral = self.cfg_private['mistral']['MISTRAL_API_KEY']
             k_here = self.cfg_private['here']['API_KEY']
             k_opencage = self.cfg_private['open_cage_geocode']['API_KEY']
@@ -494,6 +496,7 @@ class VoucherVision():
         self.has_key_google_location = self.has_API_key(k_google_location)
         self.has_key_google_application_credentials = self.has_API_key(k_google_application_credentials)
 
+        self.has_key_hyperbolic = self.has_API_key(k_hyperbolic)
         self.has_key_mistral = self.has_API_key(k_mistral)
         self.has_key_here = self.has_API_key(k_here)
         self.has_key_open_cage_geocode = self.has_API_key(k_opencage)
@@ -552,6 +555,14 @@ class VoucherVision():
                 pass # Already set
             else:
                 os.environ['MISTRAL_API_KEY'] = self.cfg_private['mistral']['MISTRAL_API_KEY']
+        
+
+        ### hyperbolic
+        if self.has_key_hyperbolic:
+            if self.is_hf:
+                pass # Already set
+            else:
+                os.environ['HYPERBOLIC_API_KEY'] = self.cfg_private['hyperbolic']['HYPERBOLIC_API_KEY']
 
 
         ### HERE

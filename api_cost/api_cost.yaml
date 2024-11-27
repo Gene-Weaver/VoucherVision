@@ -106,26 +106,44 @@ PALM2_TB_2:
 
 # Mistral AI 
 # https://docs.mistral.ai/platform/pricing/
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-11-26 14:38:32
 OPEN_MIXTRAL_8X7B:
   in: 0.7
   out: 0.7
-# UPDATED: 2024-09-12 14:38:32
+# UPDATED: 2024-11-26 14:38:32
 OPEN_MISTRAL_7B:
   in: 0.25
   out: 0.25
-# UPDATED: 2024-09-12 16:01:10
+# UPDATED: 2024-11-26 16:01:10
 MISTRAL_LARGE:
-  in: 8
-  out: 24
-# UPDATED: 2024-09-12 14:38:32
-MISTRAL_MEDIUM:
-  in: 2.7
-  out: 8.1
-# UPDATED: 2024-09-12 16:01:10
-MISTRAL_SMALL:
   in: 2
   out: 6
+# UPDATED: 2024-11-26 14:38:32
+OPEN_MIXTRAL_8X22B:
+  in: 2
+  out: 6
+# UPDATED: 2024-11-26 16:01:10
+MISTRAL_SMALL:
+  in: 0.2
+  out: 0.6
+# UPDATED: 2024-11-26 16:01:10
+MISTRAL_NEMO:
+  in: 0.15
+  out: 0.15
+# UPDATED: 2024-11-26 16:01:10
+PIXTRAL_12B:
+  in: 0.15
+  out: 0.15
+  # UPDATED: 2024-11-26 16:01:10
+PIXTRAL_LARGE:
+  in: 2
+  out: 6
+MINISTRAL_8B_24_10:
+  in: 0.1
+  out: 0.1
+MINISTRAL_3B_24_10:
+  in: 0.04
+  out: 0.04
 
 ################
 # Hyperbolic Models  https://docs.hyperbolic.xyz/docs/hyperbolic-ai-inference-pricing

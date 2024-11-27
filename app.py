@@ -1449,7 +1449,7 @@ def check_api_key_status():
         cfg_private = None
 
     API_Validator = APIvalidation(cfg_private, st.session_state.dir_home, st.session_state['is_hf'])
-    present_keys, missing_keys, date_of_check = API_Validator.report_api_key_status()  # Assuming this function returns two lists
+    present_keys, missing_keys, date_of_check = API_Validator.report_api_key_status() 
 
     # Prepare annotations for present keys
     present_annotations = []
@@ -1526,7 +1526,7 @@ def get_all_cost_tables():
             cost_google[key] = cost_data.get(value,'')
         elif 'Hyperbolic' in parts:
             cost_hyper[key] = cost_data.get(value,'')
-        elif ('MISTRAL' in parts) or ('MIXTRAL' in parts):
+        elif ('MISTRAL' in parts) or ('MIXTRAL' in parts) or ('PIXTRAL' in parts) or ('MINISTRAL' in parts):
             cost_mistral[key] = cost_data.get(value,'')
 
     styled_cost_openai = convert_cost_dict_to_table(cost_openai, "OpenAI")
@@ -1834,11 +1834,11 @@ def content_llm_cost():
     with col_cost_2:
         show_cost_matrix_2(rounding)
         show_cost_matrix_3(rounding)
+        show_cost_matrix_5(rounding)
     with col_cost_3:
         show_cost_matrix_6(rounding)
     with col_cost_4:
         show_cost_matrix_4(rounding)
-        show_cost_matrix_5(rounding)
 
 
 
@@ -2131,7 +2131,17 @@ def content_ocr_method():
     demo_text_trh = demo_text_h + '\n' + demo_text_tr
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
-    options = ["Google Vision Handwritten", "Google Vision Printed", "Qwen-2-VL", "Florence-2", "GPT-4o-mini", "CRAFT + trOCR","LLaVA", ]
+    options = ["Google Vision Handwritten", 
+                "Google Vision Printed", 
+                "LOCAL Qwen-2-VL", 
+                "LOCAL Florence-2", 
+                "GPT-4o-mini", 
+                "Hyperbolic Pixtral-12B-2409",
+                "Hyperbolic Llama-3.2-90B-Vision-Instruct",
+                "Hyperbolic Qwen2-VL-7B-Instruct",
+                "Hyperbolic Qwen2-VL-72B-Instruct",
+                "CRAFT + trOCR",
+                "LLaVA", ]
     options_llava = ["llava-v1.6-mistral-7b", "llava-v1.6-34b", "llava-v1.6-vicuna-13b", "llava-v1.6-vicuna-7b",]
     options_llava_bit = ["full", "4bit",]
     captions_llava = [
@@ -2189,9 +2199,15 @@ def content_ocr_method():
         OCR_options = {
             "Google Vision Handwritten": 'hand',
             "Google Vision Printed": 'normal',
-            "Qwen-2-VL": "Qwen-2-VL",
+            "LOCAL Qwen-2-VL": "LOCAL Qwen-2-VL",
             "GPT-4o-mini": "GPT-4o-mini",
-            "Florence-2": 'Florence-2',
+            
+            "Hyperbolic Pixtral-12B-2409": "Pixtral-12B-2409",
+            "Hyperbolic Llama-3.2-90B-Vision-Instruct": "Llama-3.2-90B-Vision-Instruct",
+            "Hyperbolic Qwen2-VL-7B-Instruct": "Qwen2-VL-7B-Instruct",
+            "Hyperbolic Qwen2-VL-72B-Instruct": "Qwen2-VL-72B-Instruct",
+
+            "LOCAL Florence-2": 'LOCAL Florence-2',
             "CRAFT + trOCR": 'CRAFT',
             "LLaVA": 'LLaVA',
         }
@@ -2238,7 +2254,7 @@ def content_ocr_method():
             ["Qwen/Qwen2-VL-7B-Instruct", "Qwen/Qwen2-VL-7B-Instruct-AWQ", ],
             captions=["Qwen2-VL-7B-Instruct requires at least 24GB of VRAM", "Qwen2-VL-7B-Instruct-AWQ requires 16GB of VRAM."])
     
-    if "Florence-2" in selected_OCR_options:
+    if "LOCAL Florence-2" in selected_OCR_options:
         st.subheader('Options for :green[Florence-2]')
         default_florence_model_path = st.session_state.config['leafmachine']['project']['florence_model_path']
 

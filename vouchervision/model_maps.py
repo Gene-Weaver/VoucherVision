@@ -45,12 +45,16 @@ class ModelMaps:
         'Hyperbolic_LLM_Llama_3_2_3B':'#FF6347',
         'Hyperbolic_LLM_Qwen_2_5_Coder_32B':'#FF6347',
 
-
-        'OPEN_MISTRAL_7B': '#FFA07A',  # Light Salmon
-        'OPEN_MIXTRAL_8X7B': '#FF8C00',  # Dark Orange
-        'MISTRAL_SMALL': '#FF6347',  # Tomato
-        'MISTRAL_MEDIUM': '#FF4500',  # Orange Red
+        'OPEN_MISTRAL_7B': '#800000',  # Maroon
+        'OPEN_MIXTRAL_8X7B': '#800000',  # Maroon
+        'OPEN_MIXTRAL_8X22B': '#800000',  # Maroon
+        'MISTRAL_NEMO': '#800000',  # Maroon
+        'PIXTRAL_12B': '#800000',  # Maroon
         'MISTRAL_LARGE': '#800000',  # Maroon
+        'PIXTRAL_LARGE': '#800000',  # Maroon
+        'MISTRAL_SMALL': '#800000',  # Maroon
+        'MINISTRAL_8B_24_10': '#800000',  # Maroon
+        'MINISTRAL_3B_24_10': '#800000',  # Maroon
 
         'LOCAL_MIXTRAL_8X7B_INSTRUCT_V01': '#000000',  # Black
         'LOCAL_MISTRAL_7B_INSTRUCT_V02': '#4a4a4a',  # Gray
@@ -97,11 +101,16 @@ class ModelMaps:
                      'Gemini 1.5 Pro',
                      ]
     
-    MODELS_MISTRAL = ['Mistral Small',
-                      'Mistral Medium',
-                      'Mistral Large',
-                      'Open Mixtral 8x7B',
-                      'Open Mistral 7B',
+    MODELS_MISTRAL = ['Open Mistral 7B',
+                        'Open Mixtral 8x7B',
+                        'Open Mixtral 8x22B',
+                        'Mixtral NeMo',
+                        'Pixtral 12B',
+                        'Mistral Large',
+                        'Pixtral Large',
+                        'Mistral Small',
+                        'Ministral 8B',
+                        'Ministral 3B',
                       ]
     
     MODELS_HYPERBOLIC = ['Hyperbolic_VLM_Pixtral_12B',
@@ -166,12 +175,16 @@ class ModelMaps:
         # 'PaLM 2 text-bison@001': 'PALM2_TB_1',
         'PaLM 2 text-bison@002': 'PALM2_TB_2',
 
-        'Mistral Large': 'MISTRAL_LARGE',
-        'Mistral Medium': 'MISTRAL_MEDIUM',
-        'Mistral Small': 'MISTRAL_SMALL',
-        'Open Mixtral 8x7B': 'OPEN_MIXTRAL_8X7B',
-        'Open Mistral 7B': 'OPEN_MISTRAL_7B',
-
+        'Open Mistral 7B':  'OPEN_MISTRAL_7B',
+        'Open Mixtral 8x7B':  'OPEN_MIXTRAL_8X7B',
+        'Open Mixtral 8x22B':  'OPEN_MIXTRAL_8X22B',
+        'Mixtral NeMo':  'MISTRAL_NEMO',
+        'Pixtral 12B':  'PIXTRAL_12B',
+        'Mistral Large':  'MISTRAL_LARGE',
+        'Pixtral Large':  'PIXTRAL_LARGE',
+        'Mistral Small':  'MISTRAL_SMALL',
+        'Ministral 8B':  'MINISTRAL_8B_24_10',
+        'Ministral 3B':  'MINISTRAL_3B_24_10',
 
         'Hyperbolic VLM Pixtral 12B': 'Hyperbolic_VLM_Pixtral_12B',
         'Hyperbolic VLM Qwen2 VL 7B Instruct': 'Hyperbolic_VLM_Qwen2_VL_7B_Instruct',
@@ -200,7 +213,7 @@ class ModelMaps:
     }
 
     @classmethod
-    def get_version_has_key(cls, key, has_key_openai, has_key_azure_openai, has_key_google_application_credentials, has_key_mistral, has_hyper_key):
+    def get_version_has_key(cls, key, has_key_openai, has_key_azure_openai, has_key_google_application_credentials, has_key_mistral, has_key_hyperbolic):
         # Define the mapping for 'has_key' values
         version_has_key = {
             'GPT 4 Turbo 2024-04-09': has_key_openai,
@@ -230,27 +243,32 @@ class ModelMaps:
             'Gemini 1.5 Flash':  has_key_google_application_credentials,
             'Gemini 1.5 Pro':  has_key_google_application_credentials,
 
-            'Mistral Small':  has_key_mistral,
-            'Mistral Medium':  has_key_mistral,
-            'Mistral Large':  has_key_mistral,
-            'Open Mixtral 8x7B':  has_key_mistral,
             'Open Mistral 7B':  has_key_mistral,
+            'Open Mixtral 8x7B':  has_key_mistral,
+            'Open Mixtral 8x22B':  has_key_mistral,
+            'Mixtral NeMo':  has_key_mistral,
+            'Pixtral 12B':  has_key_mistral,
+            'Mistral Large':  has_key_mistral,
+            'Pixtral Large':  has_key_mistral,
+            'Mistral Small':  has_key_mistral,
+            'Ministral 8B':  has_key_mistral,
+            'Ministral 3B':  has_key_mistral,
 
-            'Hyperbolic VLM Pixtral 12B': has_hyper_key,
-            'Hyperbolic VLM Qwen2 VL 7B Instruct': has_hyper_key,
-            'Hyperbolic VLM Qwen2 VL 72B Instruct': has_hyper_key,
-            # 'Hyperbolic VLM Llama 3 2 90B Vision Instruct': has_hyper_key,
+            'Hyperbolic VLM Pixtral 12B': has_key_hyperbolic,
+            'Hyperbolic VLM Qwen2 VL 7B Instruct': has_key_hyperbolic,
+            'Hyperbolic VLM Qwen2 VL 72B Instruct': has_key_hyperbolic,
+            'Hyperbolic VLM Llama 3 2 90B Vision Instruct': has_key_hyperbolic,
 
-            'Hyperbolic LLM Qwen 2.5-72B': has_hyper_key,
-            'Hyperbolic LLM Qwen 2.5-Coder-32B': has_hyper_key,
-            'Hyperbolic LLM Llama 3.2-3B': has_hyper_key,
-            'Hyperbolic LLM Llama 3.1-405B': has_hyper_key,
-            'Hyperbolic LLM Llama 3.1-405B-FP8': has_hyper_key,
-            'Hyperbolic LLM Llama 3.1-8B': has_hyper_key,
-            'Hyperbolic LLM Llama 3.1-70B': has_hyper_key,
-            'Hyperbolic LLM Llama 3-70B': has_hyper_key,
-            'Hyperbolic LLM Hermes 3-70B': has_hyper_key,
-            'Hyperbolic LLM DeepSeek-V2.5': has_hyper_key,
+            'Hyperbolic LLM Qwen 2.5-72B': has_key_hyperbolic,
+            'Hyperbolic LLM Qwen 2.5-Coder-32B': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.2-3B': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.1-405B': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.1-405B-FP8': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.1-8B': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.1-70B': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3-70B': has_key_hyperbolic,
+            'Hyperbolic LLM Hermes 3-70B': has_key_hyperbolic,
+            'Hyperbolic LLM DeepSeek-V2.5': has_key_hyperbolic,
 
             'LOCAL Mistral Nemo Instruct 2407': True, 
             'LOCAL Mixtral 8x7B Instruct v0.1':  True,
@@ -292,11 +310,16 @@ class ModelMaps:
             'Gemini 1.5 Flash':  False,
             'Gemini 1.5 Pro':  False,
 
-            'Mistral Small':  False,
-            'Mistral Medium':  False,
-            'Mistral Large':  False,
-            'Open Mixtral 8x7B':  False,
             'Open Mistral 7B':  False,
+            'Open Mixtral 8x7B':  False,
+            'Open Mixtral 8x22B':  False,
+            'Mixtral NeMo':  False,
+            'Pixtral 12B':  False,
+            'Mistral Large':  False,
+            'Pixtral Large':  False,
+            'Mistral Small':  False,
+            'Ministral 8B':  False,
+            'Ministral 3B':  False,
 
             'Hyperbolic VLM Pixtral 12B':  False,
             'Hyperbolic VLM Qwen2 VL 7B Instruct':  False,
@@ -403,19 +426,25 @@ class ModelMaps:
         ### Mistral 
         elif key == 'OPEN_MISTRAL_7B':
             return 'open-mistral-7b'
-        
         elif key == 'OPEN_MIXTRAL_8X7B':
             return 'open-mixtral-8x7b'
-        
-        elif key == 'MISTRAL_SMALL':
-            return 'mistral-small-latest'
-        
-        elif key == 'MISTRAL_MEDIUM':
-            return 'mistral-medium-latest'
+        elif key == 'OPEN_MIXTRAL_8X22B':
+            return 'open-mixtral-8x22b'
+        elif key == 'MISTRAL_NEMO':
+            return 'mistral-nemo'
+        elif key == 'PIXTRAL_12B':
+            return 'pixtral-12b'
         
         elif key == 'MISTRAL_LARGE':
             return 'mistral-large-latest'
-        
+        elif key == 'PIXTRAL_LARGE':
+            return 'pixtral-large-latest'
+        elif key == 'MISTRAL_SMALL':
+            return 'mistral-small-latest'
+        elif key == 'MINISTRAL_8B_24_10':
+            return 'ministral-8b-latest'
+        elif key == 'MINISTRAL_3B_24_10':
+            return 'ministral-3b-latest'
 
 
         elif key == 'Hyperbolic VLM Pixtral 12B': 
