@@ -111,11 +111,13 @@ class HyperbolicOCR:
 
             if "usage" in response_json:
                 usage = response_json["usage"]
+                tokens_in = usage["prompt_tokens"]
+                tokens_out = usage["completion_tokens"]
             else:
                 usage = None
-
-            tokens_in = usage["prompt_tokens"]
-            tokens_out = usage["completion_tokens"]
+                tokens_in = 0
+                tokens_out = 0
+            
 
             if self.model_id == "mistralai/Pixtral-12B-2409": 
                 total_cost = calculate_cost('Hyperbolic_VLM_Pixtral_12B', self.path_api_cost, tokens_in, tokens_out)

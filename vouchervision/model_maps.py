@@ -113,20 +113,20 @@ class ModelMaps:
                         'Ministral 3B',
                       ]
     
-    MODELS_HYPERBOLIC = ['Hyperbolic_VLM_Pixtral_12B',
-                        'Hyperbolic_VLM_Qwen2_VL_7B_Instruct',
-                        'Hyperbolic_VLM_Qwen2_VL_72B_Instruct',
-                        # 'Hyperbolic_VLM_Llama_3_2_90B_Vision_Instruct',
-                        'Hyperbolic_LLM_Llama_3_1_8B',
-                        'Hyperbolic_LLM_Llama_3_1_70B',
-                        'Hyperbolic_LLM_Llama_3_70B',
-                        'Hyperbolic_LLM_Hermes_3_70B',
-                        'Hyperbolic_LLM_Llama_3_1_405B',
-                        'Hyperbolic_LLM_Llama_3_1_405B_FP8',
-                        'Hyperbolic_LLM_DeepSeek_V2_5',
-                        'Hyperbolic_LLM_Qwen_2_5_72B',
-                        'Hyperbolic_LLM_Llama_3_2_3B',
-                        'Hyperbolic_LLM_Qwen_2_5_Coder_32B',
+    MODELS_HYPERBOLIC = ['Hyperbolic VLM Pixtral 12B',
+                        'Hyperbolic VLM Qwen2 VL 7B Instruct',
+                        'Hyperbolic VLM Qwen2 VL 72B Instruct',
+                        # 'Hyperbolic VLM Llama 3 2 90B Vision Instruct',
+                        'Hyperbolic LLM Llama 3.1-8B',
+                        'Hyperbolic LLM Llama 3.1-70B',
+                        'Hyperbolic LLM Llama 3-70B',
+                        'Hyperbolic LLM Hermes 3-70B',
+                        'Hyperbolic LLM Llama 3.1-405B',
+                        'Hyperbolic LLM Llama 3.1-405B-FP8',
+                        'Hyperbolic LLM DeepSeek-V2.5',
+                        'Hyperbolic LLM Qwen 2.5-72B',
+                        'Hyperbolic LLM Llama 3.2-3B',
+                        'Hyperbolic LLM Qwen 2.5-Coder-32B',
                     ]
 
     MODELS_LOCAL = ['LOCAL Mistral Nemo Instruct 2407', 
@@ -446,47 +446,46 @@ class ModelMaps:
         elif key == 'MINISTRAL_3B_24_10':
             return 'ministral-3b-latest'
 
-
-        elif key == 'Hyperbolic VLM Pixtral 12B': 
+        elif key == 'Hyperbolic_VLM_Pixtral_12B': 
             return 'mistralai/Pixtral-12B-2409'
         
-        elif key == 'Hyperbolic VLM Qwen2 VL 7B Instruct': 
+        elif key == 'Hyperbolic_VLM_Qwen2_VL_7B_Instruct': 
             return 'Qwen/Qwen2-VL-7B-Instruct'
         
-        elif key == 'Hyperbolic VLM Qwen2 VL 72B Instruct': 
+        elif key == 'Hyperbolic_VLM_Qwen2_VL_72B_Instruct': 
             return 'Qwen/Qwen2-VL-72B-Instruct'
         
-        # elif key == 'Hyperbolic VLM Llama 3 2 90B Vision Instruct': 
-        #     return 'Hyperbolic_VLM_Llama_3_2_90B_Vision_Instruct'
+        # elif key == 'Hyperbolic_VLM_Llama_3_2_90B_Vision_Instruct': 
+        #     return 'meta-llama/Llama-3.2-90B-Vision-Instruct'
 
-        elif key == 'Hyperbolic LLM Qwen 2.5-72B': 
+        elif key == 'Hyperbolic_LLM_Qwen_2_5_72B': 
             return 'Qwen/Qwen2.5-72B-Instruct'
         
-        elif key == 'Hyperbolic LLM Qwen 2.5-Coder-32B': 
+        elif key == 'Hyperbolic_LLM_Qwen_2_5_Coder_32B': 
             return 'Qwen/Qwen2.5-Coder-32B-Instruct'
         
-        elif key == 'Hyperbolic LLM Llama 3.2-3B': 
+        elif key == 'Hyperbolic_LLM_Llama_3_2_3B': 
             return 'meta-llama/Llama-3.2-3B-Instruct'
         
-        elif key == 'Hyperbolic LLM Llama 3.1-405B': 
-            return 'meta-llama/Meta-Llama-3.1-405B'
+        elif key == 'Hyperbolic_LLM_Llama_3_1_405B': 
+            return 'meta-llama/Meta-Llama-3.1-405B-Instruct'
         
-        elif key == 'Hyperbolic LLM Llama 3.1-405B-FP8': 
+        elif key == 'Hyperbolic_LLM_Llama_3_1_405B_FP8': 
             return 'meta-llama/Meta-Llama-3.1-405B-FP8'
         
-        elif key == 'Hyperbolic LLM Llama 3.1-8B': 
+        elif key == 'Hyperbolic_LLM_Llama_3_1_8B': 
             return 'meta-llama/Meta-Llama-3.1-8B-Instruct'
         
-        elif key == 'Hyperbolic LLM Llama 3.1-70B': 
+        elif key == 'Hyperbolic_LLM_Llama_3_1_70B': 
             return 'meta-llama/Meta-Llama-3.1-70B-Instruct'
         
-        elif key == 'Hyperbolic LLM Llama 3-70B': 
+        elif key == 'Hyperbolic_LLM_Llama_3_70B': 
             return 'meta-llama/Meta-Llama-3-70B-Instruct'
         
-        elif key == 'Hyperbolic LLM Hermes 3-70B': 
+        elif key == 'Hyperbolic_LLM_Hermes_3_70B': 
             return 'NousResearch/Hermes-3-Llama-3.1-70B'
         
-        elif key == 'Hyperbolic LLM DeepSeek-V2.5': 
+        elif key == 'Hyperbolic_LLM_DeepSeek_V2_5': 
             return 'deepseek-ai/DeepSeek-V2.5'
         
 

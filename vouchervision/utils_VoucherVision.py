@@ -15,6 +15,7 @@ from vouchervision.LLM_MistralAI import MistralHandler
 from vouchervision.LLM_local_cpu_MistralAI import LocalCPUMistralHandler
 from vouchervision.LLM_local_MistralAI import LocalMistralHandler 
 from vouchervision.LLM_local_custom_fine_tune import LocalFineTuneHandler 
+from vouchervision.LLM_Hyperbolic import HyperbolicHandler
 from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
 from vouchervision.general_utils import get_cfg_from_full_path
@@ -769,6 +770,10 @@ class VoucherVision():
                 
                 elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
                     response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_MistralAI(prompt, json_report, paths)
+
+                elif 'Hyperbolic' in name_parts:
+                    response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_Hyperbolic(prompt, json_report, paths)
+                
                 
                 elif 'LOCAL' in name_parts: 
                     if 'MISTRAL' in name_parts or 'MIXTRAL' in name_parts:
@@ -827,6 +832,8 @@ class VoucherVision():
                 return GoogleGeminiHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
             elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
                 return MistralHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
+            elif 'Hyperbolic' in name_parts:
+                return HyperbolicHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
             else:
                 return OpenAIHandler(cfg, logger, model_name, JSON_dict_structure, is_azure, llm_object, config_vals_for_permutation)
 

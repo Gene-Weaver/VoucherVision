@@ -143,9 +143,13 @@ class APIvalidation:
             }
             
             response = requests.post(url, headers=headers, json=data)
-            if "choices" in response:
+            response_json = response.json()
+
+            if "choices" in response_json:
+                print(f"hyperbolic meta-llama/Meta-Llama-3.1-8B-Instruct: {response_json['choices'][0]['message']['content']}")
                 return True
             else:
+                print("hyperbolic failed to return expected response")
                 return False
 
         except Exception as e:  # Replace with a more specific exception if possible
