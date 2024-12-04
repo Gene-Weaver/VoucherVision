@@ -218,7 +218,7 @@ University of Michigan Herbarium
                 {'catalogNumber': '', 'order': '', 'family': '', 'scientificName': '', 'scientificNameAuthorship': '', 'genus': '', 'subgenus': '', 'specificEpithet': '', 'infraspecificEpithet': '', 'identifiedBy': '', 'recordedBy': '', 'recordNumber': '', 'verbatimEventDate': '', 'eventDate': '', 'habitat': '', 'occurrenceRemarks': '', 'country': '', 'stateProvince': '', 'county': '', 'municipality': '', 'locality': '', 'degreeOfEstablishment': '', 'decimalLatitude': '', 'decimalLongitude': '', 'verbatimCoordinates': '', 'minimumElevationInMeters': '', 'maximumElevationInMeters': ''}"""
     JSON_dict_structure = {'catalogNumber': '', 'order': '', 'family': '', 'scientificName': '', 'scientificNameAuthorship': '', 'genus': '', 'subgenus': '', 'specificEpithet': '', 'infraspecificEpithet': '', 'identifiedBy': '', 'recordedBy': '', 'recordNumber': '', 'verbatimEventDate': '', 'eventDate': '', 'habitat': '', 'occurrenceRemarks': '', 'country': '', 'stateProvince': '', 'county': '', 'municipality': '', 'locality': '', 'degreeOfEstablishment': '', 'decimalLatitude': '', 'decimalLongitude': '', 'verbatimCoordinates': '', 'minimumElevationInMeters': '', 'maximumElevationInMeters': ''}
     
-    os.environ["HYPERBOLIC_API_KEY"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ3aWxsd2VAdW1pY2guZWR1IiwiaWF0IjoxNzMyNTk2NDExfQ.6B1-5buQnSiqO7TKd_6RhD_lUzT4yuR2h7MpC2sQDlo"
+    os.environ["HYPERBOLIC_API_KEY"] = ""
     
     ml = HyperbolicHandler(None, None, "meta-llama/Meta-Llama-3.1-8B-Instruct", JSON_dict_structure, None)
     # ml.call_llm_api_Hyperbolic(prompt_test, )
