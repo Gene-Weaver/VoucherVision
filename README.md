@@ -55,7 +55,7 @@ December 4, 2024
     - OpenAI (GPT4o-mini, GPT4o)
     - Locally hosted models, your computer ***must*** have an NVIDIA GPU with at least 24 GB of VRAM (Florence-2, Qwen2-VL) 
 - Since we are moving toward VLMs for OCR, I have improved cost tracking to include these too
-- THE BEST OCR + LLM OPTIONS RIGHT NOW:
+- 💥 THE BEST OCR + LLM OPTIONS RIGHT NOW 💥
     - The first/only OCR engine to reliably read the difficult cursive in the included demo image is `Gemini-1.5-Pro`!
     - The best option for locally hosted OCR is by far `Qwen2-VL` with `Florence-2` coming in 2nd
     - The best LLMs for parsing the OCR are still `Gemini-1.5-Pro` and `GPT-4o` due to their 'knowledge' and ability to correct/infer OCR errors/omissions
