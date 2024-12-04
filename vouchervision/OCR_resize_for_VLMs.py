@@ -4,6 +4,8 @@ import os
 
 def resize_image_to_min_max_pixels(image, min_pixels=256*28*28, max_pixels=1536*28*28):
     """
+    The default is optimized for Qwen2-VL
+    
     Resize the image while maintaining aspect ratio such that the total number of pixels stays between
     the min_pixels and max_pixels thresholds.
 

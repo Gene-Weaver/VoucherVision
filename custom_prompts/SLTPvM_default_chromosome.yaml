@@ -20,7 +20,7 @@ rules:
   scientificName: The scientific name of the taxon including genus, specific epithet, and any lower classifications.
   genus: Taxonomic determination to genus. Genus must be capitalized. If genus is not present use the taxonomic family name followed by the word 'indet'.
   specificEpithet: The name of the species epithet of the scientificName. Only include the species epithet.
-  speciesNameAuthorship: The authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclatural code.
+  scientificNameAuthorship: The authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclatural code.
   collectedBy: A comma separated list of names of people, groups, or organizations responsible for observing, recording, collecting, or presenting the original specimen. The primary collector or observer should be listed first. 
   collectorNumber: An identifier given to the occurrence at the time it was recorded, the specimen collector's number.
   identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon to the subject organism, the determiner. This is not the specimen collector. 

@@ -9,7 +9,9 @@ from outlines.models import transformers
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
 
-
+'''
+DON'T USE, check first
+'''
 class GoogleGeminiHandler:
     RETRY_DELAY = 10  # Wait 10 seconds before retrying
     MAX_RETRIES = 3  # Maximum number of retries

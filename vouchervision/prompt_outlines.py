@@ -4,6 +4,10 @@ import yaml
 import outlines
 from outlines.generate import json as generate_json
 
+'''
+DON'T USE THIS, USE THE prompt_outlines.py VERSION INSTEAD
+'''
+
 class PromptOutlines:
     def __init__(self, rules_config_path):
         self.rules_config_path = rules_config_path

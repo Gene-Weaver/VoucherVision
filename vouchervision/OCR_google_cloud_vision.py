@@ -8,9 +8,10 @@ import colorsys
 from tqdm import tqdm
 from google.oauth2 import service_account
 from OCR_Florence_2 import FlorenceOCR
-from OCR_GPT4oMini import GPT4oMiniOCR
+from vouchervision.OCR_GPT4o import GPT4oOCR
 from OCR_Qwen import Qwen2VLOCR
 from OCR_Hyperbolic_VLMs import HyperbolicOCR
+from OCR_Gemini import OCRGeminiProVision
 ### LLaVA should only be installed if the user will actually use it.
 ### It requires the most recent pytorch/Python and can mess with older systems
 
@@ -62,6 +63,10 @@ class OCREngine:
         self.cost = 0.0
         self.tokens_in = 0
         self.tokens_out = 0
+        self.cost_in = 0
+        self.cost_out = 0
+
+        self.ocr_method = []
 
         self.hand_cleaned_text = None
         self.hand_organized_text = None
@@ -92,6 +97,7 @@ class OCREngine:
         self.set_client()
         self.init_florence()
         self.init_gpt_4o_mini()
+        self.init_gemini_pro()
         self.init_hyperbolic()
         self.init_Qwen2VL()
         self.init_craft()
@@ -139,7 +145,17 @@ class OCREngine:
 
     def init_gpt_4o_mini(self):
         if 'GPT-4o-mini' in self.OCR_option:
-            self.GPTmini = GPT4oMiniOCR(api_key = os.getenv('OPENAI_API_KEY'))
+            self.GPTmini = GPT4oOCR(api_key = os.getenv('OPENAI_API_KEY'))
+        if 'GPT-4o' in self.OCR_option:
+            self.GPT4o = GPT4oOCR(api_key = os.getenv('OPENAI_API_KEY'))
+
+    def init_gemini_pro(self):
+        if 'Gemini-1.5-Pro' in self.OCR_option:
+            self.GeminiProVision_1_5_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-1.5-pro")
+        if "Gemini-1.5-Flash" in self.OCR_option:
+            self.GeminiProVision_1_5_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-1.5-flash")
+        if "Gemini-1.5-Flash-8B" in self.OCR_option:
+            self.GeminiProVision_1_5_Flash_8B = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-1.5-flash-8b")
 
     def init_hyperbolic(self):
         if 'Pixtral-12B-2409' in self.OCR_option:
@@ -480,6 +496,7 @@ class OCREngine:
 
 
     def detect_text(self):
+        self.ocr_method.append("Google OCR Printed")
         
         with io.open(self.path, 'rb') as image_file:
             content = image_file.read()
@@ -596,6 +613,8 @@ class OCREngine:
 
 
     def detect_handwritten_ocr(self):
+        self.ocr_method.append("Google OCR Handwritten")
+
         
         with open(self.path, "rb") as image_file:
             content = image_file.read()
@@ -713,6 +732,8 @@ class OCREngine:
         return self.hand_cleaned_text
 
     def hyperbolic_ocr(self, ocr_option, ocr_helper, json_key, logger_message):
+        self.ocr_method.append(ocr_option)
+
         # Update the JSON report
         if self.json_report:
             self.json_report.set_text(text_main=f'Working on {ocr_option} OCR :construction:')
@@ -721,10 +742,43 @@ class OCREngine:
         self.logger.info(f"{logger_message} Usage Report")
 
         # Perform OCR
-        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, self.tokens_in, self.tokens_out = ocr_helper.ocr_hyperbolic(
+        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_helper.ocr_hyperbolic(
             self.path, max_tokens=1024
         )
         self.cost += total_cost
+        self.tokens_in += tokens_in
+        self.tokens_out += tokens_out
+        self.cost_in += cost_in
+        self.cost_out += cost_out
+
+
+        # Store results in JSON
+        self.OCR_JSON_to_file[json_key] = results_text
+
+        # Update the OCR string
+        if self.double_OCR:
+            self.OCR += f"\n{ocr_option} OCR:\n{results_text}" * 2
+        else:
+            self.OCR += f"\n{ocr_option} OCR:\n{results_text}"
+
+    def gemini_ocr(self, ocr_option, ocr_helper, json_key, logger_message):
+        self.ocr_method.append(ocr_option)
+
+        # Update the JSON report
+        if self.json_report:
+            self.json_report.set_text(text_main=f'Working on {ocr_option} OCR :construction:')
+
+        # Log usage
+        self.logger.info(f"{logger_message} Usage Report")
+
+        # Perform OCR
+        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_helper.ocr_gemini(self.path)
+
+        self.cost += total_cost
+        self.tokens_in += tokens_in
+        self.tokens_out += tokens_out
+        self.cost_in += cost_in
+        self.cost_out += cost_out
 
         # Store results in JSON
         self.OCR_JSON_to_file[json_key] = results_text
@@ -743,6 +797,8 @@ class OCREngine:
         # Can stack options, so solitary if statements
         self.OCR = 'OCR:\n'
         if 'CRAFT' in self.OCR_option:
+            self.ocr_method.append("CRAFT trOCR")
+
             self.do_use_trOCR = True
             self.detect_text_craft()
             ### Optionally add trOCR to the self.OCR for additional context
@@ -754,6 +810,8 @@ class OCREngine:
             # logger.info(f"CRAFT trOCR:\n{self.OCR}")
 
         if 'LLaVA' in self.OCR_option: # This option does not produce an OCR helper image
+            self.ocr_method.append("LLaVA")
+            
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on LLaVA {self.Llava.model_path} OCR :construction:')
 
@@ -769,6 +827,8 @@ class OCREngine:
             # logger.info(f"LLaVA OCR:\n{self.OCR}")
 
         if 'Florence-2' in self.OCR_option: # This option does not produce an OCR helper image
+            self.ocr_method.append("Florence-2")
+
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on Florence-2 [{self.Florence.model_id}] OCR :construction:')
 
@@ -783,6 +843,8 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}"
 
         if 'Qwen-2-VL' in self.OCR_option: # This option does not produce an OCR helper image
+            self.ocr_method.append("Qwen-2-VL")
+
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on Qwen-2-VL [{self.Qwen2VL.model_id}] OCR :construction:')
 
@@ -797,12 +859,19 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nQwen2VL OCR:\n{results_text}"
 
         if 'GPT-4o-mini' in self.OCR_option: # This option does not produce an OCR helper image
+            self.ocr_method.append("GPT-4o-mini")
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on GPT-4o-mini OCR :construction:')
 
             self.logger.info(f"GPT-4o-mini Usage Report")
-            results_text, cost_in, cost_out, total_cost, rates_in, rates_out, self.tokens_in, self.tokens_out = self.GPTmini.ocr_gpt4o(self.path, resolution=self.cfg['leafmachine']['project']['OCR_GPT_4o_mini_resolution'], max_tokens=512)
+            results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = self.GPTmini.ocr_gpt4o(self.path, model_name="gpt-4o-mini",
+                                                                                                                            resolution=self.cfg['leafmachine']['project']['OCR_GPT_4o_mini_resolution'],
+                                                                                                                            max_tokens=1024)
             self.cost += total_cost
+            self.tokens_in += tokens_in
+            self.tokens_out += tokens_out
+            self.cost_in += cost_in
+            self.cost_out += cost_out
 
             self.OCR_JSON_to_file['OCR_GPT_4o_mini'] = results_text
 
@@ -810,6 +879,50 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}" + f"\nGPT-4o-mini OCR:\n{results_text}"
             else:
                 self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}"
+        
+        if 'GPT-4o' in self.OCR_option: # This option does not produce an OCR helper image
+            self.ocr_method.append("GPT-4o")
+            if self.json_report:
+                self.json_report.set_text(text_main=f'Working on GPT-4o OCR :construction:')
+
+            self.logger.info(f"GPT-4o Usage Report")
+            results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = self.GPTmini.ocr_gpt4o(self.path, model_name="gpt-4o",
+                                                                                                                            resolution=self.cfg['leafmachine']['project']['OCR_GPT_4o_mini_resolution'], 
+                                                                                                                            max_tokens=1024)
+            self.cost += total_cost
+            self.tokens_in += tokens_in
+            self.tokens_out += tokens_out
+            self.cost_in += cost_in
+            self.cost_out += cost_out
+
+            self.OCR_JSON_to_file['OCR_GPT_4o'] = results_text
+
+            if self.double_OCR:
+                self.OCR = self.OCR + f"\nGPT-4o OCR:\n{results_text}" + f"\nGPT-4o OCR:\n{results_text}"
+            else:
+                self.OCR = self.OCR + f"\nGPT-4o OCR:\n{results_text}"
+
+        # Gemini options
+        if "Gemini-1.5-Pro" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="Gemini-1.5-Pro",
+                ocr_helper=self.GeminiProVision_1_5_Pro,
+                json_key='OCR_Gemini_1_5_Pro',
+                logger_message="Gemini-1.5-Pro"
+            )
+
+        if "Gemini-1.5-Flash" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="Gemini-1.5-Flash",
+                ocr_helper=self.GeminiProVision_1_5_Flash,
+                json_key='OCR_Gemini_1_5_Flash',
+                logger_message="Gemini-1.5-Flash"
+            )
+
+        if "Gemini-1.5-Flash-8B" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="Gemini-1.5-Flash-8B",
+                ocr_helper=self.GeminiProVision_1_5_Flash_8B,
+                json_key='OCR_Gemini_1_5_Flash_8B',
+                logger_message="Gemini-1.5-Flash-8B"
+            )
 
         # Process each OCR option dynamically
         if 'Qwen2-VL-7B-Instruct' in self.OCR_option: # This option does not produce an OCR helper image

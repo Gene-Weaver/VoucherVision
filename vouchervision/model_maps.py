@@ -15,10 +15,10 @@ class ModelMaps:
         # 'PALM2_TB_1': '#87CEEB',  # Sky Blue
         'PALM2_TB_2': '#1E90FF',  # Dodger Blue
         'PALM2_TU_1': '#0000FF',  # Blue
-        'GEMINI_PRO': '#1E00FF',  # 
+        'GEMINI_1_5_FLASH_8B': '#1E00FF',  # 
         'GEMINI_1_5_FLASH': '#1E00FF',  # gemini-1.5-flash
         'GEMINI_1_5_PRO': '#1E00FF',  # gemini-1.5-pro
-        
+
 
         'AZURE_GPT_4': '#800080',  # Purple
         'AZURE_GPT_4o': '#800080',  # Purple
@@ -37,13 +37,14 @@ class ModelMaps:
         'Hyperbolic_LLM_Llama_3_1_8B':'#FF6347',
         'Hyperbolic_LLM_Llama_3_1_70B':'#FF6347',
         'Hyperbolic_LLM_Llama_3_70B':'#FF6347',
-        'Hyperbolic_LLM_Hermes_3_70B':'#FF6347',
+        # 'Hyperbolic_LLM_Hermes_3_70B':'#FF6347',
         'Hyperbolic_LLM_Llama_3_1_405B':'#FF6347',
         'Hyperbolic_LLM_Llama_3_1_405B_FP8':'#FF6347',
         'Hyperbolic_LLM_DeepSeek_V2_5':'#FF6347',
         'Hyperbolic_LLM_Qwen_2_5_72B':'#FF6347',
         'Hyperbolic_LLM_Llama_3_2_3B':'#FF6347',
         'Hyperbolic_LLM_Qwen_2_5_Coder_32B':'#FF6347',
+        'Hyperbolic_LLM_QwQ_32B_Preview':'#FF6347',
 
         'OPEN_MISTRAL_7B': '#800000',  # Maroon
         'OPEN_MIXTRAL_8X7B': '#800000',  # Maroon
@@ -96,9 +97,9 @@ class ModelMaps:
                     # 'PaLM 2 text-bison@001',
                      'PaLM 2 text-bison@002',
                      'PaLM 2 text-unicorn@001',
-                     'Gemini 1.0 Pro',
-                     'Gemini 1.5 Flash',
                      'Gemini 1.5 Pro',
+                     'Gemini 1.5 Flash',
+                     'Gemini 1.5 Flash 8B',
                      ]
     
     MODELS_MISTRAL = ['Open Mistral 7B',
@@ -120,13 +121,14 @@ class ModelMaps:
                         'Hyperbolic LLM Llama 3.1-8B',
                         'Hyperbolic LLM Llama 3.1-70B',
                         'Hyperbolic LLM Llama 3-70B',
-                        'Hyperbolic LLM Hermes 3-70B',
+                        # 'Hyperbolic LLM Hermes 3-70B',
                         'Hyperbolic LLM Llama 3.1-405B',
                         'Hyperbolic LLM Llama 3.1-405B-FP8',
                         'Hyperbolic LLM DeepSeek-V2.5',
                         'Hyperbolic LLM Qwen 2.5-72B',
                         'Hyperbolic LLM Llama 3.2-3B',
                         'Hyperbolic LLM Qwen 2.5-Coder-32B',
+                        'Hyperbolic LLM QwQ-32B-Preview',
                     ]
 
     MODELS_LOCAL = ['LOCAL Mistral Nemo Instruct 2407', 
@@ -167,7 +169,7 @@ class ModelMaps:
         # 'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
         # 'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
-        'Gemini 1.0 Pro': 'GEMINI_PRO',
+        'Gemini 1.5 Flash 8B': 'GEMINI_1_5_FLASH_8B',
         'Gemini 1.5 Flash': 'GEMINI_1_5_FLASH',  # gemini-1.5-flash
         'Gemini 1.5 Pro': 'GEMINI_1_5_PRO',  # gemini-1.5-pro
 
@@ -199,9 +201,9 @@ class ModelMaps:
         'Hyperbolic LLM Llama 3.1-8B': 'Hyperbolic_LLM_Llama_3_1_8B',
         'Hyperbolic LLM Llama 3.1-70B': 'Hyperbolic_LLM_Llama_3_1_70B',
         'Hyperbolic LLM Llama 3-70B': 'Hyperbolic_LLM_Llama_3_70B',
-        'Hyperbolic LLM Hermes 3-70B': 'Hyperbolic_LLM_Hermes_3_70B',
+        # 'Hyperbolic LLM Hermes 3-70B': 'Hyperbolic_LLM_Hermes_3_70B',
         'Hyperbolic LLM DeepSeek-V2.5': 'Hyperbolic_LLM_DeepSeek_V2_5',
-
+        'Hyperbolic LLM QwQ-32B-Preview': 'Hyperbolic_LLM_QwQ_32B_Preview',
 
         'LOCAL Mistral Nemo Instruct 2407': 'LOCAL_MISTRAL_NEMO_INSTRUCT_2407', 
         'LOCAL Mixtral 8x7B Instruct v0.1': 'LOCAL_MIXTRAL_8X7B_INSTRUCT_V01',
@@ -239,7 +241,7 @@ class ModelMaps:
             # 'PaLM 2 text-bison@001':  has_key_google_application_credentials,
             'PaLM 2 text-bison@002':  has_key_google_application_credentials,
             'PaLM 2 text-unicorn@001':  has_key_google_application_credentials,
-            'Gemini 1.0 Pro':  has_key_google_application_credentials,
+            'Gemini 1.5 Flash 8B':  has_key_google_application_credentials,
             'Gemini 1.5 Flash':  has_key_google_application_credentials,
             'Gemini 1.5 Pro':  has_key_google_application_credentials,
 
@@ -267,8 +269,9 @@ class ModelMaps:
             'Hyperbolic LLM Llama 3.1-8B': has_key_hyperbolic,
             'Hyperbolic LLM Llama 3.1-70B': has_key_hyperbolic,
             'Hyperbolic LLM Llama 3-70B': has_key_hyperbolic,
-            'Hyperbolic LLM Hermes 3-70B': has_key_hyperbolic,
+            # 'Hyperbolic LLM Hermes 3-70B': has_key_hyperbolic,
             'Hyperbolic LLM DeepSeek-V2.5': has_key_hyperbolic,
+            'Hyperbolic LLM QwQ-32B-Preview': has_key_hyperbolic,
 
             'LOCAL Mistral Nemo Instruct 2407': True, 
             'LOCAL Mixtral 8x7B Instruct v0.1':  True,
@@ -306,7 +309,7 @@ class ModelMaps:
             # 'PaLM 2 text-bison@001':  False,
             'PaLM 2 text-bison@002':  False,
             'PaLM 2 text-unicorn@001':  False,
-            'Gemini 1.0 Pro':  False,
+            'Gemini 1.5 Flash 8B':  False,
             'Gemini 1.5 Flash':  False,
             'Gemini 1.5 Pro':  False,
 
@@ -334,8 +337,9 @@ class ModelMaps:
             'Hyperbolic LLM Llama 3.1-8B':  False,
             'Hyperbolic LLM Llama 3.1-70B':  False,
             'Hyperbolic LLM Llama 3-70B':  False,
-            'Hyperbolic LLM Hermes 3-70B':  False,
+            # 'Hyperbolic LLM Hermes 3-70B':  False,
             'Hyperbolic LLM DeepSeek-V2.5':  False,
+            'Hyperbolic LLM QwQ-32B-Preview':  False,
 
             'LOCAL Mistral Nemo Instruct 2407':  False, 
             'LOCAL Mixtral 8x7B Instruct v0.1':  False,
@@ -414,9 +418,9 @@ class ModelMaps:
         elif key == 'PALM2_TU_1':
             return 'text-unicorn@001'
         
-        elif key == 'GEMINI_PRO':
-            return 'gemini-1.0-pro' 
-        
+        elif key == 'GEMINI_1_5_FLASH_8B':
+            return 'gemini-1.5-flash-8b' 
+
         elif key == 'GEMINI_1_5_FLASH':
             return 'gemini-1.5-flash' 
 
@@ -448,10 +452,8 @@ class ModelMaps:
 
         elif key == 'Hyperbolic_VLM_Pixtral_12B': 
             return 'mistralai/Pixtral-12B-2409'
-        
         elif key == 'Hyperbolic_VLM_Qwen2_VL_7B_Instruct': 
             return 'Qwen/Qwen2-VL-7B-Instruct'
-        
         elif key == 'Hyperbolic_VLM_Qwen2_VL_72B_Instruct': 
             return 'Qwen/Qwen2-VL-72B-Instruct'
         
@@ -460,31 +462,24 @@ class ModelMaps:
 
         elif key == 'Hyperbolic_LLM_Qwen_2_5_72B': 
             return 'Qwen/Qwen2.5-72B-Instruct'
-        
+        elif key == 'Hyperbolic_LLM_QwQ_32B_Preview': 
+            return 'Qwen/QwQ-32B-Preview'
         elif key == 'Hyperbolic_LLM_Qwen_2_5_Coder_32B': 
             return 'Qwen/Qwen2.5-Coder-32B-Instruct'
-        
         elif key == 'Hyperbolic_LLM_Llama_3_2_3B': 
             return 'meta-llama/Llama-3.2-3B-Instruct'
-        
         elif key == 'Hyperbolic_LLM_Llama_3_1_405B': 
             return 'meta-llama/Meta-Llama-3.1-405B-Instruct'
-        
         elif key == 'Hyperbolic_LLM_Llama_3_1_405B_FP8': 
             return 'meta-llama/Meta-Llama-3.1-405B-FP8'
-        
         elif key == 'Hyperbolic_LLM_Llama_3_1_8B': 
             return 'meta-llama/Meta-Llama-3.1-8B-Instruct'
-        
         elif key == 'Hyperbolic_LLM_Llama_3_1_70B': 
             return 'meta-llama/Meta-Llama-3.1-70B-Instruct'
-        
         elif key == 'Hyperbolic_LLM_Llama_3_70B': 
             return 'meta-llama/Meta-Llama-3-70B-Instruct'
-        
-        elif key == 'Hyperbolic_LLM_Hermes_3_70B': 
-            return 'NousResearch/Hermes-3-Llama-3.1-70B'
-        
+        # elif key == 'Hyperbolic_LLM_Hermes_3_70B': 
+            # return 'NousResearch/Hermes-3-Llama-3.1-70B'
         elif key == 'Hyperbolic_LLM_DeepSeek_V2_5': 
             return 'deepseek-ai/DeepSeek-V2.5'
         

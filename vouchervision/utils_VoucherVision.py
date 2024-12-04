@@ -15,7 +15,8 @@ from vouchervision.LLM_MistralAI import MistralHandler
 from vouchervision.LLM_local_cpu_MistralAI import LocalCPUMistralHandler
 from vouchervision.LLM_local_MistralAI import LocalMistralHandler 
 from vouchervision.LLM_local_custom_fine_tune import LocalFineTuneHandler 
-from vouchervision.LLM_Hyperbolic import HyperbolicHandler
+# from vouchervision.LLM_Hyperbolic import HyperbolicHandler
+from vouchervision.LLM_Hyperbolic_Outlines import HyperbolicHandler
 from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
 from vouchervision.general_utils import get_cfg_from_full_path
@@ -47,6 +48,9 @@ class VoucherVision():
         self.OCR_cost = 0.0
         self.OCR_tokens_in = 0
         self.OCR_tokens_out = 0
+        self.OCR_cost_in = 0.0
+        self.OCR_cost_out = 0.0
+        self.ocr_method = ""
 
         ### config_vals_for_permutation allows you to set the starting temp, top_k, top_p, seed....
         self.config_vals_for_permutation = config_vals_for_permutation
@@ -670,6 +674,8 @@ class VoucherVision():
         self.OCR_cost = 0.0
         self.OCR_tokens_in = 0
         self.OCR_tokens_out = 0
+        self.OCR_cost_in = 0
+        self.OCR_cost_out = 0
 
         ### Process_image() runs the OCR for text, handwriting, trOCR AND creates the overlay image
         OCR_Engine.process_image(self.do_create_OCR_helper_image, path_to_crop, self.logger)
@@ -731,6 +737,7 @@ class VoucherVision():
         llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, self.JSON_dict_structure, name_parts, is_azure, self.llm, self.config_vals_for_permutation)
 
         OCR_Engine = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, self.cfg, self.trOCR_model_version, self.trOCR_model, self.trOCR_processor, self.device)  
+        
 
         for i, path_to_crop in enumerate(self.img_paths):
             self.update_progress_report_batch(progress_report, i)
@@ -746,6 +753,13 @@ class VoucherVision():
             if json_report:
                 json_report.set_text(text_main='Starting OCR')
             self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, txt_file_path_OCR, txt_file_path_OCR_bounds, self.path_to_crop, OCR_Engine)
+            self.OCR_cost += OCR_Engine.cost
+            self.OCR_tokens_in += OCR_Engine.tokens_in
+            self.OCR_tokens_out += OCR_Engine.tokens_out
+            self.OCR_cost_in += OCR_Engine.cost_in
+            self.OCR_cost_out += OCR_Engine.cost_out
+            self.ocr_method = str(OCR_Engine.ocr_method)
+
             if json_report:
                 json_report.set_text(text_main='Finished OCR')
 
@@ -810,8 +824,8 @@ class VoucherVision():
         self.update_progress_report_final(progress_report)
         final_JSON_response = self.parse_final_json_response(final_JSON_response)
         
-        return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out, self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out
-    
+        return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out, self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out, self.OCR_cost_in, self.OCR_cost_out, self.ocr_method
+
 
     ##################################################################################################################################
     ################################################## LLM Helper Funcs ##############################################################
@@ -943,9 +957,9 @@ class VoucherVision():
             if is_real_run:
                 progress_report.update_overall(f"Transcribing Labels")
 
-            final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out = self.send_to_LLM(self.is_azure, progress_report, json_report, self.model_name)
+            final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, OCR_cost_in, OCR_cost_out, OCR_method = self.send_to_LLM(self.is_azure, progress_report, json_report, self.model_name)
             
-            return final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out
+            return final_json_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, OCR_cost_in, OCR_cost_out, OCR_method
 
         except Exception as e:
             self.logger.error(f"LLM call failed in process_specimen_batch: {e}")

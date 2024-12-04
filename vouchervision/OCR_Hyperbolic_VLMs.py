@@ -1,13 +1,11 @@
-import os
-import base64
-import requests
+import os, base64, requests
 from io import BytesIO
 from PIL import Image
 
 from OCR_resize_for_VLMs import resize_image_to_min_max_pixels
 from general_utils import calculate_cost
 
-PROMPT_SIMPLE = """Please perform OCR on this scientific image and extract all of the words and text verbatim. Do not explain your answer, only return the verbatim text:"""
+PROMPT_SIMPLE = """Please perform OCR on this scientific image and extract all of the words and text verbatim. Then correct any minor typos for scientific species names. Do not explain your answer, only return the verbatim text:"""
 PROMPT_OCR_AND_PARSE = """Perform OCR on this image. Return only the verbatim text without any explanation. Then complete the following task:
 Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
 The rules are:
@@ -139,7 +137,8 @@ class HyperbolicOCR:
 
 def main():
     # Example image path
-    img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
+    # img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
+    img_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
     
     # Replace with your actual Hyperbolic API key
     API_KEY = ""

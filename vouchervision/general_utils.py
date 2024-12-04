@@ -26,6 +26,7 @@ https://helpx.adobe.com/content/dam/help/en/photoshop/pdf/dng_commandline.pdf
 
 '''
 
+EXPENSE_REPORT_HEADERS = ['run','date','api_version','overall_cost', 'parsing_cost','ocr_cost','n_images', 'parsing_tokens_in', 'parsing_tokens_out', 'parsing_rate_in', 'parsing_rate_out', 'parsing_cost_in', 'parsing_cost_out','ocr_tokens_in', 'ocr_tokens_out', 'ocr_cost_in', 'ocr_cost_out', 'ocr_method']
 
 # https://stackoverflow.com/questions/287871/how-do-i-print-colored-text-to-the-terminal
 
@@ -70,49 +71,59 @@ def add_to_expense_report(dir_home, data):
         
         # If the file does not exist, write the header first
         if not file_exists:
-            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out','ocr_cost','ocr_tokens_in', 'ocr_tokens_out',])
+            writer.writerow(EXPENSE_REPORT_HEADERS)
         
         # Write the data row
         writer.writerow(data)
 
-def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, n_images, dir_home, logger):
+def save_token_info_as_csv(Dirs, LLM_version0, path_api_cost, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, OCR_cost_in, OCR_cost_out, OCR_method, n_images, dir_home, logger):
     if path_api_cost:
+        overall_cost = 0.0
         LLM_version = ModelMaps.get_version_mapping_cost(LLM_version0)
 
         # Define the CSV file path
         csv_file_path = os.path.join(Dirs.path_cost, Dirs.run_name + '.csv')
 
-        cost_in, cost_out, total_cost, rate_in, rate_out = calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out)
+        cost_in, cost_out, parsing_cost, rate_in, rate_out = calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out)
 
-        total_cost += OCR_cost
+        overall_cost = OCR_cost + parsing_cost
         
         # The data to be written to the CSV file
-        data = [Dirs.run_name, get_datetime(),LLM_version, total_cost, n_images, total_tokens_in, total_tokens_out, rate_in, rate_out, cost_in, cost_out,OCR_cost, OCR_tokens_in, OCR_tokens_out,]
+        data = [Dirs.run_name, get_datetime(),LLM_version, overall_cost, parsing_cost, OCR_cost, n_images, total_tokens_in, total_tokens_out, rate_in, rate_out, cost_in, cost_out, OCR_tokens_in, OCR_tokens_out, OCR_cost_in, OCR_cost_out, OCR_method]
         
         # Open the file in write mode
         with open(csv_file_path, mode='w', newline='') as file:
             writer = csv.writer(file)
             
             # Write the header
-            writer.writerow(['run','date','api_version','total_cost', 'n_images', 'tokens_in', 'tokens_out', 'rate_in', 'rate_out', 'cost_in', 'cost_out','ocr_cost','ocr_tokens_in', 'ocr_tokens_out'])
+            writer.writerow(EXPENSE_REPORT_HEADERS)
             
             # Write the data
             writer.writerow(data)
         # Create a summary string
         cost_summary = (f"Cost Summary for {Dirs.run_name}:\n"
-                        f"     API Cost In: ${rate_in} per 1000 Tokens\n" 
-                        f"     API Cost Out: ${rate_out} per 1000 Tokens\n" 
+                        f"          LLM PARSING COST\n" 
+                        f"     API Cost In: ${rate_in} per million Tokens\n" 
+                        f"     API Cost Out: ${rate_out} per million Tokens\n" 
                         f"     Tokens In: {total_tokens_in} - Cost: ${cost_in:.4f}\n"
                         f"     Tokens Out: {total_tokens_out} - Cost: ${cost_out:.4f}\n"
-                        f"     Images Processed: {n_images}\n"
-                        f"     Total Cost: ${total_cost:.4f}")
+                        f"          VLM OCR COST\n" 
+                        f"     OCR Method(s): {OCR_method}\n"
+                        f"     Tokens In: {OCR_tokens_in} - Cost: ${OCR_cost_in:.4f}\n"
+                        f"     Tokens Out: {OCR_tokens_out} - Cost: ${OCR_cost_out:.4f}\n"
+                        f"          Images Processed: {n_images}\n"
+                        f"     Parsing Cost: ${parsing_cost:.4f}"
+                        f"     OCR Cost: ${OCR_cost:.4f}"
+                        f"     TOTAL COST: ${overall_cost:.4f}")
         
         add_to_expense_report(dir_home, data)
         logger.info(cost_summary)
-        return total_cost
+        costs = [overall_cost, parsing_cost, OCR_cost]
+        return costs
 
     else:
-        return None           #TODO add config tests to expense_report
+        costs = [0.0, 0.0, 0.0]
+        return costs        #TODO add config tests to expense_report
 
 @st.cache_data
 def summarize_expense_report(path_expense_report):
@@ -135,27 +146,32 @@ def summarize_expense_report(path_expense_report):
 
     # Try to read the CSV file into a DataFrame
     try:
-        df = pd.read_csv(path_expense_report)
-
-        # Process each row in the DataFrame
-        for index, row in df.iterrows():
-            run_count += 1
-            total_cost_sum += row['total_cost'] + row['ocr_cost']
-            tokens_in_sum += row['tokens_in']
-            tokens_out_sum += row['tokens_out']
-            rate_in_sum += row['rate_in']
-            rate_out_sum += row['rate_out']
-            cost_in_sum += row['cost_in']
-            cost_out_sum += row['cost_out']
-            n_images_sum += row['n_images']
-            ocr_cost_sum += row['ocr_cost']
-            ocr_tokens_in_sum += row['ocr_tokens_in']
-            ocr_tokens_out_sum += row['ocr_tokens_out']
-            api_version_counts[row['api_version']] += 1
-
+        df = pd.read_csv(path_expense_report, delimiter=',', header=0)
+        print(df.head())
     except FileNotFoundError:
         print(f"The file {path_expense_report} does not exist.")
         return None
+    except Exception as e:
+        raise ValueError(f"The API costs table might have been significantly revised since you last used VoucherVision so the headers in the expense_report.csv file no longer match. To fix this, make a copy of the ./VoucherVision/expense_report/expense_report.csv and delete the original to allow VV to create a new file from scratch. The error message:\n{e}")
+
+    try:
+        # Process each row in the DataFrame
+        for index, row in df.iterrows():
+            run_count += 1
+            total_cost_sum += float(row['overall_cost'])
+            tokens_in_sum += float(row['parsing_tokens_in'])
+            tokens_out_sum += float(row['parsing_tokens_out'])
+            rate_in_sum += float(row['parsing_rate_in'])
+            rate_out_sum += float(row['parsing_rate_out'])
+            cost_in_sum += float(row['parsing_cost_in'])
+            cost_out_sum += float(row['parsing_cost_out'])
+            n_images_sum += float(row['n_images'])
+            ocr_cost_sum += float(row['ocr_cost'])
+            ocr_tokens_in_sum += float(row['ocr_tokens_in'])
+            ocr_tokens_out_sum += float(row['ocr_tokens_out'])
+            api_version_counts[row['api_version']] += 1
+    except Exception as e:
+        raise ValueError(f"Error summarizing costs for sidebar: {e}")
 
     # Calculate API version percentages
     api_version_percentages = {version: (count / run_count) * 100 for version, count in api_version_counts.items()}
@@ -163,7 +179,7 @@ def summarize_expense_report(path_expense_report):
     # Calculate cost per image for each API version
     cost_per_image_dict = {}
     for version, count in api_version_counts.items():
-        total_cost = df[df['api_version'] == version]['total_cost'].sum()
+        total_cost = df[df['api_version'] == version]['overall_cost'].sum()
         n_images = df[df['api_version'] == version]['n_images'].sum()
         cost_per_image = total_cost / n_images if n_images > 0 else 0
         cost_per_image_dict[version] = cost_per_image

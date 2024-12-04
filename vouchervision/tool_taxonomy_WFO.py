@@ -1,4 +1,4 @@
-import requests
+import requests, json
 from urllib.parse import urlencode
 from Levenshtein import ratio
 from fuzzywuzzy import fuzz
@@ -227,10 +227,22 @@ def validate_taxonomy_WFO(tool_WFO, record_dict, replace_if_success_wfo=False):
     except:
         return record_dict, Matcher.NULL_DICT
 
-'''
+
 if __name__ == "__main__":
-    Matcher = WFONameMatcher()
+    Matcher = WFONameMatcher(True)
     # input_string = "Rhopalocarpus alterfolius"
+    test1 ={
+        "order": "",
+        "family": "Leguminosae",
+        "scientificName": "Andira inermis",
+        "scientificNameAuthorship": "H.B.K.",
+
+        "genus": "Andira",
+        "subgenus": "",
+        "specificEpithet": "inermis",
+        "infraspecificEpithet": "",
+    }
+
     record_exact_match ={
         "order": "Malpighiales",
         "family": "Hypericaceae",
@@ -319,7 +331,8 @@ if __name__ == "__main__":
         "specificEpithet": "proli",
         "infraspecificEpithet": "",
     }
-    options = [record_exact_match,
+    options = [test1,
+               record_exact_match,
                record_partialPrimary_exactSecondary,
                record_exactPrimary_partialSecondary,
                record_partialPrimary_partialSecondary,
@@ -328,6 +341,5 @@ if __name__ == "__main__":
                record_partialPrimary_errorSecondary,
                record_errorPrimary_errorSecondary]
     for opt in options:
-        simplified_response = Matcher.check_WFO(opt)
+        simplified_response = Matcher.check_WFO(opt, replace_if_success_wfo=False)
         print(json.dumps(simplified_response, indent=4))
-'''

@@ -73,9 +73,12 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
     # Process labels
     Voucher_Vision = VoucherVision(cfg, logger, dir_home, path_custom_prompts, Project, Dirs, is_hf)
     n_images = len(Voucher_Vision.img_paths)
-    last_JSON_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out = Voucher_Vision.process_specimen_batch(progress_report, json_report, is_real_run)
+    last_JSON_response, final_WFO_record, final_GEO_record, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, OCR_cost_in, OCR_cost_out, OCR_method = Voucher_Vision.process_specimen_batch(progress_report, json_report, is_real_run)
 
-    total_cost = save_token_info_as_csv(Dirs, cfg['leafmachine']['LLM_version'], path_api_cost, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, n_images, dir_home, logger)
+    costs = save_token_info_as_csv(Dirs, cfg['leafmachine']['LLM_version'], path_api_cost, total_tokens_in, total_tokens_out, OCR_cost, OCR_tokens_in, OCR_tokens_out, OCR_cost_in, OCR_cost_out, OCR_method, n_images, dir_home, logger)
+    total_cost = costs[0]
+    parsing_cost = costs[1]
+    ocr_cost = costs[2]
 
     t_overall_s = perf_counter()
     logger.name = 'Run Complete! :)'
@@ -106,6 +109,8 @@ def voucher_vision(cfg_file_path, dir_home, path_custom_prompts, cfg_test, progr
             'n_failed_OCR': Voucher_Vision.n_failed_OCR, 
             'n_failed_LLM_calls': Voucher_Vision.n_failed_LLM_calls, 
             'zip_filepath': zip_filepath,
+            'parsing_cost': parsing_cost,
+            'ocr_cost': ocr_cost,
             }
 
 def make_zipfile(base_dir, output_filename):

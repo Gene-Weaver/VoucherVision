@@ -76,18 +76,18 @@ AZURE_GPT_3_5:
 
 # Google Gemini
 # https://ai.google.dev/pricing
-# UPDATED: 2024-09-12 14:38:32
-GEMINI_PRO:
-  in: 0.5
-  out: 1.5
+# UPDATED: 2024-12-02 14:38:32
+GEMINI_1_5_FLASH_8B:
+  in: 0.0375
+  out: 0.15
 # UPDATED: 2024-09-12 14:38:32
 GEMINI_1_5_FLASH:
   in: 0.075
   out: 0.3
 # UPDATED: 2024-09-12 14:38:32
 GEMINI_1_5_PRO:
-  in: 3.5
-  out: 10.5
+  in: 1.25
+  out: 5.00
 
 # Google PaLM 2 (text-bison, text-unicorn)
 # https://cloud.google.com/vertex-ai/docs/generative-ai/pricing
@@ -192,8 +192,9 @@ Hyperbolic_LLM_Llama_3_2_3B:
 Hyperbolic_LLM_Qwen_2_5_Coder_32B:
   in: 0.2
   out: 0.2
-
-
+Hyperbolic_LLM_QwQ_32B_Preview:
+  in: 0.2
+  out: 0.2
 ################
 # Local Models
 ################

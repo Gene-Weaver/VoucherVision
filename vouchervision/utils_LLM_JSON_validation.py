@@ -2,16 +2,7 @@ import json
 
 
 def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
-    data = validate_JSON(data)
-    if data is None:
-        return None
-    else:
-        # Make sure that there are no literal list [] objects in the dict
-        for key, value in data.items():
-            if value is None:
-                data[key] = ''
-            elif isinstance(value, str):
-                if value.lower() in ['unknown','not provided', 'missing', 'na', 'none', 'n/a', 'null', 'unspecified',
+    list_of_nulls = ['unknown','not provided', 'missing', 'na', 'none', 'n/a', 'null', 'unspecified',
                                      'TBD', 'tbd',
                                     'not provided in the text', 'not found in the text', 'Not found in OCR text', 'not found in ocr text',
                                     'not in the text', 'not provided', 'not found',
@@ -26,6 +17,12 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
                                     "not specified in text",
                                     "not specified in ocr",
                                     "not specified",
+                                    "google handwritten ocr",
+                                    "google printed ocr",
+                                    "gpt-4o-mini ocr",
+                                    "qwen2-vl-7b-instruct ocr",
+                                    "qwen2-vl-72b-instruct ocr",
+                                    "llama-3.2-90b-vision-instruct ocr",
                                     'not in the ocr text', 
                                     'Not provided in ocr text',
                                     'not provided in ocr text',
@@ -33,7 +30,53 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
                                     'n/a, n/a, n/a','n/a n/a, n/a','n/a, n/a n/a','n/a n/a n/a',
                                     'n/a, n/a, n/a, n/a','n/a n/a n/a n/a','n/a n/a, n/a, n/a','n/a, n/a n/a, n/a','n/a, n/a, n/a n/a',
                                     'n/a n/a n/a, n/a','n/a, n/a n/a n/a',
-                                    'n/a n/a, n/a n/a',]:
+                                    'n/a n/a, n/a n/a',]
+    list_of_ocr_nulls = [
+            'Pixtral-12B-2409 OCR',
+            'Qwen2-VL-7B-Instruct OCR',
+            'Qwen2-VL-72B-Instruct OCR',
+            'Llama-3.2-90B-Vision-Instruct OCR',
+            'Qwen2.5-72B-Instruct OCR',
+            'Qwen2.5-Coder-32B-Instruct OCR',
+            'Llama-3.2-3B-Instruct OCR',
+            'Meta-Llama-3.1-405B-Instruct OCR',
+            'Meta-Llama-3.1-405B-FP8 OCR',
+            'Meta-Llama-3.1-8B-Instruct OCR',
+            'Meta-Llama-3.1-70B-Instruct OCR',
+            'Meta-Llama-3-70B-Instruct OCR',
+            'Hermes-3-Llama-3.1-70B OCR',
+            'DeepSeek-V2.5 OCR',
+            'Gemini-1.5-Pro OCR',
+            'Gemini OCR',
+            'Pixtral-12B-2409',
+            'Qwen2-VL-7B-Instruct',
+            'Qwen2-VL-72B-Instruct',
+            'Llama-3.2-90B-Vision-Instruct',
+            'Qwen2.5-72B-Instruct',
+            'Qwen2.5-Coder-32B-Instruct',
+            'Llama-3.2-3B-Instruct',
+            'Meta-Llama-3.1-405B-Instruct',
+            'Meta-Llama-3.1-405B-FP8',
+            'Meta-Llama-3.1-8B-Instruct',
+            'Meta-Llama-3.1-70B-Instruct',
+            'Meta-Llama-3-70B-Instruct',
+            'Hermes-3-Llama-3.1-70B',
+            'DeepSeek-V2.5',
+            'Gemini-1.5-Pro',
+            'Gemini',
+            ]
+    list_of_ocr_nulls_lower = [item.lower() for item in list_of_ocr_nulls]
+    list_of_nulls_lower = [item.lower() for item in list_of_nulls]
+    data = validate_JSON(data)
+    if data is None:
+        return None
+    else:
+        # Make sure that there are no literal list [] objects in the dict
+        for key, value in data.items():
+            if value is None:
+                data[key] = ''
+            elif isinstance(value, str):
+                if value.lower() in list_of_ocr_nulls_lower or value.lower() in list_of_nulls_lower:
                     data[key] = ''
             elif isinstance(value, list):
                 # Join the list elements into a single string

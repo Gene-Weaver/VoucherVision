@@ -1606,6 +1606,8 @@ def content_header():
                 st.session_state['formatted_json_WFO'] = voucher_vision_output['final_WFO_record']
                 st.session_state['formatted_json_GEO'] = voucher_vision_output['final_GEO_record']
                 total_cost = voucher_vision_output['total_cost']
+                parsing_cost = voucher_vision_output['parsing_cost']
+                ocr_cost = voucher_vision_output['ocr_cost']
                 n_failed_OCR = voucher_vision_output['n_failed_OCR']
                 n_failed_LLM_calls = voucher_vision_output['n_failed_LLM_calls']
                 st.session_state['zip_filepath'] = voucher_vision_output['zip_filepath']
@@ -1627,11 +1629,17 @@ def content_header():
                 if total_cost:
                     with col_run_4:
                         st.success(f":money_with_wings: This run cost :heavy_dollar_sign:{total_cost:.4f}")
+                        st.success(f"Parsing\: \${parsing_cost:.4f} OCR\: \${ocr_cost:.4f}")
                 else:
-                    with col_run_4:
-                        st.info(f":money_with_wings: This run cost :heavy_dollar_sign:{total_cost:.4f}")
+                    pass
+                    # with col_run_4:
+                    #     st.info(f":money_with_wings: This run cost :heavy_dollar_sign:{total_cost:.4f}")
+                    #     st.info(f"Parsing\: \${parsing_cost:.4f} OCR\: \${ocr_cost:.4f}")
+
+
             if st.session_state['zip_filepath']:
                 create_download_button(st.session_state['zip_filepath'], col_run_1,key=97863332)
+            
         else:
             st.button("Start Transcription", type='primary', disabled=True)
             with col_run_4:
@@ -2136,6 +2144,10 @@ def content_ocr_method():
                 "LOCAL Qwen-2-VL", 
                 "LOCAL Florence-2", 
                 "GPT-4o-mini", 
+                "GPT-4o", 
+                "Gemini-1.5-Pro",
+                "Gemini-1.5-Flash",
+                "Gemini-1.5-Flash-8B",
                 "Hyperbolic Pixtral-12B-2409",
                 "Hyperbolic Llama-3.2-90B-Vision-Instruct",
                 "Hyperbolic Qwen2-VL-7B-Instruct",
@@ -2200,7 +2212,13 @@ def content_ocr_method():
             "Google Vision Handwritten": 'hand',
             "Google Vision Printed": 'normal',
             "LOCAL Qwen-2-VL": "LOCAL Qwen-2-VL",
+
             "GPT-4o-mini": "GPT-4o-mini",
+            "GPT-4o": "GPT-4o",
+
+            "Gemini-1.5-Pro": "Gemini-1.5-Pro",
+            "Gemini-1.5-Flash": "Gemini-1.5-Flash",
+            "Gemini-1.5-Flash-8B": "Gemini-1.5-Flash-8B",
             
             "Hyperbolic Pixtral-12B-2409": "Pixtral-12B-2409",
             "Hyperbolic Llama-3.2-90B-Vision-Instruct": "Llama-3.2-90B-Vision-Instruct",
@@ -2264,13 +2282,13 @@ def content_ocr_method():
             captions=["'large' requires at least 16GB of VRAM", "'base' requires 12GB of VRAM."])
 
     if "GPT-4o-mini" in selected_OCR_options:
-        st.subheader('Options for :violet[GPT-4o-mini]')
+        st.subheader('Options for :violet[GPT-4o-mini] and :violet[GPT-4o]')
         default_resolution = st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution']
 
         st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution'] = st.radio(
-            "Select level of detail for :violet[GPT-4o-mini] OCR. We only recommend 'high' detail in most scenarios.",
+            "Select level of detail for :violet[GPT-4o] OCR. We only recommend 'high' detail in most scenarios.",
             ["high", "low", ],
-            captions=[f"$0.50 per 1,000", f"$5 - $10 per 1,000"])
+            captions=[f"\$5-\$10 per 1,000 images",f"~\$0.50 per 1,000 images",])
 
 
     if 'LLaVA' in selected_OCR_options:
@@ -2603,12 +2621,12 @@ def render_expense_report_summary():
         # Iterate through the expense report to accumulate costs and image counts
         for index, row in expense_report.iterrows():
             api_version = row['api_version']
-            total_cost = row['total_cost']
+            total_cost = row['overall_cost']
             n_images = row['n_images']
             total_images += n_images  # Keep track of total images processed
             if api_version not in cost_per_image_dict:
-                cost_per_image_dict[api_version] = {'total_cost': 0, 'n_images': 0}
-            cost_per_image_dict[api_version]['total_cost'] += total_cost
+                cost_per_image_dict[api_version] = {'overall_cost': 0, 'n_images': 0}
+            cost_per_image_dict[api_version]['overall_cost'] += total_cost
             cost_per_image_dict[api_version]['n_images'] += n_images
 
         api_versions = list(cost_per_image_dict.keys())
@@ -2616,7 +2634,7 @@ def render_expense_report_summary():
         
         # Calculate the cost per image for each API version
         for version, cost_data in cost_per_image_dict.items():
-            total_cost = cost_data['total_cost']
+            total_cost = cost_data['overall_cost']
             n_images = cost_data['n_images']
             # Calculate the cost per image for this version
             cost_per_image = total_cost / n_images if n_images > 0 else 0
@@ -2642,7 +2660,7 @@ def render_expense_report_summary():
         # Sum the total cost for each API version
         for index, row in expense_report.iterrows():
             api_version = row['api_version']
-            total_cost = row['total_cost']
+            total_cost = row['overall_cost']
             if api_version not in total_cost_by_version:
                 total_cost_by_version[api_version] = 0
             total_cost_by_version[api_version] += total_cost
