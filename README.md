@@ -7,6 +7,7 @@ Table of Contents
 
 * [Table of Contents](#table-of-contents)
 * [About](#about)
+* [Updates](#updates)
 * [Roadmap and New Features List](#roadmap-and-new-features-list)
 * [Try our public demo!](#try-our-public-demo)
 * [Installing VoucherVision](#installing-VoucherVision)
@@ -43,6 +44,25 @@ Table of Contents
 
 For inquiries, feedback (or if you want to get involved!) [please complete our form](https://docs.google.com/forms/d/e/1FAIpQLSe2E9zU1bPJ1BW4PMakEQFsRmLbQ0WTBI2UXHIMEFm4WbnAVw/viewform?usp=sf_link).
 
+## **UPDATES**
+
+December 4, 2024
+- This update will require you to delete your `expense_report.csv` file, allowing VoucherVision to create a new one. The headers were updated, so new runs will not be able to merge with existing data. You can make a copy of the file for your records and then delete `./VoucherVision/expense_report/expense_report.csv`
+- I am transitioning away from Langchain, calls to LLM_XXXXX.py files will undergo changes
+- Many, many new OCR engines are supported including 
+    - All current Hyperbolic VLMs ("Qwen/Qwen2-VL-72B-Instruct", "Qwen/Qwen2-VL-7B-Instruct", "mistralai/Pixtral-12B-2409") [Hyperbolic](https://app.hyperbolic.xyz/models)
+    - Google Gemini models (Gemini-1.5-Pro, Gemini-1.5-Flash, Gemini-1.5-Flash-8B)
+    - OpenAI (GPT4o-mini, GPT4o)
+    - Locally hosted models, your computer ***must*** have an NVIDIA GPU with at least 24 GB of VRAM (Florence-2, Qwen2-VL) 
+- Since we are moving toward VLMs for OCR, I have improved cost tracking to include these too
+- THE BEST OCR + LLM OPTIONS RIGHT NOW:
+    - The first/only OCR engine to reliably read the difficult cursive in the included demo image is `Gemini-1.5-Pro`!
+    - The best option for locally hosted OCR is by far `Qwen2-VL` with `Florence-2` coming in 2nd
+    - The best LLMs for parsing the OCR are still `Gemini-1.5-Pro` and `GPT-4o` due to their 'knowledge' and ability to correct/infer OCR errors/omissions
+    - The best value is `GPT-4o-mini` and `Gemini-1.5-Flash`, which are highly capable at parsing, but lack the ability to significantly correct/infer OCR errors/omissions
+    - The best locally hosted LLM seems to be `mistralai/Mistral-Small-Instruct-2409`, but I still need to add more local options that work reliably with 12-24GB of VRAM, which are usually 7B models or quantized versions of the full precision models
+- The [HuggingFace](https://huggingface.co/spaces/phyloforfun/VoucherVision) version does not include all of the OCR and LLM options that are available if you install VoucherVision locally
+
 ## **Overview:**  
 Initiated by the **University of Michigan Herbarium**, VoucherVision harnesses the power of large language models (LLMs) to transform the transcription process of natural history specimen labels. Our workflow is as follows:
 - Text extraction from specimen labels with **LeafMachine2**.
@@ -69,14 +89,14 @@ Thanks to all of our collaborating institutions!
     - [x] Unified with local version
     - [X] Visualize locations on a map (verbatim and decimal)
     - [x] Tested with batch of 300 images
-    - [ ] Optimize for +300 images at a time (not recommended unless paying for HF persistent storage)
+    - [X] Optimize for +300 images at a time (not recommended unless paying for HF persistent storage)
 - [x] Modular Prompt Builder
     - [x] Build, save, load, submit to VV library
-    - [ ] Test whether order of column matters
+    - [X] Test whether order of column matters
     - [X] Provide 3 standard prompts: long, medium, short
-    - [ ] Test shorter prompt effectiveness
+    - [X] Test shorter prompt effectiveness
 - [X] API Availability Test/Visualization
-    - [ ] Lock-out unsupported methods
+    - [X] Lock-out unsupported methods
 - [ ] Option to load existing OCR into VoucherVision workflow
 - [X] Save/load VV settings
 - [X] LLM Cost Calculator
