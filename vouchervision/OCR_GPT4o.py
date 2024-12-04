@@ -24,7 +24,13 @@ class GPT4oOCR:
         image.save(buffered, format="JPEG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-    def ocr_gpt4o(self, image_path, model_name="gpt-4o-mini", resolution="high", max_tokens=1024, do_resize=True, prompt=None):
+    def ocr_gpt4o(self, image_path, model_name="gpt-4o-mini", resolution="high", max_tokens=1024, do_resize=True, prompt=None,
+                  temperature=None, top_p=None, seed=123456):
+        
+        # Temp is used first
+        if temperature:
+            top_p = None
+
         self.model_name = model_name
         overall_cost_in = 0
         overall_cost_out = 0
@@ -51,8 +57,10 @@ class GPT4oOCR:
         }
 
         if prompt is None:
-            # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
-            keys = ["default_plus_minorcorrect_idhandwriting",]
+            # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_excludestricken_idhandwriting_gpt4",
+            #         "handwriting_only", "species_only", "detailed_metadata"]
+            # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting_gpt4", "species_only",]
+            keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
 
             prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
             for key, prompt in zip(keys, prompts):
@@ -77,7 +85,10 @@ class GPT4oOCR:
                         ]
                         }
                     ],
-                    "max_tokens": max_tokens
+                    "max_completion_tokens": max_tokens,
+                    "temperature": temperature,
+                    "seed": seed,
+                    "top_p": top_p,
                     }
 
                 response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
@@ -101,6 +112,10 @@ class GPT4oOCR:
                     overall_total_cost += total_cost
                     overall_tokens_in += tokens_in
                     overall_tokens_out += tokens_out
+
+                    # if key == "species_only":
+                    #     parsed_answer = f"Based on context, determine which of these scientific names is the primary name: {parsed_answer}"
+
                     if len(keys) > 1:
                         overall_response += (parsed_answer + "\n\n")
                     else:
@@ -117,23 +132,83 @@ class GPT4oOCR:
         
 
 def main():
+    run_sweep = True
     # img_path = '/home/brlab/Downloads/gem_2024_06_26__02-26-02/Cropped_Images/By_Class/label/1.jpg'
-    img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
+    # img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
+    img_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     
     # $env:OPENAI_API_KEY="KEY"
     API_KEY = ""
 
     
-    ocr = GPT4oOCR(API_KEY, model_name="gpt-4o-mini")
-    ocr = GPT4oOCR(API_KEY, model_name="gpt-4o")
+    # ocr = GPT4oOCR(API_KEY, model_name="gpt-4o-mini")
+    ocr = GPT4oOCR(API_KEY)
     
-    parsed_answer, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr.ocr_gpt4o(img_path, resolution="low", max_tokens=1024)
-    print(f"Parsed Answer: {parsed_answer}")
-    print(f"Total Cost: {total_cost}")
+    # parsed_answer, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr.ocr_gpt4o(img_path, resolution="low", max_tokens=1024)
+    # print(f"Parsed Answer: {parsed_answer}")
+    # print(f"Total Cost: {total_cost}")
     
-    parsed_answer, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr.ocr_gpt4o(img_path, resolution="high", max_tokens=1024)
-    print(f"Parsed Answer: {parsed_answer}")
-    print(f"Total Cost: {total_cost}")
+    # parsed_answer, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr.ocr_gpt4o(img_path, resolution="high", max_tokens=1024)
+    # print(f"Parsed Answer: {parsed_answer}")
+    # print(f"Total Cost: {total_cost}")
+
+    if run_sweep:
+        import csv
+
+        success_counts = {}
+        fail_counts = {}
+
+        reps = [0, 1, 2]
+        temps = [0, 0.05, 0.1, 0.2, 0.5, 0.75, 1.0, 1.25,]
+        ps = [0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9, 1]
+        # reps = [0,]
+        # temps = [0, ]
+        # ps = [0.1,]
+
+        for rep in reps:
+            for t in temps:
+                response, _, _, _, _, _, _, _ = ocr.ocr_gpt4o(img_path, model_name="gpt-4o",
+                                                              resolution="high", max_tokens=1024, temperature=t, seed=123456)
+                param_set = (t, 'N/A', response)  # N/A signifies no top_p used
+
+                if "jouvea pilosa" in response.lower():
+                    print("<<<< SUCCESS >>>>")
+                    print(f"t {t}, p 'N/A'")
+                    success_counts[param_set] = success_counts.get(param_set, 0) + 1
+                else:
+                    print("                     <<<< FAIL >>>>")
+                    print(f"                     t {t}, p 'N/A'")
+                    fail_counts[param_set] = fail_counts.get(param_set, 0) + 1
+
+            for p in ps:
+                response, _, _, _, _, _, _, _ = ocr.ocr_gpt4o(img_path, model_name="gpt-4o",
+                                                              resolution="high", max_tokens=1024, top_p=p, seed=123456)
+                param_set = ('N/A', p, response)  # N/A signifies no temperature used
+
+                if "jouvea pilosa" in response.lower():
+                    print("<<<< SUCCESS >>>>")
+                    print(f"t 'N/A', p {p}")
+                    success_counts[param_set] = success_counts.get(param_set, 0) + 1
+                else:
+                    print("                     <<<< FAIL >>>>")
+                    print(f"                     t 'N/A', p {p}")
+                    fail_counts[param_set] = fail_counts.get(param_set, 0) + 1
+
+        # Display the results
+        print("Success counts:", success_counts)
+        print("Fail counts:", fail_counts)
+
+        # Save to CSV
+        with open('GPT4o_OCR_parameter_sweep_results_wSpecies_notGPT4version.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Temperature', 'Top P', 'Success Count', 'Fail Count', 'Response'])
+            
+            all_params = set(success_counts.keys()).union(set(fail_counts.keys()))
+            for params in all_params:
+                t, p, response = params
+                success = success_counts.get(params, 0)
+                fail = fail_counts.get(params, 0)
+                writer.writerow([t, p, success, fail, response])
 
     
 

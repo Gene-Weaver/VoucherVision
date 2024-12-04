@@ -6,15 +6,19 @@ class OCRPromptCatalog:
     def __init__(self):
         # Dictionary to store prompts by version
         self.prompts = {
-            "default_plus_minorcorrect_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim. Then correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
+            "default_plus_minorcorrect_excludestricken_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted, but also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
+            
+            "default_plus_minorcorrect_excludestricken_idhandwriting_gpt4": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted. Use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Your corrections should be minimal and should focus character recognition errors. The correction cannot have more or fewer characters than the original word. Do not explain your answer, only return the verbatim text:""",
+            
+            "default_plus_minorcorrect_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
 
-            "default_plus_minorcorrect": """Please perform OCR on this scientific image and extract all of the words and text verbatim. Then correct any minor typos for scientific species names. Do not explain your answer, only return the verbatim text:""",
+            "default_plus_minorcorrect": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. Do not explain your answer, only return the verbatim text:""",
 
             "default": """Please perform OCR on this scientific image and extract all of the words and text verbatim. Do not explain your answer, only return the verbatim text:""",
 
             "handwriting_only": """Identify and extract all handwritten text from this image. Do not include printed text.Only return the handwritten text verbatim:""",
 
-            "species_only": """Extract all scientific species names from this image. Do not include any other text. Correct minor typos in the species names if needed. Return only the species names:""",
+            "species_only": """Extract all scientific species names from this image. Do not include any other text. Do not include text that has been stricken, crossed out, or redacted. Correct minor typos in the species names if needed. Return only the species names:""",
 
             "detailed_metadata": """Extract all text from this scientific image, including metadata, species names, and handwritten notes. Correct any minor typos in species names and categorize the extracted text by type (metadata, species names, handwritten notes). Return the result in JSON format:""",
         }

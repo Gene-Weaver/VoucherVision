@@ -13,7 +13,7 @@ https://ai.google.dev/gemini-api/docs/vision?lang=python
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-1.5-pro", max_output_tokens=1024, temperature=1, top_p=0, top_k=1, do_resize_img=False):
+    def __init__(self, api_key, model_name="gemini-1.5-pro", max_output_tokens=1024, temperature=0.5, top_p=0.8, top_k=10, seed=123456, do_resize_img=False):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
@@ -28,6 +28,7 @@ class OCRGeminiProVision:
             "top_k": top_k,
             "max_output_tokens": max_output_tokens,
             "response_mime_type": "text/plain",
+            # "seed": seed,
         }
         self.model = genai.GenerativeModel(
             model_name=self.model_name, generation_config=self.generation_config
@@ -54,15 +55,15 @@ class OCRGeminiProVision:
 
             # Upload the resized image to Gemini
             file = genai.upload_file(temp_file_path, mime_type=mime_type)
-            print(f"Uploaded file '{file.display_name}' as: {file.uri}")
+            # print(f"Uploaded file '{file.display_name}' as: {file.uri}")
             os.remove(temp_file_path)
         else:
             file = genai.upload_file(image_path, mime_type=mime_type)
-            print(f"Uploaded file '{image_path}'")
+            # print(f"Uploaded file '{image_path}'")
 
         return file
 
-    def ocr_gemini(self, image_path, prompt=None):
+    def ocr_gemini(self, image_path, prompt=None, temperature=None, top_p=None, top_k=None, max_output_tokens=None, seed=123456):
         """
         Transcribes the text in the image using the Gemini model.
 
@@ -70,6 +71,17 @@ class OCRGeminiProVision:
         :param prompt: Instruction for the transcription task.
         :return: Transcription result as plain text.
         """
+        if temperature:
+            self.generation_config["temperature"] = temperature
+        if top_p:
+            self.generation_config["top_p"] = top_p
+        if top_k:
+            self.generation_config["top_k"] = top_k
+        if max_output_tokens:
+            self.generation_config["max_output_tokens"] = max_output_tokens
+        # self.generation_config["seed"] = seed
+
+        
         overall_cost_in = 0
         overall_cost_out = 0
         overall_total_cost = 0
@@ -79,6 +91,7 @@ class OCRGeminiProVision:
 
         if prompt is None:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
+            # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
             keys = ["default_plus_minorcorrect_idhandwriting",]
 
             prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
@@ -89,7 +102,8 @@ class OCRGeminiProVision:
 
                 # Generate content directly without starting a chat session
                 response = self.model.generate_content(
-                    [prompt, uploaded_file]
+                    [prompt, uploaded_file],
+                    generation_config=self.generation_config
                 )
                 try:
                     tokens_in = response.usage_metadata.prompt_token_count
@@ -111,10 +125,15 @@ class OCRGeminiProVision:
                     overall_total_cost += total_cost
                     overall_tokens_in += tokens_in
                     overall_tokens_out += tokens_out
+
+                    parsed_answer = response.text
+                    # if key == "species_only":
+                    #     parsed_answer = f"Based on context, determine which of these scientific names is the primary name: {parsed_answer}"
+
                     if len(keys) > 1:
-                        overall_response += (response.text + "\n\n")
+                        overall_response += (parsed_answer + "\n\n")
                     else:
-                        overall_response = response.text
+                        overall_response = parsed_answer
                 except Exception as e:
                     print(f"OCR failed: {e}")
 
@@ -126,10 +145,81 @@ class OCRGeminiProVision:
 
 # Example usage
 if __name__ == "__main__":
+    run_sweep = True
     API_KEY = "" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
-    image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
+    
+    
+    # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
+    image_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     ocr_tool = OCRGeminiProVision(api_key=API_KEY)
 
-    # Transcribe text from the image
-    response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path)
-    print("Transcription Result:\n", response)
+    # response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0)
+
+
+    # Revisit seed, https://github.com/google-gemini/generative-ai-python/issues/605
+    # as of 12/4/2024 it was not available in the SDK yet
+    if run_sweep:
+        import csv
+
+        success_counts = {}
+        fail_counts = {}
+
+        # Transcribe text from the image
+        reps = [0,1,2,]
+        temps = [0, 0.5, 1, 1.5,]
+        ks = [1, 3, 10, 40]
+        ps = [0, 0.8, 0.5, 0.3]
+        # reps = [0,]
+        # temps = [0, ]
+        # ks = [1, ]
+        # ps = [0, ]
+        
+
+        for rep in reps:
+
+            for t in temps:
+                for k in ks:
+                    for p in ps:
+                        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=t, top_k=k, top_p=p, seed=123456)
+                        # print("Transcription Result:\n", response)
+
+                        # Define the parameter tuple for tracking
+                        param_set = (t, k, p, response)
+
+                        if "jouvea pilosa" in response.lower():
+                            # Increment success count
+                            if param_set in success_counts:
+                                success_counts[param_set] += 1
+                            else:
+                                success_counts[param_set] = 1
+                            print("<<<< SUCCESS >>>>")
+                            print(f"t {t}, k {k}, p {p}")
+                            # print("Transcription Result:\n", response)
+                        else:
+                            # Increment failure count
+                            if param_set in fail_counts:
+                                fail_counts[param_set] += 1
+                            else:
+                                fail_counts[param_set] = 1
+                            print("                     <<<< FAIL >>>>")
+                            print(f"                     t {t}, k {k}, p {p}")
+        # Display the results
+        print("Success counts:", success_counts)
+        print("Fail counts:", fail_counts)
+
+        # Save to CSV
+        with open('Gemini_OCR_parameter_sweep_results_noSpecies.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            # Write headers
+            writer.writerow(['Temperature', 'Top K', 'Top P', 'Success Count', 'Fail Count', 'Response'])
+            
+            # Extract all unique parameter sets
+            all_params = set(success_counts.keys()).union(set(fail_counts.keys()))
+            
+            # Write data rows
+            for params in all_params:
+                t, k, p, response = params
+                success = success_counts.get(params, 0)
+                fail = fail_counts.get(params, 0)
+                writer.writerow([t, k, p, success, fail, response])
+

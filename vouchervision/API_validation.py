@@ -1,4 +1,4 @@
-import os, io, openai, vertexai, json, tempfile
+import os, io, openai, vertexai, json, tempfile, requests
 import webbrowser
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage
@@ -28,11 +28,12 @@ class APIvalidation:
         self.is_hf = is_hf
         self.formatted_date = self.get_formatted_date()
 
-        self.HF_MODEL_LIST = ['microsoft/Florence-2-large','microsoft/Florence-2-base',
-            'microsoft/trocr-base-handwritten','microsoft/trocr-large-handwritten',
-            'google/gemma-2-9b','google/gemma-2-9b-it','google/gemma-2-27b','google/gemma-2-27b-it',
-            'mistralai/Mistral-7B-Instruct-v0.3','mistralai/Mixtral-8x22B-v0.1','mistralai/Mixtral-8x22B-Instruct-v0.1',
-            'unsloth/mistral-7b-instruct-v0.3-bnb-4bit'
+        self.HF_MODEL_LIST = ['mistralai/Mistral-Small-Instruct-2409','mistralai/Mistral-7B-Instruct-v0.3','mistralai/Mixtral-8x22B-v0.1','mistralai/Mixtral-8x22B-Instruct-v0.1',
+                              'meta-llama/Llama-3.2-1B','meta-llama/Llama-3.2-3B','meta-llama/Llama-3.2-11B-Vision-Instruct',
+                            'microsoft/Florence-2-large','microsoft/Florence-2-base',
+                            'microsoft/trocr-base-handwritten','microsoft/trocr-large-handwritten',
+                            'google/gemma-2-9b','google/gemma-2-9b-it','google/gemma-2-27b','google/gemma-2-27b-it',
+                            'unsloth/mistral-7b-instruct-v0.3-bnb-4bit'
             ]
 
     def get_formatted_date(self):
@@ -302,23 +303,43 @@ class APIvalidation:
 
         while attempts < max_attempts:
             try:
-                model_info = api.model_info(model_id, use_auth_token=k_huggingface)
-                print(f"Access to model '{model_id}' is granted.")
-                return "valid"
+                files = api.list_repo_files(model_id, token=k_huggingface)
+                # Check if a common small file like 'config.json' is present
+                if 'config.json' in files:
+                    file_url = f"https://huggingface.co/{model_id}/resolve/main/config.json"
+                    # Attempt to fetch the file using the token for authentication
+                    headers = {'Authorization': f'Bearer {k_huggingface}'} if k_huggingface else {}
+                    response = requests.get(file_url, headers=headers)
+                    
+                    # Check the response status
+                    if response.status_code == 200:
+                        print(f"Access to model '{model_id}' is granted.")
+                        return "Valid"
+                    else:
+                        print(f"Access to model '{model_id}' denied or requires additional steps. Status code: {response.status_code}")
+                        print(f"        Visit https://huggingface.co/{model_id} to accept terms.")
+                        return "Invalid"
+                else:
+                    print(f"'config.json' not found in {model_id}.")
+                    return "Invalid"
+            except Exception as e:
+                print(f"Error accessing model '{model_id}': {e}")
+                return "Invalid"
+
             except Exception as e:
                 error_message = str(e)
                 if 'awaiting a review' in error_message:
                     print(f"Access to model '{model_id}' is awaiting review. (Under Review)")
                     return "under_review"
-                print(f"Access to model '{model_id}' is denied. Please accept the terms and conditions.")
-                print(f"Error: {e}")
-                webbrowser.open(f"https://huggingface.co/{model_id}")
-                input("Press Enter after you have accepted the terms and conditions...")
+                # print(f"Access to model '{model_id}' is denied. Please accept the terms and conditions.")
+                # print(f"Error: {e}")
+                # webbrowser.open(f"https://huggingface.co/{model_id}")
+                # input("Press Enter after you have accepted the terms and conditions...")
 
             attempts += 1
 
         print(f"Failed to access model '{model_id}' after {max_attempts} attempts.")
-        return "invalid"
+        return "Invalid"
 
 
     
@@ -336,8 +357,19 @@ class APIvalidation:
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_json_str
             return credentials
 
-
-
+    def safe_get_key(self, config, section, key):
+        try:
+            return config[section][key]
+        except KeyError:
+            error_message = (f"Your PRIVATE_DATA.yaml is missing the '{key}' configuration under '{section}'. "
+                            "If you do not have or need this key, please add it to your PRIVATE_DATA.yaml file "
+                            f"with the value set to an empty string or your actual key. Alternatively, you can adjust "
+                            "these settings via the sidebar in the Streamlit interface by clicking the 'Set API Keys' button."
+                            f" You can manually fix this by adding this to your PRIVATE_DATA.yaml file, matching the format of existing keys >>>\n{section}:\n    {key}: YOUR_KEY_OR_AN_EMPTY_STRING \n<<<")
+            raise ValueError(error_message)
+        except Exception as e:
+            raise ValueError(f"An unexpected error occurred while retrieving the '{key}' under '{section}': {e}")
+        
     def report_api_key_status(self):
         missing_keys = []
         present_keys = []
@@ -352,25 +384,30 @@ class APIvalidation:
 
             k_huggingface = None
             
+            k_hyperbolic = os.getenv('HYPERBOLIC_API_KEY')
             k_mistral = os.getenv('MISTRAL_API_KEY')
             k_here = os.getenv('HERE_API_KEY')
             k_opencage = os.getenv('OPENCAGE_API_KEY')
         else:
-            k_OPENAI_API_KEY = self.cfg_private['openai']['OPENAI_API_KEY']
-            k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
+            # OpenAI Keys
+            k_OPENAI_API_KEY = self.safe_get_key(self.cfg_private, 'openai', 'OPENAI_API_KEY')
+            k_openai_azure = self.safe_get_key(self.cfg_private, 'openai_azure', 'OPENAI_API_KEY_AZURE')
 
+            # Google Cloud Keys
+            k_project_id = self.safe_get_key(self.cfg_private, 'google', 'GOOGLE_PROJECT_ID')
+            k_location = self.safe_get_key(self.cfg_private, 'google', 'GOOGLE_LOCATION')
+            k_google_application_credentials = self.safe_get_key(self.cfg_private, 'google', 'GOOGLE_APPLICATION_CREDENTIALS')
 
-            k_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
-            k_location = self.cfg_private['google']['GOOGLE_LOCATION']
-            k_google_application_credentials = self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS']
-  
-            k_hyperbolic = self.cfg_private['hyperbolic']['HYPERBOLIC_API_KEY']
-            k_mistral = self.cfg_private['mistral']['MISTRAL_API_KEY']
-            k_here = self.cfg_private['here']['API_KEY']
-            k_opencage = self.cfg_private['open_cage_geocode']['API_KEY']
+            # Other API Keys
+            k_hyperbolic = self.safe_get_key(self.cfg_private, 'hyperbolic', 'HYPERBOLIC_API_KEY')
+            k_mistral = self.safe_get_key(self.cfg_private, 'mistral', 'MISTRAL_API_KEY')
+            k_here = self.safe_get_key(self.cfg_private, 'here', 'API_KEY')
+            k_opencage = self.safe_get_key(self.cfg_private, 'open_cage_geocode', 'API_KEY')
 
-            k_huggingface = self.cfg_private['huggingface']['hf_token']
-            os.environ["HUGGING_FACE_KEY"] = k_huggingface
+            # Huggingface Token
+            k_huggingface = self.safe_get_key(self.cfg_private, 'huggingface', 'hf_token')
+            if k_huggingface:
+                os.environ["HUGGING_FACE_KEY"] = k_huggingface
 
 
 
@@ -404,7 +441,7 @@ class APIvalidation:
         # List of gated models to check access for
         for model_id in self.HF_MODEL_LIST:
             access_status = self.check_gated_model_access(model_id, k_huggingface)
-            if access_status == "valid":
+            if access_status == "Valid":
                 present_keys.append(f'[MODEL] {model_id} (Valid)')
             elif access_status == "under_review":
                 present_keys.append(f'[MODEL] {model_id} (Under Review)')

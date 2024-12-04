@@ -82,6 +82,9 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
                 # Join the list elements into a single string
                 data[key] = ', '.join(str(item) for item in value)
 
+            if value:
+                data[key] = value.replace('*','')
+
         ### align the keys with the template
         # Create a new dictionary with the same order of keys as JSON_dict_structure
         ordered_data = {}

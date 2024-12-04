@@ -886,7 +886,7 @@ class OCREngine:
                 self.json_report.set_text(text_main=f'Working on GPT-4o OCR :construction:')
 
             self.logger.info(f"GPT-4o Usage Report")
-            results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = self.GPTmini.ocr_gpt4o(self.path, model_name="gpt-4o",
+            results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = self.GPT4o.ocr_gpt4o(self.path, model_name="gpt-4o",
                                                                                                                             resolution=self.cfg['leafmachine']['project']['OCR_GPT_4o_mini_resolution'], 
                                                                                                                             max_tokens=1024)
             self.cost += total_cost

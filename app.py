@@ -600,7 +600,15 @@ def refresh():
     st.session_state['uploader_idk'] += 1
     st.write('')
 
+def set_api_keys():
+    st.session_state.proceed_to_private = True
+    st.session_state.proceed_to_main = False
 
+def proceed_to_main():
+    st.session_state.private_file = does_private_file_exist()
+    st.session_state.proceed_to_private = False
+    st.session_state.proceed_to_main = True
+    # st.rerun()
 
     
 
@@ -1043,7 +1051,20 @@ def get_prompt_versions(LLM_version):
 
     return yaml_files
 
-
+def get_private_file_fill_in(cfg_private):
+    dir_home = os.path.dirname(__file__)
+    path_cfg_private = os.path.join(dir_home, 'PRIVATE_DATA.yaml')
+    
+    # Load the configuration from the YAML file
+    with open(path_cfg_private, 'r') as file:
+        data_loaded = yaml.safe_load(file)
+    
+    # Merge the loaded data into the cfg_private dictionary
+    for key, subdict in data_loaded.items():
+        if key in cfg_private:
+            cfg_private[key].update(subdict)
+    
+    return cfg_private
 
 def get_private_file():
     dir_home = os.path.dirname(__file__)
@@ -1071,39 +1092,70 @@ def create_private_file():
     st.title("VoucherVision")
     _, col_private,__= st.columns([section_left,section_mid, section_right])
 
+    # Initialize the configuration dictionary with placeholders
+    cfg_private = {
+        'openai': {'OPENAI_API_KEY': ''},
+        'openai_azure': {
+            'OPENAI_API_KEY_AZURE': '',
+            'OPENAI_API_VERSION': '',
+            'OPENAI_API_BASE': '',
+            'OPENAI_ORGANIZATION': '',
+            'OPENAI_API_TYPE': ''
+        },
+        'google': {
+            'GOOGLE_APPLICATION_CREDENTIALS': '',
+            'GOOGLE_PALM_API': '',
+            'GOOGLE_PROJECT_ID': '',
+            'GOOGLE_LOCATION': ''
+        },
+        'hyperbolic': {'HYPERBOLIC_API_KEY': ''},
+        'mistral': {'MISTRAL_API_KEY': ''},
+        'here': {
+            'APP_ID': '',
+            'API_KEY': ''
+        },
+        'open_cage_geocode': {'API_KEY': ''},
+        'huggingface': {}
+    }
+
+    # Conditionally load private data if it exists in the session state
+    if 'private_file' in st.session_state and st.session_state.private_file:
+        cfg_private = get_private_file_fill_in(cfg_private)
     
-
-    if st.session_state.private_file:
-        cfg_private = get_private_file()
-    else:
-        cfg_private = {}
-        cfg_private['openai'] = {}
-        cfg_private['openai']['OPENAI_API_KEY'] =''
+    # if st.session_state.private_file:
+    #     cfg_private = get_private_file()
+    # else:
+    #     cfg_private = {}
+    #     cfg_private['openai'] = {}
+    #     cfg_private['openai']['OPENAI_API_KEY'] =''
         
-        cfg_private['openai_azure'] = {}
-        cfg_private['openai_azure']['OPENAI_API_KEY_AZURE'] = ''
-        cfg_private['openai_azure']['OPENAI_API_VERSION'] = ''
-        cfg_private['openai_azure']['OPENAI_API_BASE'] =''
-        cfg_private['openai_azure']['OPENAI_ORGANIZATION'] =''
-        cfg_private['openai_azure']['OPENAI_API_TYPE'] =''
+    #     cfg_private['openai_azure'] = {}
+    #     cfg_private['openai_azure']['OPENAI_API_KEY_AZURE'] = ''
+    #     cfg_private['openai_azure']['OPENAI_API_VERSION'] = ''
+    #     cfg_private['openai_azure']['OPENAI_API_BASE'] =''
+    #     cfg_private['openai_azure']['OPENAI_ORGANIZATION'] =''
+    #     cfg_private['openai_azure']['OPENAI_API_TYPE'] =''
 
-        cfg_private['google'] = {}
-        cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS'] =''
-        cfg_private['google']['GOOGLE_PALM_API'] =''
-        cfg_private['google']['GOOGLE_PROJECT_ID'] =''
-        cfg_private['google']['GOOGLE_LOCATION'] =''
+    #     cfg_private['google'] = {}
+    #     cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS'] =''
+    #     cfg_private['google']['GOOGLE_PALM_API'] =''
+    #     cfg_private['google']['GOOGLE_PROJECT_ID'] =''
+    #     cfg_private['google']['GOOGLE_LOCATION'] =''
 
-        cfg_private['mistral'] = {}
-        cfg_private['mistral']['MISTRAL_API_KEY'] =''
+    #     cfg_private['hyperbolic'] = {}
+    #     cfg_private['hyperbolic']['HYPERBOLIC_API_KEY'] =''
 
-        cfg_private['here'] = {}
-        cfg_private['here']['APP_ID'] =''
-        cfg_private['here']['API_KEY'] =''
+    #     cfg_private['mistral'] = {}
+    #     cfg_private['mistral']['MISTRAL_API_KEY'] =''
 
-        cfg_private['open_cage_geocode'] = {}
-        cfg_private['open_cage_geocode']['API_KEY'] =''
+    #     cfg_private['here'] = {}
+    #     cfg_private['here']['APP_ID'] =''
+    #     cfg_private['here']['API_KEY'] =''
 
-        cfg_private['huggingface'] = {}
+    #     cfg_private['open_cage_geocode'] = {}
+    #     cfg_private['open_cage_geocode']['API_KEY'] =''
+
+    #     cfg_private['huggingface'] = {}
 
     with col_private:
         st.header("Set API keys")
@@ -1113,6 +1165,8 @@ def create_private_file():
         st.write("Deleting this file will allow you to reset API keys. Alternatively, you can edit the keys in the user interface or by manually editing the `.yaml` file in a text editor.")
         st.write("Leave keys blank if you do not intend to use that service.")
         st.info("Note: You can manually edit these API keys later by opening the /PRIVATE_DATA.yaml file in a plain text editor.")
+
+        st.button('Proceed to VoucherVision', on_click=proceed_to_main, key=f"Proceed to VoucherVision Top")
 
         st.write("---")
         st.subheader("Hugging Face  (*Required For Local LLMs*)")
@@ -1206,6 +1260,10 @@ def create_private_file():
                                                 placeholder = 'e.g. my-project-name',
                                                 help ="This is the value in the `project_id` field in your JSON key.",
                                                 type='password')
+        google_api_key = st.text_input(label = 'Google API Key', value = cfg_private['google'].get('GOOGLE_PALM_API', ''),
+                                                placeholder = 'e.g. long string',
+                                                help ="This is singular API key that can be used to access Gemini and Palm models",
+                                                type='password')
 
         
         st.write("---")
@@ -1253,6 +1311,15 @@ def create_private_file():
 
 
         st.write("---")
+        st.subheader("Hyperbolic Labs")
+        st.markdown('Follow these [instructions](https://app.hyperbolic.xyz/) to generate an API key for Hyperbolic Labs, which provides API access to many Hugging Face models. As of Dec. 4, 2024 they provide $10 in free credits.')
+        hyperbolic_API_KEY = st.text_input("Hyperbolic Labs API Key", cfg_private['hyperbolic'].get('HYPERBOLIC_API_KEY', ''),
+                                                 help='e.g. a long string',
+                                                 placeholder='e.g. SATgthsyku.E64FgrrrrEervr3S4455t_geyDeGq',
+                                                 type='password')
+        
+
+        st.write("---")
         st.subheader("MistralAI")
         st.markdown('Follow these [instructions](https://console.mistral.ai/) to generate an API key for MistralAI.')
         mistral_API_KEY = st.text_input("MistralAI API Key", cfg_private['mistral'].get('MISTRAL_API_KEY', ''),
@@ -1280,21 +1347,24 @@ def create_private_file():
                         openai_api_key,
                         hugging_face_token,
                         azure_openai_api_version, azure_openai_api_key, azure_openai_api_base, azure_openai_organization, azure_openai_api_type,
-                        google_application_credentials, google_project_location, google_project_id,
+                        google_application_credentials, google_project_location, google_project_id, google_api_key,
+                        hyperbolic_API_KEY,
                         mistral_API_KEY, 
                         here_APP_ID, here_API_KEY])
-        if st.button('Proceed to VoucherVision'):
-            st.session_state.private_file = does_private_file_exist()
-            st.session_state.proceed_to_private = False
-            st.session_state.proceed_to_main = True
-            st.rerun()
+        if not st.session_state.is_hf:    
+            st.button('Proceed to VoucherVision', on_click=proceed_to_main, key=f"Proceed to VoucherVision Bottom")
+            # st.session_state.private_file = does_private_file_exist()
+            # st.session_state.proceed_to_private = False
+            # st.session_state.proceed_to_main = True
+            # st.rerun()
        
 
 def save_changes_to_API_keys(cfg_private,
                         openai_api_key,
                         hugging_face_token,
                         azure_openai_api_version, azure_openai_api_key, azure_openai_api_base, azure_openai_organization, azure_openai_api_type,
-                        google_application_credentials, google_project_location, google_project_id,
+                        google_application_credentials, google_project_location, google_project_id, google_api_key, 
+                        hyperbolic_API_KEY,
                         mistral_API_KEY, 
                         here_APP_ID, here_API_KEY): 
     
@@ -1312,8 +1382,13 @@ def save_changes_to_API_keys(cfg_private,
     cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS'] = google_application_credentials
     cfg_private['google']['GOOGLE_PROJECT_ID'] = google_project_id
     cfg_private['google']['GOOGLE_LOCATION'] = google_project_location 
+    cfg_private['google']['GOOGLE_PALM_API'] = google_api_key 
+    
 
     cfg_private['mistral']['MISTRAL_API_KEY'] = mistral_API_KEY
+
+    cfg_private['hyperbolic']['HYPERBOLIC_API_KEY'] = hyperbolic_API_KEY
+
 
     cfg_private['here']['APP_ID'] = here_APP_ID
     cfg_private['here']['API_KEY'] = here_API_KEY
@@ -1371,48 +1446,58 @@ def load_api_status():
             return status.get('present_keys', []), status.get('missing_keys', []), status.get('date', [])
     except FileNotFoundError:
         return None, None, None
-    
+
+def login_to_hf():
+    from huggingface_hub import login
+    login()
+
 def display_api_key_status(ccol):
-    if not st.session_state['API_checked']:
-        present_keys, missing_keys, date_of_check = load_api_status()
-        if present_keys is None and missing_keys is None:
-            st.session_state['API_checked'] = False
-        else:
-            # Convert keys to annotations (similar to what you do in check_api_key_status)
-            present_annotations = []
-            missing_annotations = []
-            model_annotations = []
-            for key in present_keys:
-                if "[MODEL]" in key:
-                    show_text = key.split(']')[1]
-                    show_text = show_text.split('(')[0]
-                    if 'Under Review' in key:
-                        model_annotations.append((show_text, "under review", "#9C0586"))  # Green for valid
-                    elif 'invalid' in key:
-                        model_annotations.append((show_text, "error!", "#870307"))  # Green for valid
-                    else:
-                        model_annotations.append((show_text, "ready!", "#059c1b"))  # Green for valid
+    # if not st.session_state['API_checked']:
+    present_keys, missing_keys, date_of_check = load_api_status()
+    if present_keys is None and missing_keys is None:
+        st.session_state['API_checked'] = False
+    else:
+        # Convert keys to annotations (similar to what you do in check_api_key_status)
+        present_annotations = []
+        missing_annotations = []
+        model_annotations = []
+        model_links = []
+        for key in present_keys:
+            if "[MODEL]" in key:
+                show_text = key.split(']')[1]
+                show_text = show_text.split('(')[0]
+                model_name_ = show_text.strip()
+                model_name__ = model_name_.split('/')[0]
+                model_links.append([model_name__,f"https://huggingface.co/{model_name_}"])
 
-                elif "Valid" in key:
-                    show_text = key.split('(')[0]
-                    present_annotations.append((show_text, "ready!", "#059c1b"))  # Green for valid
-                elif "Invalid" in key:
-                    show_text = key.split('(')[0]
-                    present_annotations.append((show_text, "error", "#870307"))  # Red for invalid
+                if 'Under Review' in key:
+                    model_annotations.append((show_text, "under review", "#9C0586"))  # Green for valid
+                elif '(Invalid)' in key:
+                    model_annotations.append((show_text, "GATED", "#870307"))  # Green for valid
+                else:
+                    model_annotations.append((show_text, "ready", "#059c1b"))  # Green for valid
 
-            st.session_state['present_annotations'] = present_annotations
-            st.session_state['missing_annotations'] = missing_annotations
-            st.session_state['model_annotations'] = model_annotations
-            st.session_state['date_of_check'] = date_of_check
-            st.session_state['API_checked'] = True
+            
+            elif "(Invalid)" in key:
+                show_text = key.split('(')[0]
+                present_annotations.append((show_text, "error", "#870307"))  # Red for invalid
+            elif "(Valid)" in key:
+                show_text = key.split('(')[0]
+                present_annotations.append((show_text, "ready", "#059c1b"))  # Green for valid
+
+        st.session_state['present_annotations'] = present_annotations
+        st.session_state['missing_annotations'] = missing_annotations
+        st.session_state['model_annotations'] = model_annotations
+        st.session_state['date_of_check'] = date_of_check
+        st.session_state['API_checked'] = True
             # print('for')
             # print(st.session_state['present_annotations'])
             # print(st.session_state['missing_annotations'])
-    else:
-        # print('else')
-        # print(st.session_state['present_annotations'])
-        # print(st.session_state['missing_annotations'])
-        pass
+    # else:
+    #     # print('else')
+    #     # print(st.session_state['present_annotations'])
+    #     # print(st.session_state['missing_annotations'])
+    #     pass
 
     # Check if the API status has already been retrieved
     if 'API_checked' not in st.session_state or not st.session_state['API_checked'] or st.session_state['API_rechecked']:
@@ -1421,6 +1506,7 @@ def display_api_key_status(ccol):
                 check_api_key_status()
         st.session_state['API_checked'] = True
         st.session_state['API_rechecked'] = False
+        st.rerun()
 
     st.markdown(f"Last checked on {st.session_state['date_of_check']}")
     # Display present keys horizontally
@@ -1436,6 +1522,18 @@ def display_api_key_status(ccol):
         
         if 'model_annotations' in st.session_state and st.session_state['model_annotations']:
             annotated_text(*st.session_state['model_annotations'])
+
+    # Create HTML table for clickable links
+    html = "<table>"
+    html += "<tr><th>Provider</th><th>Link</th></tr>"
+    for model_name, url in model_links:
+        html += f"<tr><td>{model_name}</td><td><a href='{url}' target='_blank'>{url}</a></td></tr>"
+    html += "</table>"
+
+    # Use an expander to display the model links table
+    with st.expander("Links to supported Hugging Face models"):
+        st.markdown(html, unsafe_allow_html=True)
+
 
     
     
@@ -1657,6 +1755,7 @@ def content_header():
         ct_left, ct_right = st.columns([1,1])
     with ct_left:
         st.button("Refresh", on_click=refresh, use_container_width=True)
+        st.button("Set API Keys", on_click=set_api_keys, use_container_width=True)
     with ct_right:
         try:
             st.page_link(os.path.join("pages","faqs.py"), label="FAQs", icon="❔")
@@ -1950,6 +2049,7 @@ def content_api_check():
             st.session_state['API_checked'] = False
             st.session_state['API_rechecked'] = True
             st.rerun()
+        st.button('Login to Hugging Face',on_click=login_to_hf, help="To access gated models you need to provide your HF token. Click this button to login to HF in this session. Paste your token in the terminal window. You should not have to use this method since we try to provide the token automatically, but this is here as a fallback.")
         # with col_llm_2c:
         if not st.session_state.is_hf:
             if st.button("Edit API Keys"):

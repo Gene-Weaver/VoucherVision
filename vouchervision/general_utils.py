@@ -171,7 +171,7 @@ def summarize_expense_report(path_expense_report):
             ocr_tokens_out_sum += float(row['ocr_tokens_out'])
             api_version_counts[row['api_version']] += 1
     except Exception as e:
-        raise ValueError(f"Error summarizing costs for sidebar: {e}")
+        raise ValueError(f"Error summarizing costs for sidebar. Please delete your existing './VoucherVision/expense_report/expense_report.csv' so that VV can create a new one with the current headers. Error message: {e}")
 
     # Calculate API version percentages
     api_version_percentages = {version: (count / run_count) * 100 for version, count in api_version_counts.items()}
