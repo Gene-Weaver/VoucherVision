@@ -8,10 +8,12 @@ class OCRPromptCatalog:
         self.prompts = {
             "default_plus_minorcorrect_excludestricken_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted, but also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
             
-            "default_plus_minorcorrect_excludestricken_idhandwriting_gpt4": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted. Use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Your corrections should be minimal and should focus character recognition errors. The correction cannot have more or fewer characters than the original word. Do not explain your answer, only return the verbatim text:""",
+            "default_plus_minorcorrect_excludestricken_gpt4": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted. Use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Your corrections should be minimal and should focus character recognition errors. The correction cannot have more or fewer characters than the original word. Do not explain your answer, only return the verbatim text:""",
             
             "default_plus_minorcorrect_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
-
+            
+            "default_plus_minorcorrect_Qwen": """Please perform OCR on this scientific image and extract all of the words and text verbatim. Then use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Do not explain your answer, only return the verbatim text:""",
+            
             "default_plus_minorcorrect": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. Do not explain your answer, only return the verbatim text:""",
 
             "default": """Please perform OCR on this scientific image and extract all of the words and text verbatim. Do not explain your answer, only return the verbatim text:""",

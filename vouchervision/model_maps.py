@@ -67,6 +67,11 @@ class ModelMaps:
         'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05': '#bababa',  # Gray
     }
 
+
+
+    ################################
+    # To keep support, but hide from user, just comment out the entry in this section
+    ################################
     MODELS_OPENAI = [
                     'GPT 4o 2024-08-06',
                     'GPT 4o 2024-05-13', #GPT_4o_2024_05_13
@@ -114,21 +119,22 @@ class ModelMaps:
                         'Ministral 3B',
                       ]
     
-    MODELS_HYPERBOLIC = ['Hyperbolic VLM Pixtral 12B',
-                        'Hyperbolic VLM Qwen2 VL 7B Instruct',
-                        'Hyperbolic VLM Qwen2 VL 72B Instruct',
-                        # 'Hyperbolic VLM Llama 3 2 90B Vision Instruct',
-                        'Hyperbolic LLM Llama 3.1-8B',
-                        'Hyperbolic LLM Llama 3.1-70B',
-                        'Hyperbolic LLM Llama 3-70B',
-                        # 'Hyperbolic LLM Hermes 3-70B',
-                        'Hyperbolic LLM Llama 3.1-405B',
-                        'Hyperbolic LLM Llama 3.1-405B-FP8',
-                        'Hyperbolic LLM DeepSeek-V2.5',
-                        'Hyperbolic LLM Qwen 2.5-72B',
-                        'Hyperbolic LLM Llama 3.2-3B',
-                        'Hyperbolic LLM Qwen 2.5-Coder-32B',
-                        'Hyperbolic LLM QwQ-32B-Preview',
+    MODELS_HYPERBOLIC = [
+                        # 'Hyperbolic VLM Pixtral 12B',
+                        # 'Hyperbolic VLM Qwen2 VL 7B Instruct',
+                        'Hyperbolic VLM Qwen2 VL 72B Instruct', # PASS
+                        # 'Hyperbolic VLM Llama 3 2 90B Vision Instruct', # Not available
+                        'Hyperbolic LLM Llama 3.2-3B-Instruct', # PASS
+                        'Hyperbolic LLM Llama 3.1-8B-Instruct', # PASS
+                        'Hyperbolic LLM Llama 3.1-70B-Instruct', # PASS
+                        # 'Hyperbolic LLM Llama 3-70B',
+                        # 'Hyperbolic LLM Hermes 3-70B', # Not available
+                        # 'Hyperbolic LLM Llama 3.1-405B',
+                        # 'Hyperbolic LLM Llama 3.1-405B-FP8',
+                        # 'Hyperbolic LLM DeepSeek-V2.5',
+                        'Hyperbolic LLM Qwen 2.5-72B-Instruct', # PASS
+                        'Hyperbolic LLM Qwen 2.5-Coder-32B-Instruct',# PASS
+                        # 'Hyperbolic LLM QwQ-32B-Preview',
                     ]
 
     MODELS_LOCAL = ['LOCAL Mistral Nemo Instruct 2407', 
@@ -193,13 +199,13 @@ class ModelMaps:
         'Hyperbolic VLM Qwen2 VL 72B Instruct': 'Hyperbolic_VLM_Qwen2_VL_72B_Instruct',
         # 'Hyperbolic VLM Llama 3 2 90B Vision Instruct': 'Hyperbolic_VLM_Llama_3_2_90B_Vision_Instruct',
 
-        'Hyperbolic LLM Qwen 2.5-72B': 'Hyperbolic_LLM_Qwen_2_5_72B',
-        'Hyperbolic LLM Qwen 2.5-Coder-32B': 'Hyperbolic_LLM_Qwen_2_5_Coder_32B',
-        'Hyperbolic LLM Llama 3.2-3B': 'Hyperbolic_LLM_Llama_3_2_3B',
+        'Hyperbolic LLM Qwen 2.5-72B-Instruct': 'Hyperbolic_LLM_Qwen_2_5_72B',
+        'Hyperbolic LLM Qwen 2.5-Coder-32B-Instruct': 'Hyperbolic_LLM_Qwen_2_5_Coder_32B',
+        'Hyperbolic LLM Llama 3.2-3B-Instruct': 'Hyperbolic_LLM_Llama_3_2_3B',
         'Hyperbolic LLM Llama 3.1-405B': 'Hyperbolic_LLM_Llama_3_1_405B',
         'Hyperbolic LLM Llama 3.1-405B-FP8': 'Hyperbolic_LLM_Llama_3_1_405B_FP8',
-        'Hyperbolic LLM Llama 3.1-8B': 'Hyperbolic_LLM_Llama_3_1_8B',
-        'Hyperbolic LLM Llama 3.1-70B': 'Hyperbolic_LLM_Llama_3_1_70B',
+        'Hyperbolic LLM Llama 3.1-8B-Instruct': 'Hyperbolic_LLM_Llama_3_1_8B',
+        'Hyperbolic LLM Llama 3.1-70B-Instruct': 'Hyperbolic_LLM_Llama_3_1_70B',
         'Hyperbolic LLM Llama 3-70B': 'Hyperbolic_LLM_Llama_3_70B',
         # 'Hyperbolic LLM Hermes 3-70B': 'Hyperbolic_LLM_Hermes_3_70B',
         'Hyperbolic LLM DeepSeek-V2.5': 'Hyperbolic_LLM_DeepSeek_V2_5',
@@ -261,13 +267,13 @@ class ModelMaps:
             'Hyperbolic VLM Qwen2 VL 72B Instruct': has_key_hyperbolic,
             'Hyperbolic VLM Llama 3 2 90B Vision Instruct': has_key_hyperbolic,
 
-            'Hyperbolic LLM Qwen 2.5-72B': has_key_hyperbolic,
-            'Hyperbolic LLM Qwen 2.5-Coder-32B': has_key_hyperbolic,
-            'Hyperbolic LLM Llama 3.2-3B': has_key_hyperbolic,
+            'Hyperbolic LLM Qwen 2.5-72B-Instruct': has_key_hyperbolic,
+            'Hyperbolic LLM Qwen 2.5-Coder-32B-Instruct': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.2-3B-Instruct': has_key_hyperbolic,
             'Hyperbolic LLM Llama 3.1-405B': has_key_hyperbolic,
             'Hyperbolic LLM Llama 3.1-405B-FP8': has_key_hyperbolic,
-            'Hyperbolic LLM Llama 3.1-8B': has_key_hyperbolic,
-            'Hyperbolic LLM Llama 3.1-70B': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.1-8B-Instruct': has_key_hyperbolic,
+            'Hyperbolic LLM Llama 3.1-70B-Instruct': has_key_hyperbolic,
             'Hyperbolic LLM Llama 3-70B': has_key_hyperbolic,
             # 'Hyperbolic LLM Hermes 3-70B': has_key_hyperbolic,
             'Hyperbolic LLM DeepSeek-V2.5': has_key_hyperbolic,
@@ -329,13 +335,13 @@ class ModelMaps:
             'Hyperbolic VLM Qwen2 VL 72B Instruct':  False,
             # 'Hyperbolic VLM Llama 3 2 90B Vision Instruct':  False,
 
-            'Hyperbolic LLM Qwen 2.5-72B':  False,
-            'Hyperbolic LLM Qwen 2.5-Coder-32B':  False,
-            'Hyperbolic LLM Llama 3.2-3B':  False,
+            'Hyperbolic LLM Qwen 2.5-72B-Instruct':  False,
+            'Hyperbolic LLM Qwen 2.5-Coder-32B-Instruct':  False,
+            'Hyperbolic LLM Llama 3.2-3B-Instruct':  False,
             'Hyperbolic LLM Llama 3.1-405B':  False,
             'Hyperbolic LLM Llama 3.1-405B-FP8': False,
-            'Hyperbolic LLM Llama 3.1-8B':  False,
-            'Hyperbolic LLM Llama 3.1-70B':  False,
+            'Hyperbolic LLM Llama 3.1-8B-Instruct':  False,
+            'Hyperbolic LLM Llama 3.1-70B-Instruct':  False,
             'Hyperbolic LLM Llama 3-70B':  False,
             # 'Hyperbolic LLM Hermes 3-70B':  False,
             'Hyperbolic LLM DeepSeek-V2.5':  False,
@@ -530,3 +536,4 @@ class ModelMaps:
     @classmethod
     def get_all_mapping_cost(cls):
         return cls.version_mapping_cost
+    

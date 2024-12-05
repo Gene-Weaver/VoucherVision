@@ -13,7 +13,7 @@ https://ai.google.dev/gemini-api/docs/vision?lang=python
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-1.5-pro", max_output_tokens=1024, temperature=0.5, top_p=0.8, top_k=10, seed=123456, do_resize_img=False):
+    def __init__(self, api_key, model_name="gemini-1.5-pro", max_output_tokens=1024, temperature=0.5, top_p=0.3, top_k=3, seed=123456, do_resize_img=False):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """

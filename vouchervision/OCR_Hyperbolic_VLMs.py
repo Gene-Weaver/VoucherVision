@@ -64,7 +64,7 @@ class HyperbolicOCR:
         image.save(buffered, format="JPEG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-    def ocr_hyperbolic(self, image_path, prompt=None, max_tokens=2048, temperature=0.1, top_p=0.001):
+    def ocr_hyperbolic(self, image_path, prompt=None, max_tokens=2048, temperature=0.5, top_p=0.8): # Defaults are based on the jouvea pilosa test for qwen2-vl-7b/72b
         overall_cost_in = 0
         overall_cost_out = 0
         overall_total_cost = 0
@@ -85,7 +85,10 @@ class HyperbolicOCR:
         }
         if prompt is None:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
-            keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
+            # keys = ["default_plus_minorcorrect_idhandwriting", ]
+            # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
+            keys = ["default_plus_minorcorrect_Qwen", "species_only",]
+            # keys = ["default_plus_minorcorrect_Qwen", ]
 
             prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
             for key, prompt in zip(keys, prompts):
@@ -167,7 +170,7 @@ class HyperbolicOCR:
 def main():
     # Example image path
     # img_path = 'D:/D_Desktop/BR_1839468565_Ochnaceae_Campylospermum_reticulatum_label.jpg'
-    img_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
+    img_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     
     # Replace with your actual Hyperbolic API key
     API_KEY = ""
@@ -184,5 +187,76 @@ def main():
     print(f"Parsed Answer:\n{parsed_answer}")
     print(f"Usage:\ntokens_in:{tokens_in}\ntokens_out:{tokens_out}\n\n")
 
+
+def test():
+    import csv
+    API_KEY = ""
+    # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
+    img_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
+
+    success_counts = {}
+    fail_counts = {}
+
+    # Transcribe text from the image
+    reps = [0,1,2,]
+    temps = [0, 0.1, 0.2, 0.5, 1,]
+    ps = [0.001, 0.8, 0.5, 0.3,]
+    # reps = [0,]
+    # temps = [0, ]
+    # ps = [0.001, ]
+    
+    ocr = HyperbolicOCR(API_KEY,model_id="Qwen/Qwen2-VL-72B-Instruct")
+
+    for rep in reps:
+
+        for t in temps:
+            for p in ps:
+                response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr.ocr_hyperbolic(img_path, 
+                                                                                                                            temperature=t, 
+                                                                                                                            top_p=p, 
+                                                                                                                            max_tokens=1024)
+                # print("Transcription Result:\n", response)
+                # Define the parameter tuple for tracking
+                param_set = (t,p, response)
+
+                if "jouvea pilosa" in response.lower():
+                    # Increment success count
+                    if param_set in success_counts:
+                        success_counts[param_set] += 1
+                    else:
+                        success_counts[param_set] = 1
+                    print("<<<< SUCCESS >>>>")
+                    print(f"t {t}, p {p}")
+                    # print("Transcription Result:\n", response)
+                else:
+                    # Increment failure count
+                    if param_set in fail_counts:
+                        fail_counts[param_set] += 1
+                    else:
+                        fail_counts[param_set] = 1
+                    print("                     <<<< FAIL >>>>")
+                    print(f"                     t {t}, p {p}")
+    # Display the results
+    print("Success counts:", success_counts)
+    print("Fail counts:", fail_counts)
+
+    # Save to CSV
+    with open('./OCR_vLM_Parameter_Sweep/Qwen2_VL_72B_Instruct_parameter_sweep_results_QwenVersion_wSpecies.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        # Write headers
+        writer.writerow(['Temperature', 'Top P', 'Success Count', 'Fail Count', 'Response'])
+        
+        # Extract all unique parameter sets
+        all_params = set(success_counts.keys()).union(set(fail_counts.keys()))
+        
+        # Write data rows
+        for params in all_params:
+            t, p, response = params
+            success = success_counts.get(params, 0)
+            fail = fail_counts.get(params, 0)
+            writer.writerow([t, p, success, fail, response])
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    test()

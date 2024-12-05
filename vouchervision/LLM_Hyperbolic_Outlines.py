@@ -11,7 +11,7 @@ except:
 class HyperbolicHandler:
     RETRY_DELAY = 2  # Wait 2 seconds before retrying
     MAX_RETRIES = 5  # Maximum number of retries
-    STARTING_TEMP = 0.7
+    STARTING_TEMP = 0.5
     RANDOM_SEED = 2023
 
     def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation):
@@ -49,6 +49,7 @@ class HyperbolicHandler:
         # self.OutputSchema = self._create_dynamic_pydantic_model(self.JSON_dict_structure)
         self.schema = self._build_schema()
 
+        # self.generator = outlines.generate.text(self.model)
         self.generator = outlines.generate.json(self.model, self.schema)
 
     def generate_JSON(self, prompt, max_tokens=1024, seed=156733):
@@ -181,7 +182,7 @@ if __name__ == '__main__':
     prompt_test = """Please help me complete this text parsing task given the following rules and unstructured OCR text. Your task is to refactor the OCR text into a structured JSON dictionary that matches the structure specified in the following rules. Please follow the rules strictly.
                 The rules are:
                 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below. 2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules. 3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text. 4. 
-Duplicate dictionary fields are not allowed. 5. Ensure all JSON keys are in camel case. 6. Ensure new JSON field values follow sentence case capitalization. 7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template. 8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys. 9. Only return a JSON dictionary represented as a string. You should not explain your answer.
+Duplicate dictionary fields are not allowed. 5. Ensure all JSON keys are in camel case. 6. Ensure new JSON field values follow sentence case capitalization. 7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template. 8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys. 9. Only return a JSON dictionary represented as a string. You should not explain your answer. 10. I expect the output to be only the complete JSON object without explanation.
                 This section provides rules for formatting each JSON value organized by the JSON key.
                 This is the JSON template that includes instructions for each key:
                 {"catalogNumber": "Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.", "order": "The full scientific name of the order in which 
@@ -214,13 +215,37 @@ copyright reserved 122841 cm
 DEC 1 8 1975
 University of Michigan Herbarium
 1122841
-                Please populate the following JSON dictionary based on the rules and the unformatted OCR text:
+                Please populate the following JSON dictionary based on the rules and the unformatted OCR text. I expect the output to be only the complete JSON object without explanation:
                 {'catalogNumber': '', 'order': '', 'family': '', 'scientificName': '', 'scientificNameAuthorship': '', 'genus': '', 'subgenus': '', 'specificEpithet': '', 'infraspecificEpithet': '', 'identifiedBy': '', 'recordedBy': '', 'recordNumber': '', 'verbatimEventDate': '', 'eventDate': '', 'habitat': '', 'occurrenceRemarks': '', 'country': '', 'stateProvince': '', 'county': '', 'municipality': '', 'locality': '', 'degreeOfEstablishment': '', 'decimalLatitude': '', 'decimalLongitude': '', 'verbatimCoordinates': '', 'minimumElevationInMeters': '', 'maximumElevationInMeters': ''}"""
-    JSON_dict_structure = {'catalogNumber': '', 'order': '', 'family': '', 'scientificName': '', 'scientificNameAuthorship': '', 'genus': '', 'subgenus': '', 'specificEpithet': '', 'infraspecificEpithet': '', 'identifiedBy': '', 'recordedBy': '', 'recordNumber': '', 'verbatimEventDate': '', 'eventDate': '', 'habitat': '', 'occurrenceRemarks': '', 'country': '', 'stateProvince': '', 'county': '', 'municipality': '', 'locality': '', 'degreeOfEstablishment': '', 'decimalLatitude': '', 'decimalLongitude': '', 'verbatimCoordinates': '', 'minimumElevationInMeters': '', 'maximumElevationInMeters': ''}
+    JSON_dict_structure = {"catalogNumber": "", "order": "", "family": "", "scientificName": "", "scientificNameAuthorship": "", "genus": "", "subgenus": "", "specificEpithet": "", "infraspecificEpithet": "", "identifiedBy": "", "recordedBy": "", "recordNumber": "", "verbatimEventDate": "", "eventDate": "", "habitat": "", "occurrenceRemarks": "", "country": "", "stateProvince": "", "county": "", "municipality": "", "locality": "", "degreeOfEstablishment": "", "decimalLatitude": "", "decimalLongitude": "", "verbatimCoordinates": "", "minimumElevationInMeters": "", "maximumElevationInMeters": ""}
     
     os.environ["HYPERBOLIC_API_KEY"] = ""
     
-    ml = HyperbolicHandler(None, None, "meta-llama/Meta-Llama-3.1-8B-Instruct", JSON_dict_structure, None)
-    # ml.call_llm_api_Hyperbolic(prompt_test, )
-    output = ml.generate_JSON(prompt_test)
-    print(json.dumps(output, indent=4))
+    models = [
+                'mistralai/Pixtral-12B-2409',
+                'Qwen/Qwen2-VL-7B-Instruct',
+                'Qwen/Qwen2-VL-72B-Instruct', # PASS
+                'Qwen/Qwen2.5-72B-Instruct', # PASS
+                'Qwen/QwQ-32B-Preview',
+                'Qwen/Qwen2.5-Coder-32B-Instruct', # PASS
+                'meta-llama/Llama-3.2-3B-Instruct', # PASS
+                'meta-llama/Meta-Llama-3.1-405B-Instruct',
+                'meta-llama/Meta-Llama-3.1-405B-FP8',
+                'meta-llama/Meta-Llama-3.1-8B-Instruct', # PASS
+                'meta-llama/Meta-Llama-3.1-70B-Instruct', # PASS
+                'meta-llama/Meta-Llama-3-70B-Instruct',
+                'deepseek-ai/DeepSeek-V2.5',
+        ]
+    for model in models:
+        try:
+            ml = HyperbolicHandler(None, None, model, JSON_dict_structure, None)
+            # ml = HyperbolicHandler(None, None, "meta-llama/Meta-Llama-3-70B-Instruct", JSON_dict_structure, None)
+            # prompt_test = prompt_test.replace('\'', '\"')
+            output = ml.generate_JSON(prompt_test)
+            print(f"SUCCESS >>> {model}")
+            print(json.dumps(output, indent=4))
+        except Exception as e:
+            print(f"            FAILED >>> {model}")
+            print(f"            {e}")
+
+

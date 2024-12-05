@@ -25,11 +25,11 @@ class GPT4oOCR:
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def ocr_gpt4o(self, image_path, model_name="gpt-4o-mini", resolution="high", max_tokens=1024, do_resize=True, prompt=None,
-                  temperature=None, top_p=None, seed=123456):
+                  temperature=0.1, top_p=None, seed=123456):
         
         # Temp is used first
-        if temperature:
-            top_p = None
+        if top_p:
+            temperature = None
 
         self.model_name = model_name
         overall_cost_in = 0
@@ -57,10 +57,13 @@ class GPT4oOCR:
         }
 
         if prompt is None:
-            # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_excludestricken_idhandwriting_gpt4",
+            # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_excludestricken_gpt4",
             #         "handwriting_only", "species_only", "detailed_metadata"]
-            # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting_gpt4", "species_only",]
-            keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
+
+            # keys = ["default_plus_minorcorrect_excludestricken_gpt4",]
+            # keys = ["default_plus_minorcorrect_excludestricken_gpt4", "species_only",]
+            keys = ["default_plus_minorcorrect_excludestricken_idhandwriting",]
+            # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
 
             prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
             for key, prompt in zip(keys, prompts):
@@ -158,8 +161,8 @@ def main():
         success_counts = {}
         fail_counts = {}
 
-        reps = [0, 1, 2]
-        temps = [0, 0.05, 0.1, 0.2, 0.5, 0.75, 1.0, 1.25,]
+        reps = [0,]
+        temps = [0, 0.05, 0.1, 0.2, 0.5, 0.75, 1.0, 1.2,]
         ps = [0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9, 1]
         # reps = [0,]
         # temps = [0, ]
@@ -195,11 +198,11 @@ def main():
                     fail_counts[param_set] = fail_counts.get(param_set, 0) + 1
 
         # Display the results
-        print("Success counts:", success_counts)
-        print("Fail counts:", fail_counts)
+        # print("Success counts:", success_counts)
+        # print("Fail counts:", fail_counts)
 
         # Save to CSV
-        with open('GPT4o_OCR_parameter_sweep_results_wSpecies_notGPT4version.csv', mode='w', newline='') as file:
+        with open('GPT4o_OCR_parameter_sweep_results_wSpecies_notGPT4version.csv', mode='w', newline='',encoding='ISO-8859-1', errors='replace') as file:
             writer = csv.writer(file)
             writer.writerow(['Temperature', 'Top P', 'Success Count', 'Fail Count', 'Response'])
             
@@ -208,6 +211,7 @@ def main():
                 t, p, response = params
                 success = success_counts.get(params, 0)
                 fail = fail_counts.get(params, 0)
+                response = response.encode('utf-8', errors='replace').decode('utf-8')
                 writer.writerow([t, p, success, fail, response])
 
     
