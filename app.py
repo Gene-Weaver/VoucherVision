@@ -1727,7 +1727,7 @@ def content_header():
                 if total_cost:
                     with col_run_4:
                         st.success(f":money_with_wings: This run cost :heavy_dollar_sign:{total_cost:.4f}")
-                        st.success(f"Parsing\: \${parsing_cost:.4f} OCR\: \${ocr_cost:.4f}")
+                        st.success(f"Parsing: ${parsing_cost:.4f} OCR: ${ocr_cost:.4f}")
                 else:
                     pass
                     # with col_run_4:
