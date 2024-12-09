@@ -1,4 +1,4 @@
-import os
+import os, random, time
 import tempfile
 import google.generativeai as genai
 from PIL import Image
@@ -34,34 +34,73 @@ class OCRGeminiProVision:
             model_name=self.model_name, generation_config=self.generation_config
         )
 
-    def upload_to_gemini(self, image_path, mime_type="image/jpeg"):
-        
+    def exponential_backoff(self, func, *args, **kwargs):
         """
-        Upload an image file to Gemini.
+        Exponential backoff for a given function.
+        
+        Args:
+            func (function): The function to retry.
+            *args: Positional arguments for the function.
+            **kwargs: Keyword arguments for the function.
+        
+        Returns:
+            The result of the function if successful.
+        """
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                result = func(*args, **kwargs)
+                return result
+            except Exception as e:
+                wait_time = (2 ** attempt) + random.uniform(0, 1)
+                print(f"Attempt {attempt + 1} failed with error: {e}. Retrying in {wait_time:.2f} seconds...")
+                time.sleep(wait_time)
+        
+        raise Exception(f"Failed to complete {func.__name__} after {max_retries} attempts.")
 
+
+    def upload_to_gemini_with_backoff(self, image_path, mime_type="image/jpeg"):
+        """
+        Upload an image file to Gemini with exponential backoff.
+        
         :param image_path: Path to the image file.
         :param mime_type: MIME type of the image.
         :return: Uploaded file object with URI.
         """
         genai.configure(api_key=self.api_key)
 
-        if self.do_resize_img:
-            image = Image.open(image_path)
-            resized_image = resize_image_to_min_max_pixels(image)
-            # Save the resized image to a temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
-                resized_image.save(temp_file.name, format="JPEG")
-                temp_file_path = temp_file.name
+        def upload():
+            if self.do_resize_img:
+                image = Image.open(image_path)
+                resized_image = resize_image_to_min_max_pixels(image)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+                    resized_image.save(temp_file.name, format="JPEG")
+                    temp_file_path = temp_file.name
 
-            # Upload the resized image to Gemini
-            file = genai.upload_file(temp_file_path, mime_type=mime_type)
-            # print(f"Uploaded file '{file.display_name}' as: {file.uri}")
-            os.remove(temp_file_path)
-        else:
-            file = genai.upload_file(image_path, mime_type=mime_type)
-            # print(f"Uploaded file '{image_path}'")
+                file = genai.upload_file(temp_file_path, mime_type=mime_type)
+                os.remove(temp_file_path)
+            else:
+                file = genai.upload_file(image_path, mime_type=mime_type)
+            return file
 
-        return file
+        return self.exponential_backoff(upload)
+
+    def generate_content_with_backoff(self, prompt, uploaded_file):
+        """
+        Generate content with exponential backoff.
+        
+        :param prompt: The prompt for the LLM.
+        :param uploaded_file: The uploaded file object.
+        :return: The response from the LLM.
+        """
+        def generate():
+            response = self.model.generate_content(
+                [prompt, uploaded_file],
+                generation_config=self.generation_config
+            )
+            return response
+        
+        return self.exponential_backoff(generate)
 
     def ocr_gemini(self, image_path, prompt=None, temperature=None, top_p=None, top_k=None, max_output_tokens=None, seed=123456):
         """
@@ -98,13 +137,11 @@ class OCRGeminiProVision:
             for key, prompt in zip(keys, prompts):
                 
                 # Upload the image to Gemini
-                uploaded_file = self.upload_to_gemini(image_path)
+                uploaded_file = self.upload_to_gemini_with_backoff(image_path)
 
                 # Generate content directly without starting a chat session
-                response = self.model.generate_content(
-                    [prompt, uploaded_file],
-                    generation_config=self.generation_config
-                )
+                response = self.generate_content_with_backoff(prompt, uploaded_file)
+
                 try:
                     tokens_in = response.usage_metadata.prompt_token_count
                     tokens_out = response.usage_metadata.candidates_token_count
