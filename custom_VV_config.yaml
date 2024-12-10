@@ -35,17 +35,17 @@ leafmachine:
 
 
     double_OCR: false
-    # ['hand', 'Qwen-2-VL', 'Florence-2', 'GPT-4o-mini', 'normal']
+    # ['hand', 'Qwen-2-VL', 'Florence-2', 'GPT-4o-mini', 'normal','Gemini-1.5-Pro']
     # 'hand' = Google Vision API handwritten optimized 
     # 'normal' = Default Google Vision API
     # 'Qwen-2-VL' = Qwen-2-VL model for OCR
     # 'Florence-2' = Florence-2 model for OCR
     # 'GPT-4o-mini' = GPT-4o-mini model for OCR
     OCR_option:
-    - hand
+    - Gemini-1.5-Pro
     # - Florence-2
     # - GPT-4o-mini
-    - Qwen-2-VL
+    # - Qwen-2-VL
 
     # If GPT-4o-mini is in OCR_option, then choose from:
     #         high

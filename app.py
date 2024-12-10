@@ -1727,7 +1727,10 @@ def content_header():
                 if total_cost:
                     with col_run_4:
                         st.success(f":money_with_wings: This run cost :heavy_dollar_sign:{total_cost:.4f}")
-                        st.success(f"Parsing\: \${parsing_cost:.4f} OCR\: \${ocr_cost:.4f}")
+                        # st.success(f"Parsing\: \${parsing_cost:.4f} OCR\: \${ocr_cost:.4f}")
+                        st.success(f"Parsing: ${parsing_cost:.4f} OCR: ${ocr_cost:.4f}")
+
+
                 else:
                     pass
                     # with col_run_4:
@@ -2385,10 +2388,14 @@ def content_ocr_method():
         st.subheader('Options for :violet[GPT-4o-mini] and :violet[GPT-4o]')
         default_resolution = st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution']
 
+        # st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution'] = st.radio(
+        #     "Select level of detail for :violet[GPT-4o] OCR. We only recommend 'high' detail in most scenarios.",
+        #     ["high", "low", ],
+        #     captions=[f"\$5-\$10 per 1,000 images",f"~\$0.50 per 1,000 images",])
         st.session_state.config['leafmachine']['project']['OCR_GPT_4o_mini_resolution'] = st.radio(
             "Select level of detail for :violet[GPT-4o] OCR. We only recommend 'high' detail in most scenarios.",
             ["high", "low", ],
-            captions=[f"\$5-\$10 per 1,000 images",f"~\$0.50 per 1,000 images",])
+            captions=[f"$5-$10 per 1,000 images",f"~$0.50 per 1,000 images",])
 
 
     if 'LLaVA' in selected_OCR_options:
