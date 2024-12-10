@@ -37,7 +37,7 @@ def check_and_fix_requirements(requirements_file):
     installed_distributions = get_installed_distributions()
     missing_or_incompatible = []
     
-    with open(requirements_file, 'r') as req_file:
+    with open(requirements_file, 'r', encoding='utf-8-sig') as req_file:
         requirements = [Requirement(line.strip()) for line in req_file if line.strip() and not line.startswith('#')]
 
     for req in requirements:
