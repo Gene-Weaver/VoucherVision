@@ -2756,7 +2756,7 @@ def render_expense_report_summary():
             textinfo='percent+label',
             hoverinfo='label+percent+text'  # Adds custom text (formatted cost) to the hover information
         )
-        st.plotly_chart(cost_pie_chart, use_container_width=True)
+        st.plotly_chart(cost_pie_chart, use_container_width=True,key=734563735673567)
 
 
 
@@ -2787,7 +2787,7 @@ def render_expense_report_summary():
             textinfo='percent+label',
             hoverinfo='label+percent+text'  # This tells Plotly to show the label, percent, and custom text (cost) on hover
         )
-        st.plotly_chart(cost_pie_chart, use_container_width=True)
+        st.plotly_chart(cost_pie_chart, use_container_width=True, key=39478938475)
 
         # API version usage percentages pie chart
         st.subheader('Runs by API Version')
@@ -2796,7 +2796,7 @@ def render_expense_report_summary():
         pie_chart = go.Figure(data=[go.Pie(labels=api_versions, values=percentages, hole=.3)])
         pie_chart.update_layout(margin=dict(t=0, b=0, l=0, r=0))
         pie_chart.update_traces(marker=dict(colors=colors),)
-        st.plotly_chart(pie_chart, use_container_width=True)
+        st.plotly_chart(pie_chart, use_container_width=True, key=343466756453444444)
 
 
 def content_less_used():
