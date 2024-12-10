@@ -91,8 +91,8 @@ class OCRGeminiProVision:
 
         if prompt is None:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
-            # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
-            keys = ["default_plus_minorcorrect_idhandwriting",]
+            keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
+            # keys = ["default_plus_minorcorrect_idhandwriting",]
 
             prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
             for key, prompt in zip(keys, prompts):
