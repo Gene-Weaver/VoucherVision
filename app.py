@@ -2242,13 +2242,13 @@ def content_ocr_method():
     demo_text_trh = demo_text_h + '\n' + demo_text_tr
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
-    options = ["Google Vision Handwritten", 
+    options = ["Gemini-1.5-Pro",
+                "Google Vision Handwritten", 
                 "Google Vision Printed", 
                 "LOCAL Qwen-2-VL", 
                 "LOCAL Florence-2", 
                 "GPT-4o-mini", 
                 "GPT-4o", 
-                "Gemini-1.5-Pro",
                 "Gemini-1.5-Flash",
                 "Gemini-1.5-Flash-8B",
                 "Hyperbolic Pixtral-12B-2409",

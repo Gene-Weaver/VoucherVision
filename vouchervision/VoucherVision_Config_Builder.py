@@ -52,7 +52,7 @@ def build_VV_config(loaded_cfg=None):
 
         check_for_illegal_filenames = False
 
-        LLM_version_user = 'Gemini 1.5 Flash' # 'Azure GPT 4' #'Azure GPT 4 Turbo 1106-preview'
+        LLM_version_user = 'Gemini 1.5 Pro' # 'Azure GPT 4' #'Azure GPT 4 Turbo 1106-preview'
         prompt_version = 'SLTPvM_default.yaml' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
         use_LeafMachine2_collage_images = 1 # Use LeafMachine2 collage images [0, 1, 2]
         do_create_OCR_helper_image = True

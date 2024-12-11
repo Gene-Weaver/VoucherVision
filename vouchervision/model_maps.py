@@ -88,9 +88,9 @@ class ModelMaps:
     
 
     MODELS_OPENAI_AZURE = [
-                    'Azure GPT 4',
                     'Azure GPT 4o',
                     'Azure GPT 4o mini',
+                    'Azure GPT 4',
                     #  'Azure GPT 4 32k',
                     #  'Azure GPT 4 Turbo 0125-preview',
                     #  'Azure GPT 4 Turbo 1106-preview',
@@ -100,11 +100,11 @@ class ModelMaps:
     
     MODELS_GOOGLE = [
                     # 'PaLM 2 text-bison@001',
-                     'PaLM 2 text-bison@002',
-                     'PaLM 2 text-unicorn@001',
                      'Gemini 1.5 Pro',
                      'Gemini 1.5 Flash',
                      'Gemini 1.5 Flash 8B',
+                     'PaLM 2 text-bison@002',
+                     'PaLM 2 text-unicorn@001',
                      ]
     
     MODELS_MISTRAL = ['Open Mistral 7B',
@@ -143,7 +143,7 @@ class ModelMaps:
                     'LOCAL CPU Mistral 7B Instruct v0.2 GGUF',
                     'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05']
 
-    MODELS_GUI_DEFAULT = 'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
+    MODELS_GUI_DEFAULT = 'Gemini 1.5 Pro' #'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
 
     MODEL_FAMILY = {
                     'OpenAI': MODELS_OPENAI,
@@ -175,9 +175,9 @@ class ModelMaps:
         # 'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
         # 'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
-        'Gemini 1.5 Flash 8B': 'GEMINI_1_5_FLASH_8B',
-        'Gemini 1.5 Flash': 'GEMINI_1_5_FLASH',  # gemini-1.5-flash
         'Gemini 1.5 Pro': 'GEMINI_1_5_PRO',  # gemini-1.5-pro
+        'Gemini 1.5 Flash': 'GEMINI_1_5_FLASH',  # gemini-1.5-flash
+        'Gemini 1.5 Flash 8B': 'GEMINI_1_5_FLASH_8B',
 
         'PaLM 2 text-unicorn@001': 'PALM2_TU_1',
         # 'PaLM 2 text-bison@001': 'PALM2_TB_1',
@@ -245,11 +245,11 @@ class ModelMaps:
             # 'Azure GPT 4 32k': has_key_azure_openai,
 
             # 'PaLM 2 text-bison@001':  has_key_google_application_credentials,
+            'Gemini 1.5 Pro':  has_key_google_application_credentials,
+            'Gemini 1.5 Flash':  has_key_google_application_credentials,
+            'Gemini 1.5 Flash 8B':  has_key_google_application_credentials,
             'PaLM 2 text-bison@002':  has_key_google_application_credentials,
             'PaLM 2 text-unicorn@001':  has_key_google_application_credentials,
-            'Gemini 1.5 Flash 8B':  has_key_google_application_credentials,
-            'Gemini 1.5 Flash':  has_key_google_application_credentials,
-            'Gemini 1.5 Pro':  has_key_google_application_credentials,
 
             'Open Mistral 7B':  has_key_mistral,
             'Open Mixtral 8x7B':  has_key_mistral,
@@ -313,11 +313,11 @@ class ModelMaps:
             # 'Azure GPT 4 32k': True,
 
             # 'PaLM 2 text-bison@001':  False,
+            'Gemini 1.5 Pro':  False,
+            'Gemini 1.5 Flash':  False,
+            'Gemini 1.5 Flash 8B':  False,
             'PaLM 2 text-bison@002':  False,
             'PaLM 2 text-unicorn@001':  False,
-            'Gemini 1.5 Flash 8B':  False,
-            'Gemini 1.5 Flash':  False,
-            'Gemini 1.5 Pro':  False,
 
             'Open Mistral 7B':  False,
             'Open Mixtral 8x7B':  False,
