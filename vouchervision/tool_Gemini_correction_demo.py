@@ -193,7 +193,7 @@ class ToolCorrection:
 
 # Example usage
 if __name__ == "__main__":
-    API_KEY = "AIzaSyB68i-2wemFqMvAucOw4Mhtxe-7gFRztTs" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
+    API_KEY = "" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
     
     JSON = """{
 "filename": "20240125_233719",
