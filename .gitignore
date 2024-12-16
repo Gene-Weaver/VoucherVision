@@ -6,6 +6,7 @@ LeafMachine2_WW.yaml
 yolov8x-pose.pt
 yolov8n.pt
 *PRIVATE_DATA*
+.DS_Store
 
 leafmachine2/
 
