@@ -12,6 +12,8 @@ class OCRPromptCatalog:
             
             "default_plus_minorcorrect_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
             
+            "default_plus_minorcorrect_idhandwriting_translate": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. If there is non-English text, translate all text to English, only returning the translated text. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
+            
             "default_plus_minorcorrect_Qwen": """Please perform OCR on this scientific image and extract all of the words and text verbatim. Then use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Do not explain your answer, only return the verbatim text:""",
             
             "default_plus_minorcorrect": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. Do not explain your answer, only return the verbatim text:""",

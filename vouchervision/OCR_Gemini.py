@@ -130,7 +130,8 @@ class OCRGeminiProVision:
 
         if prompt is None:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
-            keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
+            keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
+            # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting",]
 
             prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
@@ -154,7 +155,7 @@ class OCRGeminiProVision:
                     elif self.model_name == 'gemini-1.5-flash':
                         total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
                     elif self.model_name == 'gemini-1.5-flash-8b':
-                        total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)
+                        total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)                        
 
                     cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
                     overall_cost_in += cost_in
@@ -182,15 +183,22 @@ class OCRGeminiProVision:
 
 # Example usage
 if __name__ == "__main__":
-    run_sweep = True
-    API_KEY = "" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
+    run_sweep = False
+    API_KEY = "AIzaSyCVw-nwKkZM2LQd8fCOROJhd3IcxVPaMg4" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
     
-    
-    # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
-    image_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
-    ocr_tool = OCRGeminiProVision(api_key=API_KEY)
+    image_paths = ["/Users/williamweaver/Desktop/translate/00515126.jpg",
+        "/Users/williamweaver/Desktop/translate/04322236.jpg",
+        "/Users/williamweaver/Desktop/translate/04357250.jpg",]
 
-    # response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0)
+
+    # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
+    # image_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
+    
+    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.0-flash-exp")
+
+    for image_path in image_paths:
+        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0)
+        print(response)
 
 
     # Revisit seed, https://github.com/google-gemini/generative-ai-python/issues/605
@@ -202,11 +210,11 @@ if __name__ == "__main__":
         fail_counts = {}
 
         # Transcribe text from the image
-        reps = [0,1,2,]
+        # reps = [0,1,2,]
         temps = [0, 0.5, 1, 1.5,]
         ks = [1, 3, 10, 40]
         ps = [0, 0.8, 0.5, 0.3]
-        # reps = [0,]
+        reps = [0,]
         # temps = [0, ]
         # ks = [1, ]
         # ps = [0, ]
@@ -245,7 +253,7 @@ if __name__ == "__main__":
         print("Fail counts:", fail_counts)
 
         # Save to CSV
-        with open('Gemini_OCR_parameter_sweep_results_noSpecies.csv', mode='w', newline='') as file:
+        with open('Gemini2flashexp_OCR_parameter_sweep_results_noSpecies.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
             # Write headers
             writer.writerow(['Temperature', 'Top K', 'Top P', 'Success Count', 'Fail Count', 'Response'])

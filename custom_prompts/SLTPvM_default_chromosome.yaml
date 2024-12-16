@@ -1,6 +1,6 @@
 prompt_author: Will Weaver          
 prompt_author_institution: University of Michigan    
-prompt_name: SLTPvM_default
+prompt_name: SLTPvM_default_chromosome
 prompt_version: v-1-0      
 prompt_description: Prompt developed by the University of Michigan Herbarium (MICH).
     All field descriptions are modified from Darwin Core fields to increase LLM performance.     
@@ -14,7 +14,7 @@ instructions: 1. Refactor the unstructured OCR text into a dictionary based on t
   7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
   8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
   9. Only return a JSON dictionary represented as a string. You should not explain your answer.
-json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key.
+json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
 rules:
   catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.
   scientificName: The scientific name of the taxon including genus, specific epithet, and any lower classifications.
@@ -31,13 +31,14 @@ rules:
   verbatimCollectionDate: The verbatim original representation of the date and time information for when the specimen was collected. Date of collection exactly as it appears on the label. Do not change the format or correct typos.
   collectionDate: Date the specimen was collected formatted as year-month-day, YYYY-MM-DD. If specific components of the date are unknown, they should be replaced with zeros. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
   collectionDateEnd: If a range of collection dates is provided, this is the latter end date while collectionDate is the beginning date. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
-  habitat: Verbatim category or description of the habitat in which the specimen collection event occurred.
+  habitat: Verbatim category or description of the habitat where the specimen collection event occurred.
   chromosomeCount: Chromosome count. Typically includes 'n = ' or '2n = '.
   specimenDescription: Verbatim text describing the specimen itself, including color, measurements not specifically tied to a determination remark, observations of reproductive characters, growth form, taste, smell, etc.  
   cultivated: If the text includes the word 'cult' or 'cultivated' then this value is 'yes'.
-  country: The name of the nation or country in which the specimen was originally collected.
-  stateProvince: The name of the sub-national administrative region than country (state, province, canton, department, region, etc.) in which the specimen was originally collected.
-  county: The full, unabbreviated name of the next smaller administrative region than stateProvince (county, shire, department, parish etc.) in which the specimen was originally collected.
+  continent: Use your knowledge to infer the continent where the natural history museum specimen was originally collected.
+  country: Use your knowledge and the OCR text to infer the country where the natural history museum specimen was originally collected. 
+  stateProvince: The name of the sub-national administrative region than country (state, province, canton, department, region, etc.) where the specimen was originally collected.
+  county: The full, unabbreviated name of the next smaller administrative region than stateProvince (county, shire, department, parish etc.) where the specimen was originally collected.
   locality: Description of geographic location, landmarks, regional features, nearby places, municipality, city, or any contextual information aiding in pinpointing the exact origin or location of the specimen.
   verbatimCoordinates: Verbatim location coordinates as they appear on the label. Do not convert formats. Possible coordinate types include [Latitude, Longitude, UTM, TRS].
   decimalLatitude: Latitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
@@ -50,6 +51,7 @@ rules:
 mapping:
   GEOGRAPHY:
   - catalogNumber
+  - continent
   - country
   - stateProvince
   - county
@@ -81,3 +83,4 @@ mapping:
   - specimenDescription
   - chromosomeCount
   - additionalText
+

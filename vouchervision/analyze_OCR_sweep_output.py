@@ -233,6 +233,11 @@ if __name__ == "__main__":
     # calc_L_scores()
 
     ### TODO use the setdiff implementation to add the cyan and green json to the plots as a right andcenter panel
+    calc_L_scores_sorted(path_data = "/Users/williamweaver/Desktop/VoucherVision/OCR_vLM_Parameter_Sweep/Gemini2flashexp_OCR_parameter_sweep_results_noSpecies.csv",
+                        path_L_plot = "/Users/williamweaver/Desktop/VoucherVision/OCR_vLM_Parameter_Sweep/Gemini2flashexp_OCR_parameter_sweep_results_noSpecies_fixed_Plot_L_sorted.png",
+                        plot_title="Gemini 2 flash exp OCR  wSpecies - Confusion Matrix of Levenshtein Distances (Sorted by L-Distance)",
+                        label_size=10, compare_ignoring_newlines_and_case=True)
+
     
     calc_L_scores_sorted(path_data = "C:/Users/willwe/Documents/VoucherVision/OCR_vLM_Parameter_Sweep/Qwen2_VL_72B_Instruct_parameter_sweep_results_QwenVersion_wSpecies.csv",
                         path_L_plot = "C:/Users/willwe/Documents/VoucherVision/OCR_vLM_Parameter_Sweep/Qwen2_VL_72B_Instruct_parameter_sweep_results_QwenVersion_wSpecies_fixed_Plot_L_sorted.png",
