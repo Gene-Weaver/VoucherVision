@@ -18,6 +18,7 @@ class ModelMaps:
         'GEMINI_1_5_FLASH_8B': '#1E00FF',  # 
         'GEMINI_1_5_FLASH': '#1E00FF',  # gemini-1.5-flash
         'GEMINI_1_5_PRO': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_2_0_FLASH': '#1E00FF',  # gemini-1.5-pro
 
 
         'AZURE_GPT_4': '#800080',  # Purple
@@ -100,13 +101,14 @@ class ModelMaps:
     
     MODELS_GOOGLE = [
                     # 'PaLM 2 text-bison@001',
+                     'Gemini 2.0 Flash',
                      'Gemini 1.5 Pro',
                      'Gemini 1.5 Flash',
                      'Gemini 1.5 Flash 8B',
                      'PaLM 2 text-bison@002',
                      'PaLM 2 text-unicorn@001',
                      ]
-    
+
     MODELS_MISTRAL = ['Open Mistral 7B',
                         'Open Mixtral 8x7B',
                         'Open Mixtral 8x22B',
@@ -175,6 +177,7 @@ class ModelMaps:
         # 'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
         # 'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
+        'Gemini 2.0 Flash': 'GEMINI_2_0_FLASH',  # gemini-1.5-pro
         'Gemini 1.5 Pro': 'GEMINI_1_5_PRO',  # gemini-1.5-pro
         'Gemini 1.5 Flash': 'GEMINI_1_5_FLASH',  # gemini-1.5-flash
         'Gemini 1.5 Flash 8B': 'GEMINI_1_5_FLASH_8B',
@@ -245,6 +248,7 @@ class ModelMaps:
             # 'Azure GPT 4 32k': has_key_azure_openai,
 
             # 'PaLM 2 text-bison@001':  has_key_google_application_credentials,
+            'Gemini 2.0 Flash':  has_key_google_application_credentials,
             'Gemini 1.5 Pro':  has_key_google_application_credentials,
             'Gemini 1.5 Flash':  has_key_google_application_credentials,
             'Gemini 1.5 Flash 8B':  has_key_google_application_credentials,
@@ -313,6 +317,7 @@ class ModelMaps:
             # 'Azure GPT 4 32k': True,
 
             # 'PaLM 2 text-bison@001':  False,
+            'Gemini 2.0 Flash':  False,
             'Gemini 1.5 Pro':  False,
             'Gemini 1.5 Flash':  False,
             'Gemini 1.5 Flash 8B':  False,
@@ -432,6 +437,9 @@ class ModelMaps:
 
         elif key == 'GEMINI_1_5_PRO':
             return 'gemini-1.5-pro' 
+        
+        elif key == 'GEMINI_2_0_FLASH':
+            return 'gemini-2.0-flash-exp'
         
         ### Mistral 
         elif key == 'OPEN_MISTRAL_7B':

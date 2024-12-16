@@ -130,7 +130,8 @@ class OCRGeminiProVision:
 
         if prompt is None:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
-            keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
+            # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
+            keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting",]
 

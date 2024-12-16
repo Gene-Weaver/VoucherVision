@@ -150,6 +150,8 @@ class OCREngine:
             self.GPT4o = GPT4oOCR(api_key = os.getenv('OPENAI_API_KEY'))
 
     def init_gemini_pro(self):
+        if "Gemini-2.0-Flash" in self.OCR_option:
+            self.GeminiProVision_2_0_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.0-flash-exp")
         if 'Gemini-1.5-Pro' in self.OCR_option:
             self.GeminiProVision_1_5_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-1.5-pro")
         if "Gemini-1.5-Flash" in self.OCR_option:
@@ -903,6 +905,13 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nGPT-4o OCR:\n{results_text}"
 
         # Gemini options
+        if "Gemini-2.0-Flash" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="Gemini-2.0-Flash",
+                ocr_helper=self.GeminiProVision_2_0_Flash,
+                json_key='OCR_Gemini_2_0_Flash',
+                logger_message="Gemini-2.0-Flash"
+            )
+
         if "Gemini-1.5-Pro" in self.OCR_option: # This option does not produce an OCR helper image
             self.gemini_ocr(ocr_option="Gemini-1.5-Pro",
                 ocr_helper=self.GeminiProVision_1_5_Pro,

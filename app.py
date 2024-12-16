@@ -172,6 +172,8 @@ if 'cost_mistral' not in st.session_state:
     st.session_state['cost_mistral'] = None
 if 'cost_local' not in st.session_state:
     st.session_state['cost_local'] = None
+if 'cost_hyper' not in st.session_state:
+    st.session_state['cost_hyper'] = None
 
 
 if 'settings_filename' not in st.session_state:
@@ -2242,7 +2244,8 @@ def content_ocr_method():
     demo_text_trh = demo_text_h + '\n' + demo_text_tr
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
-    options = ["Gemini-1.5-Pro",
+    options = ["Gemini-2.0-Flash",
+                "Gemini-1.5-Pro",
                 "Google Vision Handwritten", 
                 "Google Vision Printed", 
                 "LOCAL Qwen-2-VL", 
@@ -2319,6 +2322,7 @@ def content_ocr_method():
             "GPT-4o-mini": "GPT-4o-mini",
             "GPT-4o": "GPT-4o",
 
+            "Gemini-2.0-Flash": "Gemini-2.0-Flash",
             "Gemini-1.5-Pro": "Gemini-1.5-Pro",
             "Gemini-1.5-Flash": "Gemini-1.5-Flash",
             "Gemini-1.5-Flash-8B": "Gemini-1.5-Flash-8B",
