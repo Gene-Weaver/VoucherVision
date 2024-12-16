@@ -69,29 +69,68 @@ def load_keep_files(path_countries_keep, path_continents_keep):
     continents_keep = set(pd.read_csv(path_continents_keep, header=None).iloc[:, 0].dropna().str.strip().tolist())
     return countries_keep, continents_keep
 
+# def split_transcription_file(path_transcription, countries_keep, continents_exclude):
+#     """Splits the transcription file into two parts based on country and continent filters."""
+#     # Read the transcription file
+#     df = pd.read_excel(path_transcription, engine='openpyxl')
+    
+#     # Ensure 'country' and 'continent' columns exist
+#     if 'country' not in df.columns or 'continent' not in df.columns:
+#         raise ValueError("The transcription file must contain 'country' and 'continent' columns.")
+    
+#     # Filter for the original transcription (keep these rows)
+#     df_original = df[
+#         df['country'].str.lower().isin({country.lower() for country in countries_keep}) | 
+#         ~df['continent'].str.lower().isin({continent.lower() for continent in continents_exclude}) | 
+#         (df['country'].isna() & df['continent'].isna())
+#     ]
+    
+#     # Filter for the new project transcription (all other rows)
+#     df_new = df[~df.index.isin(df_original.index)]
+    
+#     return df, df_original, df_new
 def split_transcription_file(path_transcription, countries_keep, continents_exclude):
     """Splits the transcription file into two parts based on country and continent filters."""
     # Read the transcription file
-    df = pd.read_excel(path_transcription, engine='openpyxl')
-    
+    df = pd.read_excel(path_transcription, engine='openpyxl', dtype=str)
+    df_pre = pd.read_excel(path_transcription, engine='openpyxl', dtype=str)
+
     # Ensure 'country' and 'continent' columns exist
     if 'country' not in df.columns or 'continent' not in df.columns:
         raise ValueError("The transcription file must contain 'country' and 'continent' columns.")
     
-    # Filter for the original transcription (keep these rows)
-    df_original = df[
+    # Create a mask to identify which rows should be part of the original transcription
+    keep_mask = (
         df['country'].str.lower().isin({country.lower() for country in countries_keep}) | 
         ~df['continent'].str.lower().isin({continent.lower() for continent in continents_exclude}) | 
         (df['country'].isna() & df['continent'].isna())
-    ]
+    )
     
     # Filter for the new project transcription (all other rows)
-    df_new = df[~df.index.isin(df_original.index)]
+    df_new = df[~keep_mask].copy()  # Copy to avoid issues with SettingWithCopyWarning
     
-    return df, df_original, df_new
+    # Replace 'country' with 'X' for rows not in the original transcription
+    df.loc[~keep_mask, 'country'] = 'X'
+    
+    # Convert empty strings back to native empty values for non-object dtypes in df and df_pre
+    filename_index = df.columns.get_loc('filename') if 'filename' in df.columns else None
+    if filename_index is not None:
+        columns_to_clear = [col for i, col in enumerate(df.columns[:filename_index]) if col not in ['catalogNumber', 'country']]
+        for col in columns_to_clear:
+            df.loc[df['country'] == 'X', col] = ""
+    
+    # Filter for the original transcription with updated 'country' values
+    df = df.fillna("")
+    df_new = df_new.fillna("")
+    df_pre = df_pre.fillna("")
+    
+    df_original = df.copy()
+    
+    return df_pre, df_original, df_new
 
 
-def save_transcription_files(path_transcription, path_transcription_new, df_original, df_new, df_pre, is_already_processed, fallback_suffix):
+
+def save_transcription_files(path_transcription, path_transcription_new, df_original, df_new, df_pre, fallback_suffix, is_already_processed=False):
     """Saves the original and new transcription files."""
     if is_already_processed:
         # Save the original transcription back to its original location
@@ -232,16 +271,16 @@ if __name__ == "__main__":
     
     # path_input_project = "C:/Users/willwe/Downloads/2023_10_09_I5_bamaral_AllAsia_Onagr"
     # path_input_project = "S:/VoucherVision/Unassigned"
-    # path_input_project = "C:/Users/willwe/Downloads/two_batches"
+    path_input_project = "C:/Users/willwe/Downloads/two_batches"
 
-    # path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
-    # path_countries_keep = "S:/VoucherVision/Tools/Country_Include_AA.csv"
-    # suffix_new_project = "_exAA"
+    path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
+    path_countries_keep = "S:/VoucherVision/Tools/Country_Include_AA.csv"
+    suffix_new_project = "_exAA"
 
-    path_input_project = "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"
-    path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_Africa.csv"
-    path_countries_keep = "S:/VoucherVision/Tools/Country_Include_Africa.csv"
-    suffix_new_project = "_Africa"
+    # path_input_project = "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"
+    # path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_Africa.csv"
+    # path_countries_keep = "S:/VoucherVision/Tools/Country_Include_Africa.csv"
+    # suffix_new_project = "_Africa"
 
     # Determine if we are going to be working on a single project, or a folder containing multiple projects
 

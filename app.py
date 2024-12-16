@@ -1,5 +1,5 @@
 import streamlit as st
-import yaml, os, json, random, time, re, torch, random, warnings, shutil, sys, glob
+import yaml, os, json, random, time, re, torch, random, warnings, shutil, sys, glob, logging
 import seaborn as sns
 import plotly.graph_objs as go
 from PIL import Image
@@ -25,6 +25,27 @@ import pstats
 # Initializations ###############################################################################################################################
 #################################################################################################################################################
 st.set_page_config(layout="wide", page_icon='img/icon.ico', page_title='VoucherVision',initial_sidebar_state="collapsed")
+
+# Get Tornado logger
+tornado_logger = logging.getLogger("tornado.application")
+
+class IgnoreLog4ShellFilter(logging.Filter):
+    """Filter log entries to exclude ones related to Log4Shell or Nessus scans."""
+    def filter(self, record):
+        # Define patterns to exclude from logs
+        ignore_patterns = [
+            r'\${jndi:ldap',  # Log4Shell payloads
+            r'/cgi-bin/admin.pl',  # Nessus scans
+            r'/cgi-bin/administrator'  # Nessus scans
+        ]
+        # If any pattern matches, this log record is ignored
+        for pattern in ignore_patterns:
+            if re.search(pattern, record.getMessage()):
+                return False
+        return True
+
+# Add the filter to all loggers
+tornado_logger.addFilter(IgnoreLog4ShellFilter())
 
 # Parse the 'is_hf' argument and set it in session state
 if 'is_hf' not in st.session_state:
@@ -114,7 +135,8 @@ if 'proceed_to_faqs' not in st.session_state:
 ########################################################################################################
 if 'processing_add_on' not in st.session_state:
     st.session_state['processing_add_on'] = 0
-
+if 'image_extensions' not in st.session_state:
+    st.session_state.image_extensions = {'.jpg', '.jpeg', '.png', '.JPG', '.JPEG'} 
 
 if 'capability_score' not in st.session_state:
     st.session_state['num_gpus'], st.session_state['gpu_dict'], st.session_state['total_vram_gb'], st.session_state['capability_score'] = check_system_gpus()
@@ -496,6 +518,32 @@ def content_input_images(col_left, col_right):
             st.session_state['view_local_gallery'] = st.toggle("View Image Gallery",)
             handle_image_upload_and_gallery()
 
+# def list_jpg_files(directory_path):
+#     jpg_count = 0
+#     clear_image_gallery()
+#     st.session_state['input_list_small'] = []
+
+#     if not os.path.isdir(directory_path):
+#         return None
+    
+#     jpg_count = count_jpg_images(directory_path)
+
+#     jpg_files = []
+#     for root, dirs, files in os.walk(directory_path):
+#         for file in files:
+#             if file.lower().endswith('.jpg'):
+#                 jpg_files.append(os.path.join(root, file))
+#                 if len(jpg_files) == MAX_GALLERY_IMAGES:
+#                     break
+#         if len(jpg_files) == MAX_GALLERY_IMAGES:
+#             break
+            
+#     for simg in jpg_files:
+#         simg2 = Image.open(simg)
+#         simg2.thumbnail((GALLERY_IMAGE_SIZE, GALLERY_IMAGE_SIZE), Image.Resampling.LANCZOS)  
+#         file_path_small = save_uploaded_local(st.session_state['dir_uploaded_images_small'], simg, simg2)
+#         st.session_state['input_list_small'].append(file_path_small)
+#     return jpg_count
 def list_jpg_files(directory_path):
     jpg_count = 0
     clear_image_gallery()
@@ -504,23 +552,27 @@ def list_jpg_files(directory_path):
     if not os.path.isdir(directory_path):
         return None
     
-    jpg_count = count_jpg_images(directory_path)
-
+    # Count only .jpg files directly in the root directory (no subdirectories)
+    jpg_count = len([
+        f for f in os.listdir(directory_path) 
+        if os.path.isfile(os.path.join(directory_path, f)) 
+        and f.lower().endswith('.jpg')
+    ])
+    
     jpg_files = []
-    for root, dirs, files in os.walk(directory_path):
-        for file in files:
-            if file.lower().endswith('.jpg'):
-                jpg_files.append(os.path.join(root, file))
-                if len(jpg_files) == MAX_GALLERY_IMAGES:
-                    break
-        if len(jpg_files) == MAX_GALLERY_IMAGES:
-            break
-            
+    for file in os.listdir(directory_path):
+        file_path = os.path.join(directory_path, file)
+        if os.path.isfile(file_path) and file.lower().endswith('.jpg'):
+            jpg_files.append(file_path)
+            if len(jpg_files) == MAX_GALLERY_IMAGES:
+                break
+
     for simg in jpg_files:
         simg2 = Image.open(simg)
         simg2.thumbnail((GALLERY_IMAGE_SIZE, GALLERY_IMAGE_SIZE), Image.Resampling.LANCZOS)  
         file_path_small = save_uploaded_local(st.session_state['dir_uploaded_images_small'], simg, simg2)
         st.session_state['input_list_small'].append(file_path_small)
+        
     return jpg_count
 
 
@@ -575,9 +627,16 @@ def clear_image_uploads():
 
 
 def use_test_image():
+    
     st.info(f"Processing images from {os.path.join(st.session_state.dir_home,'demo','demo_images')}")
     st.session_state.config['leafmachine']['project']['dir_images_local'] = os.path.join(st.session_state.dir_home,'demo','demo_images')
-    n_images = len([f for f in os.listdir(st.session_state.config['leafmachine']['project']['dir_images_local']) if os.path.isfile(os.path.join(st.session_state.config['leafmachine']['project']['dir_images_local'], f))])
+    # Count only image files in the specified directory
+    n_images = len([
+        f for f in os.listdir(st.session_state.config['leafmachine']['project']['dir_images_local']) 
+        if os.path.isfile(os.path.join(st.session_state.config['leafmachine']['project']['dir_images_local'], f)) 
+        and os.path.splitext(f.lower())[1] in st.session_state.image_extensions
+    ])
+    
     st.session_state['processing_add_on'] = n_images
     clear_image_uploads()
     st.session_state['uploader_idk'] += 1
