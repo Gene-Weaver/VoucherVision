@@ -184,7 +184,7 @@ class OCRGeminiProVision:
 # Example usage
 if __name__ == "__main__":
     run_sweep = False
-    API_KEY = "AIzaSyCVw-nwKkZM2LQd8fCOROJhd3IcxVPaMg4" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
+    API_KEY = "" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
     
     image_paths = ["/Users/williamweaver/Desktop/translate/00515126.jpg",
         "/Users/williamweaver/Desktop/translate/04322236.jpg",
