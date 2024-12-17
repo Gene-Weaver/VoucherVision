@@ -229,9 +229,19 @@ Installation should basically be the same for Linux.
 <pre><code class="language-python">pip install -r requirements.txt</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
 
+2. Upgrade Streamlit:
+    ```bash
+    pip install --upgrade streamlit
+    ```
+
+3. For Windows only, install `pywin32` (needed for Windows shortcut functionality):
+    ```bash
+    pip install pywin32
+    ```
+
 > If you do *NOT* have a GPU, then you are all set. Otherwise...
     
-2. Make sure that your GPU can be recognized. While in the terminal/powershell, type
+4. Make sure that your GPU can be recognized. While in the terminal/powershell, type
     <pre><code class="language-python">python</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     This opens a Python script. Import torch
@@ -244,7 +254,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">exit()</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-3. If `torch.cuda.is_available()` returned `True`, then you should be set. Otherwise, you need to make sure that your CUDA version is compatible with the PyTorch version. It's usually a good idea to leave the CUDA drivers alone and find the right PyTorch version since installing/updating CUDA can be non-trivial.
+5. If `torch.cuda.is_available()` returned `True`, then you should be set. Otherwise, you need to make sure that your CUDA version is compatible with the PyTorch version. It's usually a good idea to leave the CUDA drivers alone and find the right PyTorch version since installing/updating CUDA can be non-trivial.
     - Example: If `torch.cuda.is_available()` returned `False`, I would first check my CUDA version. In a terminal, type
     <pre><code class="language-python">nvidia-smi</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
@@ -269,13 +279,13 @@ Installation should basically be the same for Linux.
     
     > If you need help, please submit an inquiry in the form at [LeafMachine.org](https://LeafMachine.org/)
 
-4. To run LLMs locally also install `pip install flash-attn==1.0.9`.
+6. To run LLMs locally also install `pip install flash-attn==1.0.9`.
     - Windows is not yet compatible with newer versions. If the rest of the installation process has been successful but you get an error like this:
     > `error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/`
     - Then you need to install some Windows development tools first. Go to [https://visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and install all packages that mention C++. Restart your PC, then `pip install flash-attn==1.0.9` should work as expected.
     - For Linux, you can try `pip install flash-attn --no-build-isolation` and use a 2.X version.
 
-5. To use Qwen models, install:
+7. To use Qwen models, install:
 <pre><code class="language-python">pip install -U "optimum"</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
 <pre><code class="language-python">pip install -U "git+https://github.com/huggingface/transformers"</code></pre>
@@ -286,7 +296,7 @@ and then you might need to reinstall torch
 <pre><code class="language-python">pip install "torch==2.3.1" "torchvision==0.18.1" "torchaudio==2.3.1" --index-url "https://download.pytorch.org/whl/cu121"</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-6. Some bleeding edge models require dev versions of libraries or require flash-attention-2 to run efficiently. flash-attention-2 is NOT easy to install on Windows as of Fall 2024, so you need to use Linux to use flash-attention-2 AND need a GPU that supports it, which include Nvidia Ada chips and newer (NVIDIA A100, NVIDIA A6000 Ada, NVIDIA H100). Florence-2 needs flash-attention but we can get away with flash-attention-1.X instead of using flash-attention-2. 
+8. Some bleeding edge models require dev versions of libraries or require flash-attention-2 to run efficiently. flash-attention-2 is NOT easy to install on Windows as of Fall 2024, so you need to use Linux to use flash-attention-2 AND need a GPU that supports it, which include Nvidia Ada chips and newer (NVIDIA A100, NVIDIA A6000 Ada, NVIDIA H100). Florence-2 needs flash-attention but we can get away with flash-attention-1.X instead of using flash-attention-2. 
 
 ---
 
@@ -416,7 +426,11 @@ and then you might need to reinstall torch
 ---
 
 # Create a Desktop Shortcut to Launch VoucherVision GUI (Windows)
-We can create a desktop shortcut to launch VoucherVision. In the `../VoucherVision/` directory is a file called `create_desktop_shortcut.py`. In the terminal, move into the `../VoucherVision/` directory and type:
+We can create a desktop shortcut to launch VoucherVision. Make sure that you have installed `pywin32` in the virtual environment. 
+<pre><code class="language-python">pip install pywin32</code></pre>
+<button class="btn" data-clipboard-target="#code-snippet"></button>
+
+In the `../VoucherVision/` directory is a file called `create_desktop_shortcut.py`. In the terminal, move into the `../VoucherVision/` directory and type:
 <pre><code class="language-python">python create_desktop_shortcut.py</code></pre>
 <button class="btn" data-clipboard-target="#code-snippet"></button>
 Or...

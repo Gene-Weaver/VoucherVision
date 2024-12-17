@@ -81,6 +81,7 @@ def main(path_to_dir, redo_completed_projects):
 
 if __name__ == "__main__":
     # Hardcoded input directory (modify as needed)
-    path_to_dir = 'S:/Imagers_CR2_only/1-Incomplete/AllAsia_Workbench/_NotesFromNature'
+    # path_to_dir = 'S:/Imagers_CR2_only/1-Incomplete/AllAsia_Workbench/_NotesFromNature'
+    path_to_dir = 'C:/Users/willwe/Downloads/ignore_non_images'
     redo_completed_projects = False # False will skip projects that have already been completed, can be used like "pick up where I left off"
     main(path_to_dir, redo_completed_projects)
