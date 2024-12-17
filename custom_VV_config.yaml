@@ -27,7 +27,7 @@ leafmachine:
   project:
     dir_images_local: c:\Users\willwe\Documents\VoucherVision\demo\demo_images
 
-    dir_output: S:/VoucherVision/Unassigned
+    dir_output: S:/VoucherVision/Unassigned_AA
     run_name: test
 
     prompt_version: SLTPvM_default.yaml

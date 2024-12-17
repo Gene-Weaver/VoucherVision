@@ -3,7 +3,7 @@ import sys
 import yaml
 from vouchervision.vouchervision_main import voucher_vision, load_custom_cfg
 
-def main(path_to_dir, redo_completed_projects):
+def main(path_to_dir, redo_completed_projects, ignore_dirs):
     # Validate the base directory
     if not os.path.isdir(path_to_dir):
         print(f"Error: {path_to_dir} is not a valid directory")
@@ -39,6 +39,10 @@ def main(path_to_dir, redo_completed_projects):
     for subdir_path in subdirs:
         do_run_VV = False
         subdir_name = os.path.basename(subdir_path)
+
+        if subdir_name in ignore_dirs:
+            print(f"Skipping {subdir_name}")
+            continue
         
         # Update configuration for the current subdirectory
         cfg['leafmachine']['project']['dir_images_local'] = subdir_path
@@ -81,7 +85,15 @@ def main(path_to_dir, redo_completed_projects):
 
 if __name__ == "__main__":
     # Hardcoded input directory (modify as needed)
+    # path_to_dir = 'C:/Users/willwe/Downloads/ignore_non_images'
     # path_to_dir = 'S:/Imagers_CR2_only/1-Incomplete/AllAsia_Workbench/_NotesFromNature'
-    path_to_dir = 'C:/Users/willwe/Downloads/ignore_non_images'
+    path_to_dir = "S:/Imagers_CR2_only/1-Incomplete/AllAsia_Workbench"
+
+    ignore_dirs = [
+        "_exAllAsia_workbench",
+        "_NotesFromNature",
+        "_NotesFromNatureTEMP",
+        "_UploadComplete",
+    ]
     redo_completed_projects = False # False will skip projects that have already been completed, can be used like "pick up where I left off"
-    main(path_to_dir, redo_completed_projects)
+    main(path_to_dir, redo_completed_projects, ignore_dirs)
