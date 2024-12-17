@@ -1,42 +1,67 @@
+###                                 Instructions
+### To run this file: 
+###      1. Edit the paths below
+###      2. In the terminal, change directories and move into the directory that contains this file, using 'cd'
+###      3. Two run the code, we need 2 packages. You can either activate the VoucherVision virtual environment (https://github.com/Gene-Weaver/VoucherVision)
+###         OR you can just run `pip install pandas openpyxl` to install them locally (these are basic packages that should not cause any problems)
+###      4. Type `python split_finished_batch_by_geography.py`
+###      5. The code will run
+### 
+### This code is designed to split the VoucherVision output based on geopgraphy, usually to split out the exAA specimens.
+### 
+### This code will 
+### 1. Make a full copy of the original project and all its files, saving it to the same location with the new suffix. 
+###    If the project with suffix already exists, skip it, do nothing else
+###     e.g. ORIGINAL S:/VoucherVision/Unassigned/2023_10_13_I4_kathia_AllAsia_Api
+###          NEW      S:/VoucherVision/Unassigned/2023_10_13_I4_kathia_AllAsia_Api_exAA
+###     where the _exAA is the suffix you provide
+###     - NOTE: ALL images will exist in BOTH projects so we don't break any links. The transcribed.xlsx file dictates which specimens the person sees in the VVEditor
+### 2. Delete the .zip folders in BOTH projects
+###     - remember that we drag the .zip file into editor, so we need to create a new verison with the new transcribed.xlsx files
+### 3. Load the continent and country parameters. THese define the geographies that you want to keep in the ORIGINAL folder. All 
+###    exclusions will be moved to the NEW folder.
+###     - It will exclude the continents that you provide
+###     - It will include the countries that you provide
+### 4. It will save a fallback copy of the original transcribed.xlsx file in ORIGINAL and NEW called transcribed_prior_to_geography_split.xlsx
+###     - you can use this as a reference
+### 5. Filter based on geographies. All unkowns will remain in the ORIGINAL
+###     - e.g. If working on the All Asia grant, a specimen no geo information will be sent to the person for review along with the Asian specimens
+###            If there are African specimens, they will be moved to the _exAA project's transcribed.xlsx
+### 6. Save the two transcribed.xlsx versions, overwriting the original transcribed.xlsx version in both folders.
+### 7 Create a new .zip file in both ORIGINAL and NEW, which will be used in the VVEditor
+### 
+### Provide the following:
+###     Input:
+###         path_input_project
+###             NOTE: This path can either be to a single project, or a folder that contains many projects
+###             path to project that you want to split
+###             e.g. "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"  # a single project
+###             e.g. "C:/Users/willwe/Downloads/two_batches"                                     # a folder that contains multiple projects
+path_input_project = "C:/Users/willwe/Downloads/two_batches"
+
+###         suffix_new_project (should not change unless the scope of the project changes)
+###             suffix for new project (original_project_name{suffix_new_project})
+###             e.g. "_exAA"
+suffix_new_project = "_exAA"
+
+###         path_countries_keep (should not change unless the scope of the project changes)
+###             path to countries_keep.csv
+###             e.g. "S:/VoucherVision/Tools/Country_Include_AA.csv"
+path_countries_keep = "S:/VoucherVision/Tools/Country_Include_AA.csv"
+
+###         path_continents_exclude (should not change unless the scope of the project changes)
+###             path to continents_exclude.csv
+###             e.g. "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
+path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
+
+
+
+
+
+
+### Do not edit below this text
 import os, glob, shutil
 import pandas as pd
-
-'''
-This code is designed to split the VoucherVision output based on geopgraphy.
-
-This code will 
-1. Make a full copy of the original project and all its files, saving it to the same location with the new suffix. 
-   If the project with suffix already exists, skip it, do nothing else
-    e.g. ORIGINAL S:/VoucherVision/Unassigned/2023_10_13_I4_kathia_AllAsia_Api
-         NEW      S:/VoucherVision/Unassigned/2023_10_13_I4_kathia_AllAsia_Api_exAA
-    where the _exAA is the suffix you provide
-    - NOTE: ALL images will exist in BOTH projects so we don't break any links. The transcribed.xlsx file dictates which specimens the person sees in the VVEditor
-2. Delete the .zip folders in BOTH projects
-    - remember that we drag the .zip file into editor, so we need to create a new verison with the new transcribed.xlsx files
-3. Load the continent and country parameters. THese define the geographies that you want to keep in the ORIGINAL folder. All 
-   exclusions will be moved to the NEW folder.
-    - It will exclude the continents that you provide
-    - It will include the countries that you provide
-4. It will save a fallback copy of the original transcribed.xlsx file in ORIGINAL and NEW called transcribed_prior_to_geography_split.xlsx
-    - you can use this as a reference
-5. Filter based on geographies. All unkowns will remain in the ORIGINAL
-    - e.g. If working on the All Asia grant, a specimen no geo information will be sent to the person for review along with the Asian specimens
-           If there are African specimens, they will be moved to the _exAA project's transcribed.xlsx
-6. Save the two transcribed.xlsx versions, overwriting the original transcribed.xlsx version in both folders.
-7 Create a new .zip file in both ORIGINAL and NEW, which will be used in the VVEditor
-
-Provide the following:
-    Input:
-        path_input_project
-            path to project that you want to split
-        path_countries_keep
-            path to countries_keep.csv
-        path_continents_keep
-            path to continents_keep.csv
-        suffix_new_project
-            suffix for new project (original_project_name{suffix_new_project})
-'''
-
 def copy_project_folder(path_input_project, suffix_new_project):
     """Copies the input project folder to a new project folder with a suffix."""
     parent_dir = os.path.dirname(path_input_project)
@@ -271,11 +296,11 @@ if __name__ == "__main__":
     
     # path_input_project = "C:/Users/willwe/Downloads/2023_10_09_I5_bamaral_AllAsia_Onagr"
     # path_input_project = "S:/VoucherVision/Unassigned"
-    path_input_project = "C:/Users/willwe/Downloads/two_batches"
+    # path_input_project = "C:/Users/willwe/Downloads/two_batches"
 
-    path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
-    path_countries_keep = "S:/VoucherVision/Tools/Country_Include_AA.csv"
-    suffix_new_project = "_exAA"
+    # path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
+    # path_countries_keep = "S:/VoucherVision/Tools/Country_Include_AA.csv"
+    # suffix_new_project = "_exAA"
 
     # path_input_project = "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"
     # path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_Africa.csv"
