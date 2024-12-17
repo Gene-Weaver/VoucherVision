@@ -298,6 +298,8 @@ and then you might need to reinstall torch
 
 8. Some bleeding edge models require dev versions of libraries or require flash-attention-2 to run efficiently. flash-attention-2 is NOT easy to install on Windows as of Fall 2024, so you need to use Linux to use flash-attention-2 AND need a GPU that supports it, which include Nvidia Ada chips and newer (NVIDIA A100, NVIDIA A6000 Ada, NVIDIA H100). Florence-2 needs flash-attention but we can get away with flash-attention-1.X instead of using flash-attention-2. 
 
+9. If you are trying to use some local models and run into trouble, let me know. Some of them have very picky dependencies.
+
 ---
 
 # Installing VoucherVision (using conda)
