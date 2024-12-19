@@ -30,6 +30,17 @@
 ### 6. Save the two transcribed.xlsx versions, overwriting the original transcribed.xlsx version in both folders.
 ### 7 Create a new .zip file in both ORIGINAL and NEW, which will be used in the VVEditor
 ### 
+### NOTE: In the event of an error, you will see a folder with the suffix "__BACKUP". This retains a copy of the full original project.
+###       If the code has finished running and you see a "__BACKUP" folder, then the code did not actually run successfully. The most
+###       likely error is that the S Drive lost connection for a bit or there is a typo in a file path name.
+###       TO RESOLVE THIS ERROR:
+###             Delete the folder that you were tring to split and delete the folder that you were trying to create, then rename the "__BACKUP"
+###             folder by simply delete the "__BACKUP" from the file name. Then rerun the code.
+###             e.g. your project is called "2023_10_13_I4_kathia_AllAsia_Api", you run the code and it starts to create "2023_10_13_I4_kathia_AllAsia_Api_exAA"
+###                  the code finishes/stops running, but when you look in the output folder you still see "2023_10_13_I4_kathia_AllAsia_Api__BACKUP". 
+###                  Double check that the file paths you provided are all correct. Then delete "2023_10_13_I4_kathia_AllAsia_Api" and "2023_10_13_I4_kathia_AllAsia_Api_exAA"
+###                  Now rename "2023_10_13_I4_kathia_AllAsia_Api__BACKUP" to "2023_10_13_I4_kathia_AllAsia_Api" and rerun the code.
+### 
 ### Provide the following:
 ###     Input:
 ###         path_input_project
@@ -37,7 +48,7 @@
 ###             path to project that you want to split
 ###             e.g. "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"  # a single project
 ###             e.g. "C:/Users/willwe/Downloads/two_batches"                                     # a folder that contains multiple projects
-path_input_project = "C:/Users/willwe/Downloads/two_batches"
+path_input_project = "S:/VoucherVision/Unassigned"
 
 ###         suffix_new_project (should not change unless the scope of the project changes)
 ###             suffix for new project (original_project_name{suffix_new_project})
@@ -46,12 +57,12 @@ suffix_new_project = "_exAA"
 
 ###         path_countries_keep (should not change unless the scope of the project changes)
 ###             path to countries_keep.csv
-###             e.g. "S:/VoucherVision/Tools/Country_Include_AA.csv"
+###             e.g. "S:/Curatorial Projects/VoucherVision/Tools/Country_Include_AA.csv"
 path_countries_keep = "S:/VoucherVision/Tools/Country_Include_AA.csv"
 
 ###         path_continents_exclude (should not change unless the scope of the project changes)
 ###             path to continents_exclude.csv
-###             e.g. "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
+###             e.g. "S:/Curatorial Projects/VoucherVision/Tools/Continent_Exclude_AA.csv"
 path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_AA.csv"
 
 
@@ -87,6 +98,17 @@ def delete_old_zip_files(directory):
                     print(f"    Deleted ZIP file: {file_path}")
                 except Exception as e:
                     print(f"    Failed to delete {file_path}: {e}")
+
+def delete_directory(directory):
+    """Recursively deletes the specified directory and all its contents."""
+    try:
+        if os.path.exists(directory):
+            shutil.rmtree(directory)
+            print(f"    Successfully deleted __BACKUP directory: {directory}")
+        else:
+            print(f"Directory does not exist: {directory}")
+    except Exception as e:
+        print(f"Failed to delete directory {directory}: {e}")
 
 def load_keep_files(path_countries_keep, path_continents_keep):
     """Loads the country and continent keep files."""
@@ -230,9 +252,12 @@ def start_splitting(path_input_project, path_continents_exclude, path_countries_
         transcription_file = [f for f in transcription_files if not f.endswith('transcribed.xlsx')][0]
 
         # Step 1: Copy the project folder
+        print(f"    Copying files from {path_input_project} --> {suffix_new_project}")
         new_project_path, did_create_new_project = copy_project_folder(path_input_project, suffix_new_project)
+        print(f"    Copying files from {path_input_project} --> __BACKUP")
+        backup_project_path, did_create_backup_project = copy_project_folder(path_input_project, "__BACKUP")
 
-        if did_create_new_project:
+        if did_create_new_project and did_create_backup_project:
             delete_old_zip_files(new_project_path)
 
             base_name_original_project = os.path.basename(os.path.normpath(path_input_project))
@@ -256,12 +281,23 @@ def start_splitting(path_input_project, path_continents_exclude, path_countries_
             print(f"    Number of images skipped due to criteria: {path_transcription}")
             print(f"        {df_new.shape[0]}")
 
+            delete_directory(backup_project_path)
+        else:
+            print(f"Skipping {path_input_project}")
+            print(f"    Created {suffix_new_project} folder version of project: {did_create_new_project}")
+            print(f"        {new_project_path}")
+            print(f"    Created __BACKUP folder version of project: {did_create_backup_project}")
+            print(f"        {backup_project_path}")
+
 
     else:
         # Step 1: Copy the project folder
+        print(f"    Copying files from {path_input_project} --> {suffix_new_project}")
         new_project_path, did_create_new_project = copy_project_folder(path_input_project, suffix_new_project)
+        print(f"    Copying files from {path_input_project} --> __BACKUP")
+        backup_project_path, did_create_backup_project = copy_project_folder(path_input_project, "__BACKUP")
 
-        if did_create_new_project:
+        if did_create_new_project and did_create_backup_project:
             delete_old_zip_files(path_input_project)
             delete_old_zip_files(new_project_path)
 
@@ -286,6 +322,16 @@ def start_splitting(path_input_project, path_continents_exclude, path_countries_
             print(f"        {df_original.shape[0]}")
             print(f"    Number of images moved to new location: {path_transcription_new}")
             print(f"        {df_new.shape[0]}")
+
+            delete_directory(backup_project_path)
+
+        else:
+            print(f"Skipping {path_input_project}")
+            print(f"    Created {suffix_new_project} folder version of project: {did_create_new_project}")
+            print(f"        {new_project_path}")
+            print(f"    Created __BACKUP folder version of project: {did_create_backup_project}")
+            print(f"        {backup_project_path}")
+
 
 if __name__ == "__main__":
     # Define input paths and suffix

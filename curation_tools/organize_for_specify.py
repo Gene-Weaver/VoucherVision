@@ -7,23 +7,26 @@
 ### To run this file: 
 ###      1. Edit the paths below
 ###      2. In the terminal, change directories and move into the directory that contains this file, using 'cd'
+###         Make sure that you have run 
+###              pip install pandas openpyxl
 ###      3. Type `python organize_for_specify.py`
 ###      4. The code will run
 
 
-# path_template_csv --- This is the file that will dictate how the final output file looks.
-#                       It should always live inside 'S:/VoucherVision/Tools/Work_Bench_Headers_AllAsia_min.csv'
-#                       e.g. 'S:/VoucherVision/Tools/Work_Bench_Headers_AllAsia_min.csv'
-path_template_csv = 'S:/VoucherVision/Tools/Work_Bench_Headers_AllAsia_min.csv'
+
 
 # path_input_xlsx ----- This is the file that needs to be altered for Specify import
-#                       e.g. 'S:/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__edited__2024_12_09T09_57_28.xlsx'
-path_input_xlsx = 'S:/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__edited__2024_12_09T09_57_28.xlsx'
+#                       e.g. 'S:/Curatorial Projects/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__edited__2024_12_09T09_57_28.xlsx'
+path_input_xlsx = 'S:/Curatorial Projects/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__edited__2024_12_09T09_57_28.xlsx'
 
 # output_path --------- This is the name and path of the newly created, reformatted file. 
-#                       e.g. 'S:/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__final__2024_12_09T09_57_28.xlsx'
-output_path = 'S:/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__final__2024_12_09T09_57_28.xlsx'
+#                       e.g. 'S:/Curatorial Projects/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__final__2024_12_09T09_57_28.xlsx'
+output_path = 'S:/Curatorial Projects/VoucherVision/Transcription/willwe/Collage_HRT_test/Transcription/transcribed__final__2024_12_09T09_57_28.xlsx'
 
+# path_template_csv --- This is the file that will dictate how the final output file looks. This will *rarely* change
+#                       It should always live inside 'S:/Curatorial Projects/VoucherVision/Tools/Work_Bench_Headers_AllAsia_min.csv'
+#                       e.g. 'S:/Curatorial Projects/VoucherVision/Tools/Work_Bench_Headers_AllAsia_min.csv'
+path_template_csv = 'S:/Curatorial Projects/VoucherVision/Tools/Work_Bench_Headers_AllAsia_min.csv'
 
 
 ### Do not edit below this text
