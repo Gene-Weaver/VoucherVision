@@ -46,9 +46,9 @@
 ###         path_input_project
 ###             NOTE: This path can either be to a single project, or a folder that contains many projects
 ###             path to project that you want to split
-###             e.g. "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"  # a single project
-###             e.g. "C:/Users/willwe/Downloads/two_batches"                                     # a folder that contains multiple projects
-path_input_project = "S:/VoucherVision/Unassigned"
+###             e.g. "S:/VoucherVision/Unassigned_AA/2023_11_01_I4_mikedmac_AllAsia_Ole"  # a single project
+###             e.g. "S:/VoucherVision/Unassigned_AA"                                     # a folder that contains multiple projects
+path_input_project = "S:/VoucherVision/Unassigned_AA"
 
 ###         suffix_new_project (should not change unless the scope of the project changes)
 ###             suffix for new project (original_project_name{suffix_new_project})
@@ -334,6 +334,10 @@ def start_splitting(path_input_project, path_continents_exclude, path_countries_
 
 
 if __name__ == "__main__":
+    """
+    These commented out things can be used for debugging but you should use the global 
+    variables at the top of the script for normal use
+    """
     # Define input paths and suffix
     # path_input_project = "/path/to/input/project"
     # path_countries_keep = "/path/to/countries_keep.csv"
@@ -348,7 +352,7 @@ if __name__ == "__main__":
     # path_countries_keep = "S:/VoucherVision/Tools/Country_Include_AA.csv"
     # suffix_new_project = "_exAA"
 
-    # path_input_project = "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"
+    # path_input_project = "S:/VoucherVision/Unassigned_AA"
     # path_continents_exclude = "S:/VoucherVision/Tools/Continent_Exclude_Africa.csv"
     # path_countries_keep = "S:/VoucherVision/Tools/Country_Include_Africa.csv"
     # suffix_new_project = "_Africa"

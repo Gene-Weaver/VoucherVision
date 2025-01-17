@@ -9,7 +9,8 @@
 ### 
 ### 
 ### 
-### THIS CODE SHOULD ONLY BE RUN AFTER SPLITTING FOR GEOGRAPHY WITH THE REGULAR SCRIPT. i.e. split for _exAA first, then look for something else with this script
+### *** THIS CODE SHOULD ONLY BE RUN AFTER SPLITTING FOR GEOGRAPHY WITH THE REGULAR SCRIPT.  ***
+### i.e. split for _exAA first, then look for something else with this script
 ### ALSO this version of the script will not alter the original folder, whereas split_finished_batch_by_geography.py does alter the original folder's contents
 ### ALSO this script looks for the "transcribed_prior_to_subsetting.xlsx" file and uses it to do the sorting
 ### 
@@ -40,9 +41,11 @@
 ###     Input:
 ###         path_input_project
 ###             path to project that you want to split
-###             e.g. "C:/Users/willwe/Downloads/two_batches/2023_11_01_I4_mikedmac_AllAsia_Ole"  # a single project
-###             e.g. "C:/Users/willwe/Downloads/two_batches"                                     # a folder that contains multiple projects
-path_input_project = "C:/Users/willwe/Downloads/two_batches"
+###             e.g. "S:/VoucherVision/Unassigned_AA/2023_11_01_I4_mikedmac_AllAsia_Ole"  # a single project
+###             e.g. "S:/VoucherVision/Unassigned_AA"                                    # a folder that contains multiple projects
+# path_input_project = "S:/VoucherVision/Unassigned_AA"
+path_input_project = "S:/VoucherVision/Unassigned/2024_02_15_I5_cmsinac_AllAsia_Aster"
+
 
 ###         suffix_new_project (should not change unless the scope of the project changes)
 ###             suffix for new project (original_project_name{suffix_new_project})
@@ -51,7 +54,7 @@ suffix_new_project = "_Africa"
 
 ###         suffix_to_skip (should not change unless the scope of the project changes)
 ###             suffix(s) that we can ignore. for example, if we split the VoucherVision output to create an _exAA set, then to find 
-###             specimens from Africa we don't want to look inside those folders. Add the suffix to the list.
+###             specimens from Africa we don't want to look inside those folders, we want to look in the original folders. Add the suffix to the list.
 ###             e.g. ["_exAA",]
 suffix_to_skip = ["_exAA",]
 
@@ -84,6 +87,7 @@ def copy_project_folder(path_input_project, suffix_new_project):
         print(f"    Skipping project [{project_name}] since [{new_project_path}] already exists")
         return new_project_path, False
     
+    print(f"Copying... {path_input_project} ---> {new_project_path}")
     shutil.copytree(path_input_project, new_project_path)
     return new_project_path, True
 
@@ -303,12 +307,7 @@ def start_splitting(path_input_project, path_continents_exclude, path_countries_
             print(f"        {df_new.shape[0]}")
 
 if __name__ == "__main__":
-
-
-
-
     # Determine if we are going to be working on a single project, or a folder containing multiple projects
-
     is_single_project = check_project_validity(path_input_project, 'single')
     is_batch_project = check_project_validity(path_input_project, 'batch')
 
