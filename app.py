@@ -2641,7 +2641,7 @@ def content_processing_options():
     with col_processing_1:
         st.subheader('Compute Options')
         st.session_state.config['leafmachine']['project']['num_workers'] = st.number_input("Number of CPU workers", value=st.session_state.config['leafmachine']['project'].get('num_workers', 1), disabled=False)
-        st.session_state.config['leafmachine']['project']['batch_size'] = st.number_input("Batch size", value=st.session_state.config['leafmachine']['project'].get('batch_size', 500), help='Sets the batch size for the LeafMachine2 cropping. If computer RAM is filled, lower this value to ~100.')
+        st.session_state.config['leafmachine']['project']['batch_size'] = st.number_input("Batch size", value=st.session_state.config['leafmachine']['project'].get('batch_size', 50000), help='Sets the batch size for the LeafMachine2 cropping. If computer RAM is filled, lower this value to ~100.')
         st.session_state.config['leafmachine']['project']['pdf_conversion_dpi'] = st.number_input("PDF conversion DPI", value=st.session_state.config['leafmachine']['project'].get('pdf_conversion_dpi', 100), help='DPI of the JPG created from the page of a PDF. 100 should be fine for most cases, but 200 or 300 might be better for large images.')
     
     with col_processing_2:
