@@ -1,4 +1,4 @@
-import os, sys, inspect, shutil, warnings
+import os, sys, inspect, shutil, warnings, re
 from dataclasses import dataclass, field
 import pandas as pd
 currentdir = os.path.dirname(os.path.dirname(inspect.getfile(inspect.currentframe())))
@@ -53,6 +53,7 @@ class Project_Info():
         logger.name = 'Project Info'
         logger.info("Gathering Images and Image Metadata")
         self.logger = logger
+        self.cfg = cfg
 
         self.batch_size = cfg['leafmachine']['project']['batch_size']
 
@@ -308,6 +309,11 @@ class Project_Info():
 
         for img in os.listdir(Dirs.save_original):
             img_split, ext = os.path.splitext(img)
+
+            if self.cfg['leafmachine']['do']['check_for_illegal_filenames']:
+                # TODO This renaming needs to be unified into 1 funtion and called
+                img_split = re.sub(r"[^a-zA-Z0-9_-]", "-", img_split)
+
             if ext in self.valid_extensions:
                 with Image.open(os.path.join(Dirs.save_original, img)) as im:
                     _, ext = os.path.splitext(img)

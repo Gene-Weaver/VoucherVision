@@ -128,6 +128,7 @@ class OCRGeminiProVision:
         overall_tokens_out = 0
         overall_response = ""
 
+        # try: 
         if prompt is None:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
             # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
@@ -157,6 +158,10 @@ class OCRGeminiProVision:
                         total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
                     elif self.model_name == 'gemini-1.5-flash-8b':
                         total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)                        
+                    elif self.model_name == 'gemini-2.0-flash-exp':
+                        total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+                    elif self.model_name == 'gemini-2.0-pro':
+                        total_cost = calculate_cost('GEMINI_2_0_PRO', self.path_api_cost, tokens_in, tokens_out)   
 
                     cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
                     overall_cost_in += cost_in
@@ -175,6 +180,9 @@ class OCRGeminiProVision:
                         overall_response = parsed_answer
                 except Exception as e:
                     print(f"OCR failed: {e}")
+        # finally:  # Use a finally block to *guarantee* deletion
+        #     if uploaded_file.uri: # Check to ensure file was uploaded
+        #         self.delete_gcs_file(uploaded_file.uri['uri'])
 
         try:
             return overall_response, overall_cost_in, overall_cost_out, overall_total_cost, rates_in, rates_out, overall_tokens_in, overall_tokens_out

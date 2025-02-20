@@ -152,6 +152,19 @@ class GoogleGeminiHandler:
 
                         if self.json_report:            
                             self.json_report.set_text(text_main=f'Working on WFO, Geolocation, Links')
+                        
+                        #############################################################   
+                        # Temp for Shelly -- only run tools if has chromosome
+                        has_chromosome = output.get('chromosomeCount', '').strip()
+                        if not has_chromosome:
+                            self.tool_WFO = False
+                            self.tool_GEO = False
+                            self.tool_wikipedia = False
+                        else:
+                            self.tool_WFO = True
+                            self.tool_GEO = True
+                            self.tool_wikipedia = True
+                        #############################################################    
                         output_WFO, WFO_record, output_GEO, GEO_record = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
 
                         save_individual_prompt(sanitize_prompt(prompt_template), txt_file_path_ind_prompt)

@@ -1270,6 +1270,15 @@ def create_private_file():
             blog_text_and_image(text=None, 
                                 fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_5.PNG'))
             
+            blog_text_and_image(text="Now we need to activate a few more services to use the Gemini family of models. Search for gemini and select the Gemini API and then also select the Gemini for Google Cloud options.", 
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','gemini2.JPG'))
+            
+            blog_text_and_image(text="Enable the Gemini API", 
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','gemini3.JPG'))
+            
+            blog_text_and_image(text="Enable Gemini for Google Cloud", 
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','gemini4.JPG'))
+            
             st.subheader("Getting a Google JSON authentication key")
             st.write(f"Google uses a JSON file to store additional authentication information. Save this file in a safe, private location and assign the `GOOGLE_APPLICATION_CREDENTIALS` value to the file path. For Hugging Face, copy the contents of the JSON file including the curly brackets and paste it as the secret value.")
             st.write("To download your JSON key...")
@@ -1289,7 +1298,7 @@ def create_private_file():
                                 fullpath=os.path.join(st.session_state.dir_home, 'demo','google','google_api_11.PNG'))
             
             blog_text(text_bold="Store Safely", text=": This file contains sensitive data that can be used to authenticate and bill your Google Cloud account. Never commit it to public repositories or expose it in any way. Always keep it safe and secure.")
-
+            
             st.write("Below is an example of the JSON key.")
             st.json({
                 "type": "service_account",
@@ -1307,6 +1316,9 @@ def create_private_file():
             
             blog_text('Google project ID', ': The project ID is the "project_id"  value from the JSON file.')
             blog_text('Google project location', ': The project location specifies the location of the Google server that your project resources will utilize. It should not really make a difference which location you choose. We use `us-central1`, but you might want to choose a location closer to where you live. [please see this page for a list of available regions](https://cloud.google.com/vertex-ai/docs/general/locations)')
+            st.markdown("""Create a [Google API Key](https://aistudio.google.com/app/apikey). Google has multiple ways of authenticating their products. Please also create this API key.""")
+            blog_text_and_image(text="Follow the prompts and Create API Key", 
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','gemini6.JPG'))
 
             
         google_application_credentials = st.text_input(label = 'Full path to Google Cloud JSON API key file', value = cfg_private['google'].get('GOOGLE_APPLICATION_CREDENTIALS', ''),
@@ -1806,6 +1818,7 @@ def content_header():
             st.button("Start Transcription", type='primary', disabled=True)
             with col_run_4:
                 st.error(":heavy_exclamation_mark: Required API keys not set. Please visit the 'API Keys' tab and set the Google Vision OCR API key and at least one LLM key.")
+                st.error("If you just set the keys for the first time, please relaunch VoucherVision.")
       
         if st.session_state['formatted_json']:
             if st.session_state['hold_output']:
@@ -1824,7 +1837,13 @@ def content_header():
         try:
             st.page_link(os.path.join("pages","faqs.py"), label="FAQs", icon="❔")
         except:
-            st.page_link(os.path.join(os.path.dirname(__file__),"pages","faqs.py"), label="FAQs", icon="❔")
+            try:
+                st.page_link(os.path.join(os.path.dirname(__file__),"pages","faqs.py"), label="FAQs", icon="❔")
+            except:
+                BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Get the directory of app.py
+                RELATIVE_FAQS_PATH = os.path.relpath(os.path.join(BASE_DIR, "pages", "faqs.py"), BASE_DIR)
+                st.page_link(RELATIVE_FAQS_PATH, label="FAQs", icon="❔")
+
 
       
 

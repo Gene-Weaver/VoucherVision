@@ -1,4 +1,4 @@
-date: December 04, 2024
+date: January 07, 2025
 missing_keys: []
 present_keys:
 - Google OCR Print (Valid)
@@ -8,8 +8,8 @@ present_keys:
 - '[MODEL] mistralai/Mistral-7B-Instruct-v0.3 (Valid)'
 - '[MODEL] mistralai/Mixtral-8x22B-v0.1 (Valid)'
 - '[MODEL] mistralai/Mixtral-8x22B-Instruct-v0.1 (Valid)'
-- '[MODEL] meta-llama/Llama-3.2-1B (Invalid)'
-- '[MODEL] meta-llama/Llama-3.2-3B (Invalid)'
+- '[MODEL] meta-llama/Llama-3.2-1B (Valid)'
+- '[MODEL] meta-llama/Llama-3.2-3B (Valid)'
 - '[MODEL] meta-llama/Llama-3.2-11B-Vision-Instruct (Valid)'
 - '[MODEL] microsoft/Florence-2-large (Valid)'
 - '[MODEL] microsoft/Florence-2-base (Valid)'

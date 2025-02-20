@@ -439,7 +439,10 @@ class ModelMaps:
             return 'gemini-1.5-pro' 
         
         elif key == 'GEMINI_2_0_FLASH':
-            return 'gemini-2.0-flash-exp'
+            return 'gemini-2.0-flash-001'
+        
+        # elif key == 'GEMINI_2_0_PRO':
+        #     return 'gemini-2.0-pro' 
         
         ### Mistral 
         elif key == 'OPEN_MISTRAL_7B':

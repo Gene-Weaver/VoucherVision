@@ -135,6 +135,8 @@ def detect_archival_components(cfg, logger, dir_home, Project, Dirs, is_real_run
             num_workers = 1
         else:
             num_workers = int(cfg['leafmachine']['project']['num_workers'])
+
+        min([len(os.listdir(Project.dir_images)), ])
         
         # Weights folder base
         dir_weights = os.path.join(dir_home, 'leafmachine2', 'component_detector','runs','train')
@@ -366,7 +368,11 @@ def create_dictionary_from_txt(logger, dir_components, component, Project):
             file_name = str(file.split('.')[0])
             with open(os.path.join(dir_components, file), "r") as f:
                 # dict_labels[file] = [[int(line.split()[0])] + list(map(float, line.split()[1:])) for line in f]
-                Project.project_data[file_name][component] = [[int(line.split()[0])] + list(map(float, line.split()[1:])) for line in f]
+                try:
+                    Project.project_data[file_name][component] = [[int(line.split()[0])] + list(map(float, line.split()[1:])) for line in f]
+                except Exception as e:
+                    print(e)
+                    
                 try:
                     image_path = glob.glob(os.path.join(Project.dir_images, file_name + '.*'))[0]
                     name_ext = os.path.basename(image_path)
