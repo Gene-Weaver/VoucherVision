@@ -246,7 +246,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">pip install "torch==2.3.1" "torchvision==0.18.1" "torchaudio==2.3.1" --index-url "https://download.pytorch.org/whl/cpu"</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-> NOTE: some dependencies my try to install newer versions of PyTorch. Make sure that step 4 above is the LAST package to be installed in the virtual environment. Double check the PyTorch version before you try to run VoucherVision. 
+> NOTE: some dependencies may try to install newer versions of PyTorch. Make sure that step 4 above is the LAST package to be installed in the virtual environment. Double check the PyTorch version before you try to run VoucherVision. 
     
 4. Make sure that your GPU can be recognized. While in the terminal/powershell, type
     <pre><code class="language-python">python</code></pre>
@@ -258,7 +258,7 @@ Installation should basically be the same for Linux.
     <pre><code class="language-python">torch.cuda.is_available()</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     Check the PyTorch version. We do NOT support pytorch >= 2.6 yet. Version 2.6 introduced changes that we have to address. 
-    <pre><code class="language-python">torch.cuda.is_available()</code></pre>
+    <pre><code class="language-python">print(torch.__version__)</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
     Exit the Python instance
     <pre><code class="language-python">exit()</code></pre>
