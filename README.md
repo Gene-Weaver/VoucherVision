@@ -257,6 +257,9 @@ Installation should basically be the same for Linux.
     Make sure the GPU is found
     <pre><code class="language-python">torch.cuda.is_available()</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
+    Check the PyTorch version. We do NOT support pytorch >= 2.6 yet. Version 2.6 introduced changes that we have to address. 
+    <pre><code class="language-python">torch.cuda.is_available()</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
     Exit the Python instance
     <pre><code class="language-python">exit()</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
