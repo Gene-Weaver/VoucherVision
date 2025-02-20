@@ -238,8 +238,15 @@ Installation should basically be the same for Linux.
     ```bash
     pip install pywin32
     ```
+4. Install PyTorch. Currently does not support PyTorch 2.6+ so install using:
+    WITH GPU
+    <pre><code class="language-python">pip install "torch==2.3.1" "torchvision==0.18.1" "torchaudio==2.3.1" --index-url "https://download.pytorch.org/whl/cu121"</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
+    WITHOUT GPU
+    <pre><code class="language-python">pip install "torch==2.3.1" "torchvision==0.18.1" "torchaudio==2.3.1" --index-url "https://download.pytorch.org/whl/cpu"</code></pre>
+    <button class="btn" data-clipboard-target="#code-snippet"></button>
 
-> If you do *NOT* have a GPU, then you are all set. Otherwise...
+> NOTE: some dependencies my try to install newer versions of PyTorch. Make sure that step 4 above is the LAST package to be installed in the virtual environment. Double check the PyTorch version before you try to run VoucherVision. 
     
 4. Make sure that your GPU can be recognized. While in the terminal/powershell, type
     <pre><code class="language-python">python</code></pre>
