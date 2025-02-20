@@ -8,7 +8,6 @@ Table of Contents
 * [Table of Contents](#table-of-contents)
 * [About](#about)
 * [Updates](#updates)
-* [Roadmap and New Features List](#roadmap-and-new-features-list)
 * [Try our public demo!](#try-our-public-demo)
 * [Installing VoucherVision](#installing-VoucherVision)
    * [Prerequisites](#prerequisites)
@@ -46,6 +45,21 @@ For inquiries, feedback (or if you want to get involved!) [please complete our f
 
 ## **UPDATES**
 
+Feb. 20, 2025
+- The recommended workflow is now the following:
+    - OCR: Gemini 2.0 Flash
+    - LLM: Gemini 2.0 Flash
+    - Prompt: SLTPvM_default.yaml
+- What are we working on right now?
+    - A simple API. You upload an image, you get the JSON or CSV. 
+    - Docker containerization. Thanks Megi!
+    - Stress-testing and stability testing: MICH herbarium has processed ~50,000 images so far
+    - Testing the VV Editor in the MICH workflow
+    - Adding extremely cool auto-correction tools to fix transcription error based on already transcribed specimens
+- We are narrowing in on a couple workflows that should work for most institutions, this repo will transition to my dev environment and a new branch will be used for deployment. 
+- Make sure that you do not install PyTorch 2.6+ becasue it currently breaks the LeafMachine2 YOLO model that we use to identify text.
+
+
 December 4, 2024
 - This update will require you to delete your `expense_report.csv` file, allowing VoucherVision to create a new one. The headers were updated, so new runs will not be able to merge with existing data. You can make a copy of the file for your records and then delete `./VoucherVision/expense_report/expense_report.csv`
 - I am transitioning away from Langchain, calls to LLM_XXXXX.py files will undergo changes
@@ -74,90 +88,6 @@ For ensuring accuracy and consistency, the [VoucherVisionEditor](https://github.
 Thanks to all of our collaborating institutions!
 
 [![Partners](https://LeafMachine.org/partners/collage.jpg "Partners")](https://docs.google.com/forms/d/e/1FAIpQLSe2E9zU1bPJ1BW4PMakEQFsRmLbQ0WTBI2UXHIMEFm4WbnAVw/viewform?usp=sf_link)
-
-## Roadmap and New Features List
-
-#### VoucherVision
-- [X] Update all GPT models
-- [X] Option to zip output files for simpler import into VVE
-- [x] Expense tracking
-    - [x] Dashboard
-    - [X] More granular support for different GPT versions
-    - [x] Project-based and cummulative tracking
-- [x] Hugging Face Spaces
-    - [x] Working and refactored
-    - [x] Unified with local version
-    - [X] Visualize locations on a map (verbatim and decimal)
-    - [x] Tested with batch of 300 images
-    - [X] Optimize for +300 images at a time (not recommended unless paying for HF persistent storage)
-- [x] Modular Prompt Builder
-    - [x] Build, save, load, submit to VV library
-    - [X] Test whether order of column matters
-    - [X] Provide 3 standard prompts: long, medium, short
-    - [X] Test shorter prompt effectiveness
-- [X] API Availability Test/Visualization
-    - [X] Lock-out unsupported methods
-- [ ] Option to load existing OCR into VoucherVision workflow
-- [X] Save/load VV settings
-- [X] LLM Cost Calculator
-- [ ] FAQs page
-- [X] Detect and display system hardware
-- [ ] Filename Prefix Handling (works, but needs more options and a GUI test)
-- [ ] Validation Tools
-    - [X] JSON formatting
-    - [X] World Flora Online
-    - [X] Wikipedia links
-    - [X] USDA GRIN links
-    - [X] Plants of the World Online links
-#### Supported LLM APIs
-- [x] OpenAI 
-    - [x] GPT 4
-    - [x] GPT 4 Turbo 1106-preview
-    - [x] GPT 4 Turbo 0125-preview
-    - [x] GPT 4 32k
-    - [x] GPT 3.5
-    - [x] GPT 3.5 Instruct
-- [x] OpenAI (Microsoft Azure Endpoints)
-    - [x] GPT 4
-    - [x] GPT 4 Turbo 1106-preview
-    - [x] GPT 4 Turbo 0125-preview
-    - [x] GPT 4 32k
-    - [x] GPT 3.5
-    - [x] GPT 3.5 Instruct
-- [x] MistralAI
-    - [x] Mistral Tiny
-    - [x] Mistral Small
-    - [x] Mistral Medium
-- [x] Google PaLM2
-    - [x] text-bison@001
-    - [x] text-bison@002
-    - [x] text-unicorn@001
-- [x] Google Gemini
-    - [x] Gemini-Pro
-- [x] LOCAL LLMs
-    - [x] GPU -- Mixtral 8x7B Instruct v0.1
-    - [x] GPU -- Mistral 7B Instruct v0.2
-    - [x] CPU -- Mistral 7B Instruct v0.2 GGUF
-#### Supported Locally Hosted LLMs
-- [x] MistralAI (24GB+ VRAM GPU Required)
-    - [x] Mixtral 8x7B Instruct v0.1
-    - [x] Mixtral 7B Instruct v0.2
-- [x] MistralAI (CPU Inference) ((can run on almost computer!))
-    - [x] Mixtral 7B Instruct v0.2 GGUF via llama.cpp
-- [x] Meta-Llama2 7B
-    - [ ] Llama2 7B chat hf 
-
-#### VoucherVisionEditor
-- [X] Streamline the startup procedure
-- [ ] Add configurable dropdown menus for certain fields
-- [X] Make sure that VVE can accomodate arbitrary column names
-- [X] Remove legacy support (version 1 prompts)
-- [X] Taxonomy validation helper
-- [x] Visualize locations on a map (verbatim and decimal)
-- [x] More support for datum and verbatim coordinates
-- [ ] Compare raw OCR to values in form to flag hallucinations/generated content
-- [x] Accept zipped folders as input
-- [ ] Flag user when multiple people/names/determinations are present
 
 ### **Package Information:**  
 The main VoucherVision tool and the VoucherVisionEditor are packaged separately. This separation ensures that lower-performance computers can still install and utilize the editor. While VoucherVision is optimized to function smoothly on virtually any modern system, maximizing its capabilities (like using LeafMachine2 label collages or running Retrieval Augmented Generation (RAG) prompts) mandates a GPU.
