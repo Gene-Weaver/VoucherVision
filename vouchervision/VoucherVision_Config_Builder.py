@@ -50,7 +50,7 @@ def build_VV_config(loaded_cfg=None):
         tool_WFO = True
         tool_wikipedia = True
 
-        check_for_illegal_filenames = False
+        check_for_illegal_filenames = True
 
         LLM_version_user = 'Gemini 1.5 Pro' # 'Azure GPT 4' #'Azure GPT 4 Turbo 1106-preview'
         prompt_version = 'SLTPvM_default.yaml' # from ["Version 1", "Version 1 No Domain Knowledge", "Version 2"]
@@ -644,7 +644,7 @@ def has_API_key(val):
         
 def check_if_usable(is_hf): ############################################################################################################## TODO fix
     if is_hf:
-            return True ########### needs actual logic. borrow from another function to not repeat this
+        return True ########### needs actual logic. borrow from another function to not repeat this
     else:
         dir_home = os.path.dirname(os.path.dirname(__file__))
         path_cfg_private = os.path.join(dir_home, 'PRIVATE_DATA.yaml')
@@ -659,7 +659,7 @@ def check_if_usable(is_hf): ####################################################
         has_key_MISTRAL = has_API_key(cfg_private['mistral']['MISTRAL_API_KEY'])
 
 
-        if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_MISTRAL):
+        if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google_OCR):
             return True
         else:
             return False
