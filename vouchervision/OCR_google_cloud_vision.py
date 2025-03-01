@@ -66,7 +66,7 @@ class OCREngine:
         self.cost_in = 0
         self.cost_out = 0
 
-        self.ocr_method = []
+        self.ocr_method = set()
 
         self.hand_cleaned_text = None
         self.hand_organized_text = None
@@ -498,7 +498,7 @@ class OCREngine:
 
 
     def detect_text(self):
-        self.ocr_method.append("Google OCR Printed")
+        self.ocr_method.add("Google OCR Printed")
         
         with io.open(self.path, 'rb') as image_file:
             content = image_file.read()
@@ -615,7 +615,7 @@ class OCREngine:
 
 
     def detect_handwritten_ocr(self):
-        self.ocr_method.append("Google OCR Handwritten")
+        self.ocr_method.add("Google OCR Handwritten")
 
         
         with open(self.path, "rb") as image_file:
@@ -734,7 +734,7 @@ class OCREngine:
         return self.hand_cleaned_text
 
     def hyperbolic_ocr(self, ocr_option, ocr_helper, json_key, logger_message):
-        self.ocr_method.append(ocr_option)
+        self.ocr_method.add(ocr_option)
 
         # Update the JSON report
         if self.json_report:
@@ -764,7 +764,7 @@ class OCREngine:
             self.OCR += f"\n{ocr_option} OCR:\n{results_text}"
 
     def gemini_ocr(self, ocr_option, ocr_helper, json_key, logger_message):
-        self.ocr_method.append(ocr_option)
+        self.ocr_method.add(ocr_option)
 
         # Update the JSON report
         if self.json_report:
@@ -799,7 +799,7 @@ class OCREngine:
         # Can stack options, so solitary if statements
         self.OCR = 'OCR:\n'
         if 'CRAFT' in self.OCR_option:
-            self.ocr_method.append("CRAFT trOCR")
+            self.ocr_method.add("CRAFT trOCR")
 
             self.do_use_trOCR = True
             self.detect_text_craft()
@@ -812,7 +812,7 @@ class OCREngine:
             # logger.info(f"CRAFT trOCR:\n{self.OCR}")
 
         if 'LLaVA' in self.OCR_option: # This option does not produce an OCR helper image
-            self.ocr_method.append("LLaVA")
+            self.ocr_method.add("LLaVA")
             
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on LLaVA {self.Llava.model_path} OCR :construction:')
@@ -829,7 +829,7 @@ class OCREngine:
             # logger.info(f"LLaVA OCR:\n{self.OCR}")
 
         if 'Florence-2' in self.OCR_option: # This option does not produce an OCR helper image
-            self.ocr_method.append("Florence-2")
+            self.ocr_method.add("Florence-2")
 
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on Florence-2 [{self.Florence.model_id}] OCR :construction:')
@@ -845,7 +845,7 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}"
 
         if 'Qwen-2-VL' in self.OCR_option: # This option does not produce an OCR helper image
-            self.ocr_method.append("Qwen-2-VL")
+            self.ocr_method.add("Qwen-2-VL")
 
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on Qwen-2-VL [{self.Qwen2VL.model_id}] OCR :construction:')
@@ -861,7 +861,7 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nQwen2VL OCR:\n{results_text}"
 
         if 'GPT-4o-mini' in self.OCR_option: # This option does not produce an OCR helper image
-            self.ocr_method.append("GPT-4o-mini")
+            self.ocr_method.add("GPT-4o-mini")
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on GPT-4o-mini OCR :construction:')
 
@@ -883,7 +883,7 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}"
         
         if 'GPT-4o' in self.OCR_option: # This option does not produce an OCR helper image
-            self.ocr_method.append("GPT-4o")
+            self.ocr_method.add("GPT-4o")
             if self.json_report:
                 self.json_report.set_text(text_main=f'Working on GPT-4o OCR :construction:')
 
