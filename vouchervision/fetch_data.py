@@ -111,8 +111,20 @@ def get_weights(dir_home, current, logger):
 
         # Extract the contents of the ZIP file to the current directory
         zipfilename = current + '.zip'
-        with ZipFile(os.path.join(dir_home, zipfilename), 'r') as zip_file:
-            zip_file.extractall(os.path.join(dir_home,'bin'))
+        try:
+            with ZipFile(os.path.join(dir_home, zipfilename), 'r') as zip_file:
+                zip_file.extractall(os.path.join(dir_home,'bin'))
+        except Exception as e:
+            print(f"{bcolors.WARNING}Extracting from 1 dir higher\n{e}{bcolors.ENDC}")
+            try:
+                with ZipFile(os.path.join(os.path.dirname(dir_home), zipfilename), 'r') as zip_file:
+                    zip_file.extractall(os.path.join(dir_home,'bin'))
+            except Exception as e:
+                print(f"{bcolors.CREDBG2}ERROR --- Could not extract machine learning models\n{e}{bcolors.ENDC}")
+                logger.warning(f"ERROR --- Could not extract machine learning models")
+                logger.warning(f"ERROR --- {e}")
+                return None
+
 
         print(f"{bcolors.CGREENBG2}Data extracted to {path_zip}{bcolors.ENDC}")
         logger.warning(f"Data extracted to {path_zip}")
