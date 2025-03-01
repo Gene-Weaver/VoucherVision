@@ -472,6 +472,12 @@ class VoucherVision():
         else:
             self.dir_home = os.path.dirname(os.path.dirname(__file__))
             self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
+            if not os.path.exists(self.path_cfg_private):
+                og_pvt = self.path_cfg_private
+                self.path_cfg_private = os.path.join(os.path.dirname(self.dir_home), 'PRIVATE_DATA.yaml')
+                if not os.path.exists(self.path_cfg_private):
+                    raise FileNotFoundError(f"Cannot find PRIVATE_DATA.yaml in either of these locations: {og_pvt} OR {self.path_cfg_private}")
+            
             self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
 
             k_openai = self.cfg_private['openai']['OPENAI_API_KEY']
