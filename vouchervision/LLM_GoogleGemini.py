@@ -155,15 +155,16 @@ class GoogleGeminiHandler:
                         
                         #############################################################   
                         # Temp for Shelly -- only run tools if has chromosome
-                        has_chromosome = output.get('chromosomeCount', '').strip()
-                        if not has_chromosome:
-                            self.tool_WFO = False
-                            self.tool_GEO = False
-                            self.tool_wikipedia = False
-                        else:
-                            self.tool_WFO = True
-                            self.tool_GEO = True
-                            self.tool_wikipedia = True
+                        # has_chromosome = output.get('chromosomeCount', '').strip()
+                        # has_guardcell = output.get('guardCell', '').strip()
+                        # if (not has_chromosome) and (not has_guardcell):
+                        #     self.tool_WFO = False
+                        #     self.tool_GEO = False
+                        #     self.tool_wikipedia = False
+                        # else:
+                        #     self.tool_WFO = True
+                        #     self.tool_GEO = True
+                        #     self.tool_wikipedia = True
                         #############################################################    
                         output_WFO, WFO_record, output_GEO, GEO_record = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
 
