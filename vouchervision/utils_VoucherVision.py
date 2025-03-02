@@ -545,7 +545,7 @@ class VoucherVision():
 
         ### Google - OCR, Palm2, Gemini
         if self.has_key_google_application_credentials and self.has_key_google_project_id and self.has_key_google_location:
-            if self.is_hf:
+            if self.is_hf or self.skip_API_keys:
                 vertexai.init(project=os.getenv('GOOGLE_PROJECT_ID'), location=os.getenv('GOOGLE_LOCATION'), credentials=self.get_google_credentials())
             else:
                 vertexai.init(project=k_google_project_id, location=k_google_location, credentials=self.get_google_credentials())
