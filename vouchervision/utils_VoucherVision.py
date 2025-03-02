@@ -128,15 +128,15 @@ class VoucherVision():
             self.init_transcription_xlsx()
             self.init_trOCR_model()
 
-        '''Logging'''
-        self.logger.info(f'Transcribing dataset --- {self.dir_labels}')
-        self.logger.info(f'Saving transcription batch to --- {self.path_transcription}')
-        self.logger.info(f'Saving individual transcription files to --- {self.Dirs.transcription_ind}')
-        self.logger.info(f'Starting transcription...')
-        self.logger.info(f'     LLM MODEL --> {self.version_name}')
-        self.logger.info(f'     Using Azure API --> {self.is_azure}')
-        self.logger.info(f'     Model name passed to API --> {self.model_name}')
-        self.logger.info(f'     API access token is found in PRIVATE_DATA.yaml --> {self.has_key}')
+            '''Logging'''
+            self.logger.info(f'Transcribing dataset --- {self.dir_labels}')
+            self.logger.info(f'Saving transcription batch to --- {self.path_transcription}')
+            self.logger.info(f'Saving individual transcription files to --- {self.Dirs.transcription_ind}')
+            self.logger.info(f'Starting transcription...')
+            self.logger.info(f'     LLM MODEL --> {self.version_name}')
+            self.logger.info(f'     Using Azure API --> {self.is_azure}')
+            self.logger.info(f'     Model name passed to API --> {self.model_name}')
+            self.logger.info(f'     API access token is found in PRIVATE_DATA.yaml --> {self.has_key}')
 
 
     def init_trOCR_model(self):
