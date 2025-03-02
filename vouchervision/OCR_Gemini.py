@@ -5,7 +5,7 @@ from PIL import Image
 from OCR_resize_for_VLMs import resize_image_to_min_max_pixels
 from OCR_Prompt_Catalog import OCRPromptCatalog
 from general_utils import calculate_cost
-
+from google.genai import types
 
 '''
 Does not need to be downsampled like the other APIs or local 
@@ -93,39 +93,38 @@ class OCRGeminiProVision:
         :param mime_type: MIME type of the image.
         :return: Uploaded file object with URI.
         """
-        genai.configure(api_key=self.api_key)
+        # genai.configure(api_key=self.api_key)
 
-        def upload():
+        # def upload():
             # Check if image_source is a URL
-            if image_source.startswith(('http://', 'https://')):
-                # Download the image from the URL
-                temp_file_path = self.download_image_from_url(image_source)
-                image_path = temp_file_path
-                is_temp_file = True
-            else:
-                # Use the local file path
-                image_path = image_source
-                is_temp_file = False
+        if image_source.startswith(('http://', 'https://')):
+            # Download the image from the URL
+            # temp_file_path = self.download_image_from_url(image_source)
+            image = requests.get(image_source)
+        else:
+            # Use the local file path
+            image = Image.open(image_source)
+            # is_temp_file = False
             
-            if self.do_resize_img:
-                image = Image.open(image_path)
-                resized_image = resize_image_to_min_max_pixels(image)
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
-                    resized_image.save(temp_file.name, format="JPEG")
-                    resize_temp_path = temp_file.name
+            # if self.do_resize_img:
+            #     image = Image.open(image_path)
+            #     resized_image = resize_image_to_min_max_pixels(image)
+            #     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+            #         resized_image.save(temp_file.name, format="JPEG")
+            #         resize_temp_path = temp_file.name
 
-                file = genai.upload_file(resize_temp_path, mime_type=mime_type)
-                os.remove(resize_temp_path)
-            else:
-                file = genai.upload_file(image_path, mime_type=mime_type)
+            #     file = genai.upload_file(resize_temp_path, mime_type=mime_type)
+            #     os.remove(resize_temp_path)
+            # else:
+            #     file = genai.upload_file(image_path, mime_type=mime_type)
             
             # Clean up the temporary file if we created one from a URL
-            if is_temp_file:
-                os.remove(image_path)
+            # if is_temp_file:
+            #     os.remove(image_path)
                 
-            return file
+            # return file
 
-        return self.exponential_backoff(upload)
+        return image #self.exponential_backoff(upload)
 
     def generate_content_with_backoff(self, prompt, uploaded_file):
         """
@@ -136,12 +135,19 @@ class OCRGeminiProVision:
         :return: The response from the LLM.
         """
         def generate():
-            response = self.model.generate_content(
-                [prompt, uploaded_file],
-                generation_config=self.generation_config
-            )
-            return response
-        
+            if isinstance(uploaded_file, Image.Image):
+                response = self.model.generate_content(
+                    [prompt, uploaded_file],
+                    generation_config=self.generation_config
+                )
+                return response     
+            else:
+                response = self.model.generate_content(
+                    [prompt, types.Part.from_bytes(data=uploaded_file.content, mime_type="image/jpeg")],
+                    generation_config=self.generation_config
+                )
+                return response    
+                
         return self.exponential_backoff(generate)
 
     def ocr_gemini(self, image_path, prompt=None, temperature=None, top_p=None, top_k=None, max_output_tokens=None, seed=123456):
