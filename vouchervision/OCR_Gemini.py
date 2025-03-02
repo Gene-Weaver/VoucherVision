@@ -1,4 +1,4 @@
-import os, random, time
+import os, random, time, requests
 import tempfile
 import google.generativeai as genai
 from PIL import Image
@@ -57,9 +57,35 @@ class OCRGeminiProVision:
                 time.sleep(wait_time)
         
         raise Exception(f"Failed to complete {func.__name__} after {max_retries} attempts.")
+    
+    def download_image_from_url(self, image_url):
+        """
+        Download an image from a URL and save it to a temporary file.
+        
+        Args:
+            image_url (str): URL of the image to download.
+            
+        Returns:
+            str: Path to the temporary file containing the downloaded image.
+        """
+        def download():
+            response = requests.get(image_url, stream=True, timeout=10)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            
+            # Create a temporary file to store the image
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+                temp_file_path = temp_file.name
+                
+                # For large images, stream the content
+                for chunk in response.iter_content(chunk_size=8192):
+                    temp_file.write(chunk)
+                    
+            return temp_file_path
+        
+        return self.exponential_backoff(download)
 
 
-    def upload_to_gemini_with_backoff(self, image_path, mime_type="image/jpeg"):
+    def upload_to_gemini_with_backoff(self, image_source, mime_type="image/jpeg"):
         """
         Upload an image file to Gemini with exponential backoff.
         
@@ -70,17 +96,33 @@ class OCRGeminiProVision:
         genai.configure(api_key=self.api_key)
 
         def upload():
+            # Check if image_source is a URL
+            if image_source.startswith(('http://', 'https://')):
+                # Download the image from the URL
+                temp_file_path = self.download_image_from_url(image_source)
+                image_path = temp_file_path
+                is_temp_file = True
+            else:
+                # Use the local file path
+                image_path = image_source
+                is_temp_file = False
+            
             if self.do_resize_img:
                 image = Image.open(image_path)
                 resized_image = resize_image_to_min_max_pixels(image)
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
                     resized_image.save(temp_file.name, format="JPEG")
-                    temp_file_path = temp_file.name
+                    resize_temp_path = temp_file.name
 
-                file = genai.upload_file(temp_file_path, mime_type=mime_type)
-                os.remove(temp_file_path)
+                file = genai.upload_file(resize_temp_path, mime_type=mime_type)
+                os.remove(resize_temp_path)
             else:
                 file = genai.upload_file(image_path, mime_type=mime_type)
+            
+            # Clean up the temporary file if we created one from a URL
+            if is_temp_file:
+                os.remove(image_path)
+                
             return file
 
         return self.exponential_backoff(upload)
