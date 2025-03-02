@@ -5,6 +5,7 @@ from PIL import Image
 from OCR_resize_for_VLMs import resize_image_to_min_max_pixels
 from OCR_Prompt_Catalog import OCRPromptCatalog
 from general_utils import calculate_cost
+from google import genai
 from google.genai import types
 
 '''
