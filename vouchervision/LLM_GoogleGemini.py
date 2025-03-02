@@ -93,11 +93,19 @@ class GoogleGeminiHandler:
 
     def _build_model_chain_parser(self):
         # Instantiate the LLM class for Google Gemini
-        self.llm_model = ChatGoogleGenerativeAI(model=self.model_name, 
+        if not self.exit_early_for_JSON:
+            self.llm_model = ChatGoogleGenerativeAI(model=self.model_name, 
                                     max_output_tokens=self.config.get('max_output_tokens'),
                                     top_p=self.config.get('top_p'),
-                                    temperature=self.config.get('temperature')
+                                    temperature=self.config.get('temperature'),
                                     )    
+        else: # For vvgo
+            self.llm_model = ChatGoogleGenerativeAI(model=self.model_name, 
+                                        max_output_tokens=self.config.get('max_output_tokens'),
+                                        top_p=self.config.get('top_p'),
+                                        temperature=self.config.get('temperature'),
+                                        api_key=os.environ.get("API_KEY")
+                                        )    
         # self.llm_model = VertexAI(model='gemini-1.0-pro', 
         #                           max_output_tokens=self.config.get('max_output_tokens'),
         #                           top_p=self.config.get('top_p'))   
