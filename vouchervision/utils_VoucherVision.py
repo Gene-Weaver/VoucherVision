@@ -64,8 +64,14 @@ class VoucherVision():
         self.trOCR_processor = None
         self.trOCR_model = None
 
-        if not self.skip_API_keys:
+        if not self.skip_API_keys: # This is for VVGO
             self.set_API_keys()
+        else:
+            self.has_key_openai = False
+            self.has_key_azure_openai = False
+            self.has_key_google_application_credentials = True
+            self.has_key_mistral = False
+            self.has_key_hyperbolic = False
         self.setup()
 
 
