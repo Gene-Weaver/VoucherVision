@@ -34,7 +34,7 @@ from vouchervision.OCR_google_cloud_vision import OCREngine
     
 class VoucherVision():
 
-    def __init__(self, cfg, logger, dir_home, path_custom_prompts, Project, Dirs, is_hf, config_vals_for_permutation=None):
+    def __init__(self, cfg, logger, dir_home, path_custom_prompts, Project, Dirs, is_hf, config_vals_for_permutation=None, skip_API_keys=False):
         self.cfg = cfg
         self.logger = logger
         self.dir_home = dir_home
@@ -44,6 +44,7 @@ class VoucherVision():
         self.headers = None
         self.prompt_version = None
         self.is_hf = is_hf
+        self.skip_API_keys = skip_API_keys
 
         self.OCR_cost = 0.0
         self.OCR_tokens_in = 0
@@ -63,7 +64,8 @@ class VoucherVision():
         self.trOCR_processor = None
         self.trOCR_model = None
 
-        self.set_API_keys()
+        if not self.skip_API_keys:
+            self.set_API_keys()
         self.setup()
 
 
