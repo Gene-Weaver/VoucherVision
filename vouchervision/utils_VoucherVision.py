@@ -449,7 +449,7 @@ class VoucherVision():
         
 
     def get_google_credentials(self): # Also used for google drive
-        if self.is_hf:
+        if self.is_hf or self.skip_API_keys:
             creds_json_str = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
             credentials = service_account.Credentials.from_service_account_info(json.loads(creds_json_str))
             return credentials
@@ -463,13 +463,56 @@ class VoucherVision():
         
 
     def set_API_keys(self):
-        if self.is_hf:
-            self.dir_home = os.path.dirname(os.path.dirname(__file__))
+        if not self.skip_API_keys: 
+            if self.is_hf:
+                self.dir_home = os.path.dirname(os.path.dirname(__file__))
+                self.path_cfg_private = None
+                self.cfg_private = None
+
+                k_openai = os.getenv('OPENAI_API_KEY')
+                k_openai_azure = os.getenv('AZURE_API_VERSION')
+
+                k_huggingface = None
+
+                k_google_project_id = os.getenv('GOOGLE_PROJECT_ID')
+                k_google_location = os.getenv('GOOGLE_LOCATION')
+                k_google_application_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+
+                k_hyperbolic = os.getenv('HYPERBOLIC_API_KEY')
+                k_mistral = os.getenv('MISTRAL_API_KEY')
+                k_here = os.getenv('HERE_API_KEY')
+                k_opencage = os.getenv('open_cage_geocode')
+            else:
+                self.dir_home = os.path.dirname(os.path.dirname(__file__))
+                self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
+                if not os.path.exists(self.path_cfg_private):
+                    og_pvt = self.path_cfg_private
+                    self.path_cfg_private = os.path.join(os.path.dirname(self.dir_home), 'PRIVATE_DATA.yaml')
+                    if not os.path.exists(self.path_cfg_private):
+                        raise FileNotFoundError(f"Cannot find PRIVATE_DATA.yaml in either of these locations: {og_pvt} OR {self.path_cfg_private}")
+                
+                self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
+
+                k_openai = self.cfg_private['openai']['OPENAI_API_KEY']
+                k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
+
+                k_huggingface = self.cfg_private['huggingface']['hf_token']
+                os.environ["HUGGING_FACE_KEY"] = k_huggingface
+
+                k_google_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
+                k_google_location = self.cfg_private['google']['GOOGLE_LOCATION']
+                k_google_application_credentials = self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS']
+                
+                k_hyperbolic = self.cfg_private['hyperbolic']['HYPERBOLIC_API_KEY']
+                k_mistral = self.cfg_private['mistral']['MISTRAL_API_KEY']
+                k_here = self.cfg_private['here']['API_KEY']
+                k_opencage = self.cfg_private['open_cage_geocode']['API_KEY']
+        else: # For VVGO
             self.path_cfg_private = None
             self.cfg_private = None
 
-            k_openai = os.getenv('OPENAI_API_KEY')
-            k_openai_azure = os.getenv('AZURE_API_VERSION')
+            k_openai = None
+            k_openai_azure = None
 
             k_huggingface = None
 
@@ -477,36 +520,10 @@ class VoucherVision():
             k_google_location = os.getenv('GOOGLE_LOCATION')
             k_google_application_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
-            k_hyperbolic = os.getenv('HYPERBOLIC_API_KEY')
-            k_mistral = os.getenv('MISTRAL_API_KEY')
-            k_here = os.getenv('HERE_API_KEY')
-            k_opencage = os.getenv('open_cage_geocode')
-        else:
-            self.dir_home = os.path.dirname(os.path.dirname(__file__))
-            self.path_cfg_private = os.path.join(self.dir_home, 'PRIVATE_DATA.yaml')
-            if not os.path.exists(self.path_cfg_private):
-                og_pvt = self.path_cfg_private
-                self.path_cfg_private = os.path.join(os.path.dirname(self.dir_home), 'PRIVATE_DATA.yaml')
-                if not os.path.exists(self.path_cfg_private):
-                    raise FileNotFoundError(f"Cannot find PRIVATE_DATA.yaml in either of these locations: {og_pvt} OR {self.path_cfg_private}")
-            
-            self.cfg_private = get_cfg_from_full_path(self.path_cfg_private)
-
-            k_openai = self.cfg_private['openai']['OPENAI_API_KEY']
-            k_openai_azure = self.cfg_private['openai_azure']['OPENAI_API_KEY_AZURE']
-
-            k_huggingface = self.cfg_private['huggingface']['hf_token']
-            os.environ["HUGGING_FACE_KEY"] = k_huggingface
-
-            k_google_project_id = self.cfg_private['google']['GOOGLE_PROJECT_ID']
-            k_google_location = self.cfg_private['google']['GOOGLE_LOCATION']
-            k_google_application_credentials = self.cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS']
-            
-            k_hyperbolic = self.cfg_private['hyperbolic']['HYPERBOLIC_API_KEY']
-            k_mistral = self.cfg_private['mistral']['MISTRAL_API_KEY']
-            k_here = self.cfg_private['here']['API_KEY']
-            k_opencage = self.cfg_private['open_cage_geocode']['API_KEY']
-            
+            k_hyperbolic = None
+            k_mistral = None
+            k_here = None
+            k_opencage = None
 
 
         self.has_key_openai = self.has_API_key(k_openai)
