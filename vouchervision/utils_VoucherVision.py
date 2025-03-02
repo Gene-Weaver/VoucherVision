@@ -118,12 +118,15 @@ class VoucherVision():
 
         self.do_create_OCR_helper_image = self.cfg['leafmachine']['do_create_OCR_helper_image']
 
-        self.map_prompt_versions()
-        self.map_dir_labels()
+        if not self.skip_API_keys: 
+            self.map_prompt_versions()
+            self.map_dir_labels()
         self.map_API_options()
-        # self.init_embeddings()
-        self.init_transcription_xlsx()
-        self.init_trOCR_model()
+        
+        if not self.skip_API_keys: 
+            # self.init_embeddings()
+            self.init_transcription_xlsx()
+            self.init_trOCR_model()
 
         '''Logging'''
         self.logger.info(f'Transcribing dataset --- {self.dir_labels}')
