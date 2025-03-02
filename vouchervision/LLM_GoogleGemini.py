@@ -20,7 +20,9 @@ class GoogleGeminiHandler:
     VENDOR = 'google'
     STARTING_TEMP = 0.5
 
-    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation):
+    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False):
+        self.exit_early_for_JSON = exit_early_for_JSON
+
         self.cfg = cfg
         self.tool_WFO = self.cfg['leafmachine']['project']['tool_WFO']
         self.tool_GEO = self.cfg['leafmachine']['project']['tool_GEO']
@@ -117,7 +119,13 @@ class GoogleGeminiHandler:
         return response.text
     
     def call_llm_api_GoogleGemini(self, prompt_template, json_report, paths):
-        _____, ____, _, __, ___, json_file_path_wiki, txt_file_path_ind_prompt = paths
+        if paths is not None:
+            _____, ____, _, __, ___, json_file_path_wiki, txt_file_path_ind_prompt = paths
+        else:
+            json_file_path_wiki = None
+            txt_file_path_ind_prompt = None
+            self.exit_early_for_JSON = True
+
         self.json_report = json_report
         if self.json_report:            
             self.json_report.set_text(text_main=f'Sending request to {self.model_name}')
@@ -144,6 +152,11 @@ class GoogleGeminiHandler:
                     nt_out = count_tokens(response, self.VENDOR, self.TOKENIZER_NAME)
 
                     output = validate_and_align_JSON_keys_with_template(output, self.JSON_dict_structure)
+
+                    ### This allows VVGO to just get the JSON and exit
+                    if self.exit_early_for_JSON:
+                        return output, nt_in, nt_out, None, None, None
+
                     if output is None:
                         self.logger.error(f'[Attempt {ind}] Failed to extract JSON from:\n{response}')
                         self._adjust_config() 
