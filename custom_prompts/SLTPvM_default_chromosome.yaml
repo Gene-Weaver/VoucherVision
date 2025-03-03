@@ -3,7 +3,8 @@ prompt_author_institution: University of Michigan
 prompt_name: SLTPvM_default_chromosome
 prompt_version: v-1-0      
 prompt_description: Prompt developed by the University of Michigan Herbarium (MICH).
-    All field descriptions are modified from Darwin Core fields to increase LLM performance.     
+    All field descriptions are modified from Darwin Core fields to increase LLM performance. 
+    This has been modified to find information about polyploidy by adding the fields chromosomeCount and guardCell.
 LLM: General Purpose
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
@@ -32,7 +33,8 @@ rules:
   collectionDate: Date the specimen was collected formatted as year-month-day, YYYY-MM-DD. If specific components of the date are unknown, they should be replaced with zeros. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
   collectionDateEnd: If a range of collection dates is provided, this is the latter end date while collectionDate is the beginning date. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
   habitat: Verbatim category or description of the habitat where the specimen collection event occurred.
-  chromosomeCount: Chromosome count. Typically includes 'n = ' or '2n = . Might mention polyploidy or ploidy or ploid.'.
+  chromosomeCount: Chromosome count. Typically includes 'n = ' or '2n = '. Might mention tetraploid or polyploidy or ploidy or ploid. Might mention flow cytometry. Could be handwritten.
+  guardCell: Record any mention of guard cell size. This may also include a mention of 'n = '. 
   specimenDescription: Verbatim text describing the specimen itself, including color, measurements not specifically tied to a determination remark, observations of reproductive characters, growth form, taste, smell, etc.  
   cultivated: If the text includes the word 'cult' or 'cultivated' then this value is 'yes'.
   continent: Use your knowledge to infer the continent where the natural history museum specimen was originally collected.
