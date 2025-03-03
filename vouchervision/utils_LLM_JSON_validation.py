@@ -2,7 +2,7 @@ import json
 
 
 def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
-    list_of_nulls = ['unknown','not provided', 'missing', 'na', 'none', 'n/a', 'null', 'unspecified',
+    list_of_nulls = ['unknown','not provided', 'missing', 'na', 'none', 'n/a', 'null', 'unspecified', 'not known','not given',
                                      'TBD', 'tbd',
                                     'not provided in the text', 'not found in the text', 'Not found in OCR text', 'not found in ocr text',
                                     'not in the text', 'not provided', 'not found',
@@ -71,20 +71,43 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
     if data is None:
         return None
     else:
-        # Make sure that there are no literal list [] objects in the dict
+        # Handle duplicate fields by creating a case-insensitive dictionary for tracking duplicates
+        # and keeping the one with the most content
+        cleaned_data = {}
+        field_content_length = {}  # Track content length for each field (case-insensitive)
+        
+        # First pass: Track all fields and their content lengths
         for key, value in data.items():
+            key_lower = key.lower()
+            
+            # Convert value to string for length comparison
             if value is None:
-                data[key] = ''
-            elif isinstance(value, str):
-                if value.lower() in list_of_ocr_nulls_lower or value.lower() in list_of_nulls_lower:
-                    data[key] = ''
+                str_value = ''
             elif isinstance(value, list):
-                # Join the list elements into a single string
-                data[key] = ', '.join(str(item) for item in value)
-
-            if value:
-                data[key] = value.replace('*','')
-
+                str_value = ', '.join(str(item) for item in value)
+            else:
+                str_value = str(value)
+                
+            # Check if value is in nulls list
+            if str_value.lower() in list_of_ocr_nulls_lower or str_value.lower() in list_of_nulls_lower:
+                str_value = ''
+                
+            # Track the length of content for this field
+            current_length = len(str_value)
+            
+            # If we've seen this field before, compare content length
+            if key_lower in field_content_length:
+                if current_length > field_content_length[key_lower][1]:
+                    # This instance has more content, update our tracking
+                    field_content_length[key_lower] = (key, current_length, str_value)
+            else:
+                # First time seeing this field
+                field_content_length[key_lower] = (key, current_length, str_value)
+                
+        # Second pass: Use only the fields with the most content
+        for key_lower, (original_key, length, value) in field_content_length.items():
+            cleaned_data[original_key] = value.replace('*', '') if value else ''
+                
         ### align the keys with the template
         # Create a new dictionary with the same order of keys as JSON_dict_structure
         ordered_data = {}
@@ -93,11 +116,18 @@ def validate_and_align_JSON_keys_with_template(data, JSON_dict_structure):
         for key in JSON_dict_structure:
             truth_key_lower = key.lower()
             
-            llm_value = str(data.get(key, ''))
-            if not llm_value:
-                llm_value = str(data.get(truth_key_lower, ''))
+            # Look for the key in a case-insensitive way
+            llm_value = ''
+            if key in cleaned_data:
+                llm_value = cleaned_data[key]
+            else:
+                # Try to find a case-insensitive match
+                for data_key in cleaned_data:
+                    if data_key.lower() == truth_key_lower:
+                        llm_value = cleaned_data[data_key]
+                        break
             
-            # Copy the value from data if it exists, else use an empty string
+            # Copy the value from cleaned_data if it exists, else use an empty string
             ordered_data[key] = llm_value
 
         return ordered_data
