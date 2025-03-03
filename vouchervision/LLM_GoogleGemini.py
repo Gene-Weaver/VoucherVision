@@ -159,7 +159,12 @@ class GoogleGeminiHandler:
                     nt_in = count_tokens(prompt_template, self.VENDOR, self.TOKENIZER_NAME)
                     nt_out = count_tokens(response, self.VENDOR, self.TOKENIZER_NAME)
 
+                    self.logger.info(f"self.JSON_dict_structure\n{self.JSON_dict_structure}") #####################################################################################
+                    self.logger.info(f"############") #####################################################################################
+                    self.logger.info(f"output before\n{output}") #####################################################################################
                     output = validate_and_align_JSON_keys_with_template(output, self.JSON_dict_structure)
+                    self.logger.info(f"############") #####################################################################################
+                    self.logger.info(f"output after\n{output}") #####################################################################################
 
                     ### This allows VVGO to just get the JSON and exit
                     if self.exit_early_for_JSON:
