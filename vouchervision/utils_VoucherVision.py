@@ -77,8 +77,9 @@ class VoucherVision():
 
 
     def setup(self):
-        self.logger.name = f'[Transcription]'
-        self.logger.info(f'Setting up OCR and LLM')
+        if not self.skip_API_keys: 
+            self.logger.name = f'[Transcription]'
+            self.logger.info(f'Setting up OCR and LLM')
 
         self.trOCR_model_version = self.cfg['leafmachine']['project']['trOCR_model_path']
 
