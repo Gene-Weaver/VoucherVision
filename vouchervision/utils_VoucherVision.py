@@ -8,15 +8,7 @@ from langchain_openai import AzureChatOpenAI
 from google.oauth2 import service_account
 from transformers import AutoTokenizer, AutoModel
 
-from vouchervision.LLM_OpenAI import OpenAIHandler
-from vouchervision.LLM_GooglePalm2 import GooglePalm2Handler
-from vouchervision.LLM_GoogleGemini import GoogleGeminiHandler
-from vouchervision.LLM_MistralAI import MistralHandler
-from vouchervision.LLM_local_cpu_MistralAI import LocalCPUMistralHandler
-from vouchervision.LLM_local_MistralAI import LocalMistralHandler 
-from vouchervision.LLM_local_custom_fine_tune import LocalFineTuneHandler 
 # from vouchervision.LLM_Hyperbolic import HyperbolicHandler
-from vouchervision.LLM_Hyperbolic_Outlines import HyperbolicHandler
 from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
 from vouchervision.general_utils import get_cfg_from_full_path
@@ -870,21 +862,29 @@ class VoucherVision():
         if 'LOCAL'in name_parts:
             if ('MIXTRAL' in name_parts) or ('MISTRAL' in name_parts):
                 if 'CPU' in name_parts:
+                    from vouchervision.LLM_local_cpu_MistralAI import LocalCPUMistralHandler
                     return LocalCPUMistralHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
                 else:
+                    from vouchervision.LLM_local_MistralAI import LocalMistralHandler
                     return LocalMistralHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
         elif "/" in ''.join(name_parts):
+            from vouchervision.LLM_local_custom_fine_tune import LocalFineTuneHandler 
             return LocalFineTuneHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
         else:
             if 'PALM2' in name_parts:
+                from vouchervision.LLM_GooglePalm2 import GooglePalm2Handler
                 return GooglePalm2Handler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
             elif 'GEMINI' in name_parts:
+                from vouchervision.LLM_GoogleGemini import GoogleGeminiHandler
                 return GoogleGeminiHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
             elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
+                from vouchervision.LLM_MistralAI import MistralHandler
                 return MistralHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
             elif 'Hyperbolic' in name_parts:
+                from vouchervision.LLM_Hyperbolic_Outlines import HyperbolicHandler
                 return HyperbolicHandler(cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation)
             else:
+                from vouchervision.LLM_OpenAI import OpenAIHandler
                 return OpenAIHandler(cfg, logger, model_name, JSON_dict_structure, is_azure, llm_object, config_vals_for_permutation)
 
     def setup_prompt(self):
