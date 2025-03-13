@@ -7,11 +7,6 @@ from PIL import Image, ImageDraw, ImageFont
 import colorsys
 from tqdm import tqdm
 from google.oauth2 import service_account
-from OCR_Florence_2 import FlorenceOCR
-from vouchervision.OCR_GPT4o import GPT4oOCR
-from OCR_Qwen import Qwen2VLOCR
-from OCR_Hyperbolic_VLMs import HyperbolicOCR
-from OCR_Gemini import OCRGeminiProVision
 ### LLaVA should only be installed if the user will actually use it.
 ### It requires the most recent pytorch/Python and can mess with older systems
 
@@ -141,17 +136,28 @@ class OCREngine:
 
     def init_florence(self):
         if 'LOCAL Florence-2' in self.OCR_option:
+            from OCR_Florence_2 import FlorenceOCR
             self.Florence = FlorenceOCR(logger=self.logger, model_id=self.cfg['leafmachine']['project']['florence_model_path'])
 
     def init_gpt_4o_mini(self):
         if 'GPT-4o-mini' in self.OCR_option:
+            from vouchervision.OCR_GPT4o import GPT4oOCR
             self.GPTmini = GPT4oOCR(api_key = os.getenv('OPENAI_API_KEY'))
         if 'GPT-4o' in self.OCR_option:
+            from vouchervision.OCR_GPT4o import GPT4oOCR
             self.GPT4o = GPT4oOCR(api_key = os.getenv('OPENAI_API_KEY'))
 
     def init_gemini_pro(self):
+        if any(model in self.OCR_option for model in [
+            "Gemini-2.0-Flash", 
+            "Gemini-1.5-Pro", 
+            "Gemini-1.5-Flash", 
+            "Gemini-1.5-Flash-8B"
+        ]):
+            from OCR_Gemini import OCRGeminiProVision
+
         if "Gemini-2.0-Flash" in self.OCR_option:
-            self.GeminiProVision_2_0_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.0-flash-exp")
+            self.GeminiProVision_2_0_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.0-flash")
         if 'Gemini-1.5-Pro' in self.OCR_option:
             self.GeminiProVision_1_5_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-1.5-pro")
         if "Gemini-1.5-Flash" in self.OCR_option:
@@ -160,6 +166,13 @@ class OCREngine:
             self.GeminiProVision_1_5_Flash_8B = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-1.5-flash-8b")
 
     def init_hyperbolic(self):
+        if any(model in self.OCR_option for model in [
+                'Pixtral-12B-2409', 
+                'Llama-3.2-90B-Vision-Instruct', 
+                'Qwen2-VL-72B-Instruct', 
+                'Qwen2-VL-7B-Instruct'
+            ]):
+                from OCR_Hyperbolic_VLMs import HyperbolicOCR
         if 'Pixtral-12B-2409' in self.OCR_option:
             self.Hyperbolic_Pixtral_12B = HyperbolicOCR(api_key = os.getenv('HYPERBOLIC_API_KEY'), model_id="mistralai/Pixtral-12B-2409")
         if 'Llama-3.2-90B-Vision-Instruct' in self.OCR_option:
@@ -171,6 +184,7 @@ class OCREngine:
 
     def init_Qwen2VL(self):
         if 'LOCAL Qwen-2-VL' in self.OCR_option:
+            from OCR_Qwen import Qwen2VLOCR
             self.Qwen2VL = Qwen2VLOCR(logger=self.logger, model_id=self.cfg['leafmachine']['project']['qwen_model_path'])
             
 
