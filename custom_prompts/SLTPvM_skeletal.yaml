@@ -1,9 +1,10 @@
 prompt_author: Will Weaver          
 prompt_author_institution: University of Michigan    
-prompt_name: SLTPvM_default
+prompt_name: SLTPvM_skeletal
 prompt_version: v-1-0      
 prompt_description: Prompt developed by the University of Michigan Herbarium (MICH).
-    All field descriptions are modified from Darwin Core fields to increase LLM performance.     
+    All field descriptions are modified from Darwin Core fields to increase LLM performance. 
+    Skeletal record.   
 LLM: General Purpose
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
