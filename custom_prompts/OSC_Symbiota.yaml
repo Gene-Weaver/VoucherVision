@@ -1,0 +1,117 @@
+prompt_author: James Mickley         
+prompt_author_institution: Oregon State University
+prompt_name: OSC_Symbiota
+prompt_version: v-0-1
+prompt_description: |
+  Prompt developed by James Mickley, adapted for Symbiota fields. 
+  Based loosely on SLTPvA_medium v1.0 and SLTPvM_default v1.0, with additions from OSC herbarium experience. 
+  ~ Changelog ~
+    * v-0-1 - 2025-04-16 - Initial version
+LLM: General Purpose (tested with Google Gemini)
+instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+  2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
+  3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
+  4. Duplicate dictionary fields are not allowed.
+  5. Ensure all JSON keys are in camel case and are enclosed in double quotes.
+  6. Ensure new JSON field values follow sentence case capitalization and are enclosed in double quotes.
+  7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  9. Only return a JSON dictionary represented as a string. You should not explain your answer.
+json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key.
+rules:
+  catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.
+  collector: The name of the primary collector of the specimen.
+  associatedCollectors:  A comma separated list of full names for additional collectors, if any.
+  collectorNumber: Number or unique identifier associated with the collector.
+  verbatimCollectionDate: The verbatim original representation of the date and time information for when 
+      the specimen was collected. Date of collection exactly as it appears on the label. 
+      Do not change the format or correct typos.
+  collectionDate: "Date the specimen was collected formatted as YYYY-MM-DD. If
+      specific components of the date are unknown, they should be replaced with
+      zeros. Examples: '0000-00-00' if the entire date is unknown, 'YYYY-00-00'
+      if only the year is known, and 'YYYY-MM-00' if year and month are known
+      but day is not."
+  scientificName: The scientific name of the taxon including genus, specific epithet, 
+      and any lower classifications. Remove taxonomic authors.
+  scientificNameAuthorship: The authorship information for the scientificName formatted according to the conventions 
+      of the applicable Darwin Core nomenclatural code.
+  family: Taxonomic determination to family. Family must be capitalized.
+  genus: Taxonomic determination to genus. Genus must be capitalized. If genus is not present, 
+      use taxonomic family name.
+  specificEpithet: The name of the first or species epithet of the scientificName. Only include the species epithet.
+  infraspecificEpithet: "The infraspecific epithet specified in the taxonomic name 
+      ('var.', 'ssp.', 'subsp.', 'f.'). Prefix with the infraspecific rank."
+  identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon 
+      to the subject organism, the determiner. This is not the specimen collector.
+  identifiedConfidence: "The determiner may wish to indicate additional information related to their determination. 
+      Record this information if it is present. Some examples are '?', 'cf.', 'aff.', 'sensu lato', 's.l.', 
+      'sensu stricto', 's.s.', 'probably', '? hybrid'. The Confidence field is for short comments about the 
+      determination (16 characters maximum). Periods are used in abbreviations in this field."
+  identifiedDate: Date that the most recent determination was given, in the following format. YYYY-MM-DD.
+      If specific components of the date are unknown, they should be replaced with
+      zeros. 
+  identifiedRemarks: If a determiner has longer comments or measurements to support the determination, enter them here.
+  continent: Use your knowledge to infer the continent where the specimen was collected.
+  country: "Use your knowledge and the OCR text to infer the country where the specimen was collected. 
+      Spell out the country's full name if abbreviation is given." 
+  stateProvince: The name of the state, province, canton or region where the specimen was collected.
+  county: The full, unabbreviated name of the county, parish, shire or borough where the specimen 
+      was collected. Do not include the type of region or its abbreviation.
+  locality: Description of geographic location, landscape, landmarks, regional
+      features, nearby places, municipality, city, or other information specifying the site of collection. 
+      Exclude coordinates and elevation.
+  decimalLatitude: Latitude decimal coordinate. Correct and convert the verbatim coordinates to conform 
+      with the decimal degrees GPS coordinate format.
+  decimalLongitude: Longitude decimal coordinate. Correct and convert the verbatim coordinates to conform 
+      with the decimal degrees GPS coordinate format.
+  verbatimCoordinates: Latitude/Longitude, TRS, or UTM coordinates exactly as they appear in the 
+      unformatted OCR text. Do not convert formats. Exclude elevation.
+  datum: Datum specified in the unformatted text. Possible values include [WGS84, NAD83, NAD27].
+  verbatimElevation: The elevation in the unformatted OCR text. Include any units.
+  cultivated: If the text includes the word 'cult' or 'cultivated' then this value is 'yes'.
+  habitat: Description of the habitat or the location where the specimen was collected. 
+      Ignore descriptions of the specimen itself.
+  specimenDescription: Verbatim text describing the specimen itself, including size, shape, color, 
+      texture, height, structure, scent, secretions, reproductive characteristics, growth form, 
+      presence of hairs or bristles, and any other distinguishing morphological
+      or physiological characteristics.
+  associatedSpecies: "List of species associated with the specimen. 
+      Usually species names are preceeded by 'associated' or 'with'. When multiple taxa are 
+      listed together, their names should be separated by commas."
+  additionalText: All remaining OCR text and text that is not part of the main label, secondary text, 
+      background and supporting information.
+mapping:
+  TAXONOMY:
+  - catalogNumber
+  - scientificName
+  - scientificNameAuthorship
+  - family
+  - genus
+  - specificEpithet
+  - infraspecificEpithet
+  - identifiedBy
+  - identifiedConfidence
+  - identifiedDate
+  - identifiedRemarks
+  GEOGRAPHY:
+  - continent
+  - country
+  - stateProvince
+  - county
+  - locality
+  - decimalLatitude
+  - decimalLongitude
+  - verbatimCoordinates
+  - datum
+  - verbatimElevation
+  - habitat
+  - associatedSpecies
+  COLLECTING:
+  - collector
+  - associatedCollectors
+  - collectorNumber
+  - verbatimCollectionDate
+  - collectionDate
+  - cultivated
+  - specimenDescription
+  - additionalText
