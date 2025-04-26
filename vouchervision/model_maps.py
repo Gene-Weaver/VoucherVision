@@ -19,7 +19,8 @@ class ModelMaps:
         'GEMINI_1_5_FLASH': '#1E00FF',  # gemini-1.5-flash
         'GEMINI_1_5_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_2_0_FLASH': '#1E00FF',  # gemini-1.5-pro
-
+        'GEMINI_2_5_FLASH': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_2_5_PRO': '#1E00FF',  # gemini-1.5-pro
 
         'AZURE_GPT_4': '#800080',  # Purple
         'AZURE_GPT_4o': '#800080',  # Purple
@@ -101,6 +102,8 @@ class ModelMaps:
     
     MODELS_GOOGLE = [
                     # 'PaLM 2 text-bison@001',
+                     'Gemini 2.5 Pro',
+                     'Gemini 2.5 Flash',
                      'Gemini 2.0 Flash',
                      'Gemini 1.5 Pro',
                      'Gemini 1.5 Flash',
@@ -177,6 +180,8 @@ class ModelMaps:
         # 'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
         # 'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
+        'Gemini 2.5 Pro': 'GEMINI_2_5_PRO',  # gemini-1.5-pro
+        'Gemini 2.5 Flash': 'GEMINI_2_5_FLASH',  # gemini-1.5-pro
         'Gemini 2.0 Flash': 'GEMINI_2_0_FLASH',  # gemini-1.5-pro
         'Gemini 1.5 Pro': 'GEMINI_1_5_PRO',  # gemini-1.5-pro
         'Gemini 1.5 Flash': 'GEMINI_1_5_FLASH',  # gemini-1.5-flash
@@ -248,6 +253,9 @@ class ModelMaps:
             # 'Azure GPT 4 32k': has_key_azure_openai,
 
             # 'PaLM 2 text-bison@001':  has_key_google_application_credentials,
+
+            'Gemini 2.5 Pro':  has_key_google_application_credentials,
+            'Gemini 2.5 Flash':  has_key_google_application_credentials,
             'Gemini 2.0 Flash':  has_key_google_application_credentials,
             'Gemini 1.5 Pro':  has_key_google_application_credentials,
             'Gemini 1.5 Flash':  has_key_google_application_credentials,
@@ -317,6 +325,8 @@ class ModelMaps:
             # 'Azure GPT 4 32k': True,
 
             # 'PaLM 2 text-bison@001':  False,
+            'Gemini 2.5 Pro':  False,
+            'Gemini 2.5 Flash':  False,
             'Gemini 2.0 Flash':  False,
             'Gemini 1.5 Pro':  False,
             'Gemini 1.5 Flash':  False,
@@ -441,6 +451,12 @@ class ModelMaps:
         elif key == 'GEMINI_2_0_FLASH':
             return 'gemini-2.0-flash'
         
+        elif key == 'GEMINI_2_5_FLASH':
+            return 'gemini-2.5-flash-preview-04-17' # TODO UPDATE AS NEEDED
+        
+        elif key == 'GEMINI_2_5_PRO':
+            return 'gemini-2.5-pro-preview-03-25' # TODO UPDATE AS NEEDED
+
         # elif key == 'GEMINI_2_0_PRO':
         #     return 'gemini-2.0-pro' 
         
