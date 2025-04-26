@@ -181,59 +181,62 @@ class OCRGeminiProVision:
         overall_response = ""
 
         # try: 
-        if prompt is None:
+        if prompt is not None:
+            keys = ["default_plus_minorcorrect_excludestricken_idhandwriting",]
+
+        else:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
             # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
             keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting",]
+        
+        prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
+        for key, prompt in zip(keys, prompts):
+            
+            # Upload the image to Gemini
+            uploaded_file = self.upload_to_gemini_with_backoff(image_path)
 
-            prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
-            for key, prompt in zip(keys, prompts):
-                
-                # Upload the image to Gemini
-                uploaded_file = self.upload_to_gemini_with_backoff(image_path)
+            # Generate content directly without starting a chat session
+            response = self.generate_content_with_backoff(prompt, uploaded_file)
 
-                # Generate content directly without starting a chat session
-                response = self.generate_content_with_backoff(prompt, uploaded_file)
+            try:
+                tokens_in = response.usage_metadata.prompt_token_count
+                tokens_out = response.usage_metadata.candidates_token_count
 
-                try:
-                    tokens_in = response.usage_metadata.prompt_token_count
-                    tokens_out = response.usage_metadata.candidates_token_count
+                default_cost = (0, 0, 0, 0, 0)
+                total_cost = default_cost
 
-                    default_cost = (0, 0, 0, 0, 0)
-                    total_cost = default_cost
+                if self.model_name == 'gemini-1.5-pro':
+                    total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
+                elif self.model_name == 'gemini-1.5-flash':
+                    total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
+                elif self.model_name == 'gemini-1.5-flash-8b':
+                    total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)                        
+                elif self.model_name == 'gemini-2.0-flash-exp':
+                    total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+                elif self.model_name == 'gemini-2.0-flash':
+                    total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+                elif self.model_name == 'gemini-2.0-pro':
+                    total_cost = calculate_cost('GEMINI_2_0_PRO', self.path_api_cost, tokens_in, tokens_out)   
 
-                    if self.model_name == 'gemini-1.5-pro':
-                        total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
-                    elif self.model_name == 'gemini-1.5-flash':
-                        total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
-                    elif self.model_name == 'gemini-1.5-flash-8b':
-                        total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)                        
-                    elif self.model_name == 'gemini-2.0-flash-exp':
-                        total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
-                    elif self.model_name == 'gemini-2.0-flash':
-                        total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
-                    elif self.model_name == 'gemini-2.0-pro':
-                        total_cost = calculate_cost('GEMINI_2_0_PRO', self.path_api_cost, tokens_in, tokens_out)   
+                cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
+                overall_cost_in += cost_in
+                overall_cost_out += cost_out
+                overall_total_cost += total_cost
+                overall_tokens_in += tokens_in
+                overall_tokens_out += tokens_out
 
-                    cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
-                    overall_cost_in += cost_in
-                    overall_cost_out += cost_out
-                    overall_total_cost += total_cost
-                    overall_tokens_in += tokens_in
-                    overall_tokens_out += tokens_out
+                parsed_answer = response.text
+                # if key == "species_only":
+                #     parsed_answer = f"Based on context, determine which of these scientific names is the primary name: {parsed_answer}"
 
-                    parsed_answer = response.text
-                    # if key == "species_only":
-                    #     parsed_answer = f"Based on context, determine which of these scientific names is the primary name: {parsed_answer}"
-
-                    if len(keys) > 1:
-                        overall_response += (parsed_answer + "\n\n")
-                    else:
-                        overall_response = parsed_answer
-                except Exception as e:
-                    print(f"OCR failed: {e}")
+                if len(keys) > 1:
+                    overall_response += (parsed_answer + "\n\n")
+                else:
+                    overall_response = parsed_answer
+            except Exception as e:
+                print(f"OCR failed: {e}")
         # finally:  # Use a finally block to *guarantee* deletion
         #     if uploaded_file.uri: # Check to ensure file was uploaded
         #         self.delete_gcs_file(uploaded_file.uri['uri'])
