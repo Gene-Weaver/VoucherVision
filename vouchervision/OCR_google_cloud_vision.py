@@ -149,6 +149,8 @@ class OCREngine:
 
     def init_gemini_pro(self):
         if any(model in self.OCR_option for model in [
+            "Gemini-2.5-Pro", 
+            "Gemini-2.5-Flash", 
             "Gemini-2.0-Flash", 
             "Gemini-1.5-Pro", 
             "Gemini-1.5-Flash", 
@@ -156,6 +158,10 @@ class OCREngine:
         ]):
             from OCR_Gemini import OCRGeminiProVision
 
+        if "Gemini-2.5-Pro" in self.OCR_option:
+            self.GeminiProVision_2_5_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-pro-preview-03-25") #TODO UPDATE AS NEEDED
+        if "Gemini-2.5-Flash" in self.OCR_option:  
+            self.GeminiProVision_2_5_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-flash-preview-04-17") #TODO UPDATE AS NEEDED
         if "Gemini-2.0-Flash" in self.OCR_option:
             self.GeminiProVision_2_0_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.0-flash")
         if 'Gemini-1.5-Pro' in self.OCR_option:
@@ -919,6 +925,20 @@ class OCREngine:
                 self.OCR = self.OCR + f"\nGPT-4o OCR:\n{results_text}"
 
         # Gemini options
+        if "Gemini-2.5-Pro" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="Gemini-2.5-Pro",
+                ocr_helper=self.GeminiProVision_2_5_Pro,
+                json_key='OCR_Gemini_2_5_Pro',
+                logger_message="Gemini-2.5-Pro"
+            )
+
+        if "Gemini-2.5-Flash" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="Gemini-2.5-Flash",
+                ocr_helper=self.GeminiProVision_2_5_Flash,
+                json_key='OCR_Gemini_2_5_Flash',
+                logger_message="Gemini-2.5-Flash"
+            )
+
         if "Gemini-2.0-Flash" in self.OCR_option: # This option does not produce an OCR helper image
             self.gemini_ocr(ocr_option="Gemini-2.0-Flash",
                 ocr_helper=self.GeminiProVision_2_0_Flash,

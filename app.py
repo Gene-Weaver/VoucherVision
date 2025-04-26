@@ -1241,7 +1241,7 @@ def create_private_file():
 
         st.write("---")
         st.subheader("Google Vision  (*Required*) / Google PaLM 2 / Google Gemini")
-        st.markdown("VoucherVision currently uses [Google Vision API](https://cloud.google.com/vision/docs/ocr) for OCR. Generating an API key for this is more involved than the others. [Please carefully follow the instructions outlined here to create and setup your account.](https://cloud.google.com/vision/docs/setup) ")
+        st.markdown("VoucherVision currently uses [Google Vision API](https://cloud.google.com/vision/docs/ocr) for OCR. Generating an API key for this is more involved than the others. [Please carefully follow the instructions outlined here to create and setup your account.](https://cloud.google.com/vision/docs/setup). You do NOT need to complete any of the steps beyond where it says to 'Enable the API'. Below that is not required and may not work.")
         st.markdown("""Once your account is created, [visit this page](https://console.cloud.google.com) and create a project. Then follow these instructions:""")
 
         with st.expander("**View Google API Instructions**"):
@@ -2322,7 +2322,10 @@ def content_ocr_method():
     demo_text_trh = demo_text_h + '\n' + demo_text_tr
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
-    options = ["Gemini-2.0-Flash",
+    options = [
+                "Gemini-2.5-Pro",
+                "Gemini-2.5-Flash",
+                "Gemini-2.0-Flash",
                 "Gemini-1.5-Pro",
                 "Google Vision Handwritten", 
                 "Google Vision Printed", 
@@ -2400,6 +2403,8 @@ def content_ocr_method():
             "GPT-4o-mini": "GPT-4o-mini",
             "GPT-4o": "GPT-4o",
 
+            "Gemini-2.5-Pro": "Gemini-2.5-Pro",
+            "Gemini-2.5-Flash": "Gemini-2.5-Flash",
             "Gemini-2.0-Flash": "Gemini-2.0-Flash",
             "Gemini-1.5-Pro": "Gemini-1.5-Pro",
             "Gemini-1.5-Flash": "Gemini-1.5-Flash",

@@ -11,6 +11,8 @@ from langchain_google_vertexai import VertexAI
 
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
+from google import genai
+from google.genai import types
 
 class GoogleGeminiHandler: 
 
@@ -19,6 +21,8 @@ class GoogleGeminiHandler:
     TOKENIZER_NAME = 'gpt-4'
     VENDOR = 'google'
     STARTING_TEMP = 0.5
+
+    THINK_BUDGET = 2048
 
     def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False):
         self.exit_early_for_JSON = exit_early_for_JSON
@@ -120,10 +124,22 @@ class GoogleGeminiHandler:
 
     # Define a function to format the input for Google Gemini call
     def call_google_gemini(self, prompt_text):
-        model = GenerativeModel(self.model_name)#,
-                                        # generation_config=self.config,
-                                        # safety_settings=self.safety_settings)
-        response = model.generate_content(prompt_text.text)
+        if "2.5" in self.model_name:
+            try:
+                client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])
+            except:
+                client = genai.Client(api_key=os.environ.get("API_KEY"))
+
+            response = client.models.generate_content(
+                model=self.model_name,
+                contents=prompt_text.text,
+                config=types.GenerateContentConfig(
+                    thinking_config=types.ThinkingConfig(thinking_budget=self.THINK_BUDGET)
+                ),
+            )
+        else:
+            model = GenerativeModel(self.model_name)
+            response = model.generate_content(prompt_text.text)
         return response.text
     
     def call_llm_api_GoogleGemini(self, prompt_template, json_report, paths):

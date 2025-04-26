@@ -13,7 +13,7 @@ https://ai.google.dev/gemini-api/docs/vision?lang=python
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-1.5-pro", max_output_tokens=1024, temperature=0.5, top_p=0.3, top_k=3, seed=123456, do_resize_img=False):
+    def __init__(self, api_key, model_name="gemini-2.0-flash", max_output_tokens=4096, temperature=0.5, top_p=0.3, top_k=3, seed=123456, do_resize_img=False):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
@@ -187,7 +187,10 @@ class OCRGeminiProVision:
         else:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
             # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
-            keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
+
+            # USE # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
+            keys = ["default_plus_minorcorrect_addressstricken_idhandwriting", "species_only",]
+            
             # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting",]
         
@@ -216,9 +219,11 @@ class OCRGeminiProVision:
                 elif self.model_name == 'gemini-2.0-flash-exp':
                     total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
                 elif self.model_name == 'gemini-2.0-flash':
-                    total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
-                elif self.model_name == 'gemini-2.0-pro':
-                    total_cost = calculate_cost('GEMINI_2_0_PRO', self.path_api_cost, tokens_in, tokens_out)   
+                    total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out) 
+                elif 'gemini-2.5-flash' in self.model_name:
+                    total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+                elif 'gemini-2.5-pro' in self.model_name:
+                    total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)   
 
                 cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
                 overall_cost_in += cost_in
@@ -243,7 +248,8 @@ class OCRGeminiProVision:
 
         try:
             return overall_response, overall_cost_in, overall_cost_out, overall_total_cost, rates_in, rates_out, overall_tokens_in, overall_tokens_out
-        except:
+        except Exception as e:
+            print(f"overall_response failed: {e}")
             return "", overall_cost_in, overall_cost_out, overall_total_cost, rates_in, rates_out, overall_tokens_in, overall_tokens_out
 
 

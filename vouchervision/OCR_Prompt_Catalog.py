@@ -8,6 +8,8 @@ class OCRPromptCatalog:
         self.prompts = {
             "default_plus_minorcorrect_excludestricken_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but exclude text that has been stricken, crossed out, or redacted. Also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
             
+            "default_plus_minorcorrect_addressstricken_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but place three tildes on either side of text that has been stricken, crossed out, or redacted because these are likely to be old species names. Also correct any minor typos for scientific species names. Identify any handwritten text by placing three asterisks symbols on either side. Do not explain your answer, only return the verbatim text with the appropriate annotations:""",
+
             "default_plus_minorcorrect_excludestricken_gpt4": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted. Use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Your corrections should be minimal and should focus character recognition errors. The correction cannot have more or fewer characters than the original word. Do not explain your answer, only return the verbatim text:""",
             
             "default_plus_minorcorrect_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
@@ -22,7 +24,7 @@ class OCRPromptCatalog:
 
             "handwriting_only": """Identify and extract all handwritten text from this image. Do not include printed text.Only return the handwritten text verbatim:""",
 
-            "species_only": """Extract all scientific species names from this image. Do not include any other text. Do not include text that has been stricken, crossed out, or redacted. Correct minor typos in the species names if needed. Return only the species names:""",
+            "species_only": """Extract all scientific species names from this image. Do not include any other text. If a scientific species name has been stricken, crossed out, or redacted then place three tildes on either side. If a scientific species name is handwritten then place three asterisks symbols on either side. Correct minor typos in the species names if needed. Return only the species names:""",
 
             "detailed_metadata": """Extract all text from this scientific image, including metadata, species names, and handwritten notes. Correct any minor typos in species names and categorize the extracted text by type (metadata, species names, handwritten notes). Return the result in JSON format:""",
         }
