@@ -126,17 +126,21 @@ class GoogleGeminiHandler:
     def call_google_gemini(self, prompt_text):
         if "2.5" in self.model_name:
             try:
-                client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])
-            except:
-                client = genai.Client(api_key=os.environ.get("API_KEY"))
+                try:
+                    client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])
+                except:
+                    client = genai.Client(api_key=os.environ.get("API_KEY"))
 
-            response = client.models.generate_content(
-                model=self.model_name,
-                contents=prompt_text.text,
-                config=types.GenerateContentConfig(
-                    thinking_config=types.ThinkingConfig(thinking_budget=self.THINK_BUDGET)
-                ),
-            )
+                response = client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt_text.text,
+                    config=types.GenerateContentConfig(
+                        thinking_config=types.ThinkingConfig(thinking_budget=self.THINK_BUDGET)
+                    ),
+                )
+            except Exception as e:
+                print(f"Failed to init genai.Client for {self.model_name}: {e}")
+                return "Failed to parse text"
         else:
             model = GenerativeModel(self.model_name)
             response = model.generate_content(prompt_text.text)
