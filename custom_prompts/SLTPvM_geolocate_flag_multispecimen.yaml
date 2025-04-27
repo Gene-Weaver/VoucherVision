@@ -5,8 +5,8 @@ prompt_version: v-1-0
 prompt_description: |
   Prompt developed by the University of Michigan Herbarium (MICH).
 
-  Looks for [MULTIPLE SPECIMENS] tag in the OCR to fill in the multipleSpecimens field. 
-  
+  Looks for [MULTIPLE BARCODES] tag in the OCR to fill in the multipleBarcodes field. 
+
   Enables the LLM to perform Google Searches to geolocate the specimen. You can tell if 
   this has occurred because the verbatimCoordinates field will be empty even though the
   decimalLatitude and decimalLongitude fields are populated. This relies completely on the LLM.
@@ -58,7 +58,7 @@ rules:
   minimumElevationInMeters: Minimum elevation or altitude in meters. Only if units are explicit then convert from feet ('ft' or 'ft.'' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
   maximumElevationInMeters: Maximum elevation or altitude in meters. If only one elevation is present, then max_elevation should remain an empty string. Only if units are explicit, then convert from feet ('ft' or 'ft.' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
   elevationUnits: If a minimumElevationInMeters is reported, then use 'm'.
-  multipleSpecimens: If [MULTIPLE SPECIMENS] is in the text, 'yes'. Otherwise 'no'. 
+  multipleBarcodes: If [MULTIPLE BARCODES] is in the text, 'yes'. Otherwise 'no'. 
   additionalText: All remaining OCR text and text that is not part of the main label, secondary text, background and supporting information. 
 mapping:
   GEOGRAPHY:
@@ -84,7 +84,7 @@ mapping:
   - identifiedConfidence
   - identifiedRemarks
   - identificationHistory
-  - multipleSpecimens
+  - multipleBarcodes
   COLLECTING:
   - collectedBy
   - collectorNumber
