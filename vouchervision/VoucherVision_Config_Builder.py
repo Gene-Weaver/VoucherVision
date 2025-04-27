@@ -50,7 +50,7 @@ def build_VV_config(loaded_cfg=None):
         tool_WFO = True
         tool_wikipedia = True
 
-        tool_google = False
+        tool_google = True
 
         check_for_illegal_filenames = True
 
