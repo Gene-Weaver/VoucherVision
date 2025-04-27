@@ -163,7 +163,7 @@ class GoogleGeminiHandler:
 
     # Define a function to format the input for Google Gemini call
     def call_google_gemini(self, prompt_text):
-        if "2.5" in self.model_name:
+        if ("2.5" in self.model_name) or ("2.0" in self.model_name):
             try:
                 try:
                     client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])

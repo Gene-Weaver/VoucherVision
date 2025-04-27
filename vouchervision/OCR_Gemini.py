@@ -37,14 +37,7 @@ class OCRGeminiProVision:
     def exponential_backoff(self, func, *args, **kwargs):
         """
         Exponential backoff for a given function.
-        
-        Args:
-            func (function): The function to retry.
-            *args: Positional arguments for the function.
-            **kwargs: Keyword arguments for the function.
-        
-        Returns:
-            The result of the function if successful.
+        Returns "" if it still fails after all retries.
         """
         max_retries = 5
         for attempt in range(max_retries):
@@ -55,8 +48,9 @@ class OCRGeminiProVision:
                 wait_time = (2 ** attempt) + random.uniform(0, 1)
                 print(f"Attempt {attempt + 1} failed with error: {e}. Retrying in {wait_time:.2f} seconds...")
                 time.sleep(wait_time)
-        
-        raise Exception(f"Failed to complete {func.__name__} after {max_retries} attempts.")
+
+        print(f"Failed to complete {func.__name__} after {max_retries} attempts. Returning empty string.")
+        return ""
     
     def download_image_from_url(self, image_url):
         """
@@ -150,7 +144,13 @@ class OCRGeminiProVision:
                 [prompt, uploaded_file],
                 generation_config=self.generation_config
             )
+            
+            # NEW: Check if the response is suspiciously short
+            if not response.text or len(response.text.strip()) < 30:
+                raise Exception(f"Short or empty response (length={len(response.text.strip())}), retrying...")
+            
             return response
+
         
         return self.exponential_backoff(generate)
 
