@@ -1,10 +1,18 @@
 prompt_author: Will Weaver          
 prompt_author_institution: University of Michigan    
-prompt_name: SLTPvM_default_v2
-prompt_version: v-2-0     
-prompt_description: Prompt developed by the University of Michigan Herbarium (MICH).
-    All field descriptions are modified from Darwin Core fields to increase LLM performance.     
-LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pro. Will still work with other models though. 
+prompt_name: SLTPvM_geolocate_flag_multispecimen
+prompt_version: v-1-0     
+prompt_description: |
+  Prompt developed by the University of Michigan Herbarium (MICH).
+
+  Looks for [MULTIPLE SPECIMENS] tag in the OCR to fill in the multipleSpecimens field. 
+  
+  Enables the LLM to perform Google Searches to geolocate the specimen. You can tell if 
+  this has occurred because the verbatimCoordinates field will be empty even though the
+  decimalLatitude and decimalLongitude fields are populated. This relies completely on the LLM.
+  It will try to be conservative and only report coordinates if specific landmarks or localities
+  are present, avoiding returning coordinates when only broad-scale geography is present, like states/provinces.
+LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pro. 
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
   3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
@@ -17,6 +25,8 @@ instructions: 1. Refactor the unstructured OCR text into a dictionary based on t
   10. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
   11. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
   12. Only return a JSON dictionary represented as a string. You should not explain your answer.
+
+  After you create the JSON, if there are not already coordinates in the decimalLatitude and decimalLongitude fields, then use all of the information to geolocate the specimen using Google Search. If there is only state-level or country-level location information, then it is okay to return empty strings; that is preferable to vague or guesstimate coordinates. Otherwise, use landmarks and all other locality information to search for the best coordinates.
 json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
 rules:
   catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.
@@ -48,8 +58,8 @@ rules:
   minimumElevationInMeters: Minimum elevation or altitude in meters. Only if units are explicit then convert from feet ('ft' or 'ft.'' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
   maximumElevationInMeters: Maximum elevation or altitude in meters. If only one elevation is present, then max_elevation should remain an empty string. Only if units are explicit, then convert from feet ('ft' or 'ft.' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
   elevationUnits: If a minimumElevationInMeters is reported, then use 'm'.
+  multipleSpecimens: If [MULTIPLE SPECIMENS] is in the text, 'yes'. Otherwise 'no'. 
   additionalText: All remaining OCR text and text that is not part of the main label, secondary text, background and supporting information. 
-
 mapping:
   GEOGRAPHY:
   - catalogNumber
@@ -74,6 +84,7 @@ mapping:
   - identifiedConfidence
   - identifiedRemarks
   - identificationHistory
+  - multipleSpecimens
   COLLECTING:
   - collectedBy
   - collectorNumber

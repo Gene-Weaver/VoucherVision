@@ -13,7 +13,7 @@ https://ai.google.dev/gemini-api/docs/vision?lang=python
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.0-flash", max_output_tokens=4096, temperature=0.5, top_p=0.3, top_k=3, seed=123456, do_resize_img=False):
+    def __init__(self, api_key, model_name="gemini-2.0-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
@@ -25,7 +25,7 @@ class OCRGeminiProVision:
         self.generation_config = {
             "temperature": temperature,
             "top_p": top_p,
-            "top_k": top_k,
+            # "top_k": top_k,
             "max_output_tokens": max_output_tokens,
             "response_mime_type": "text/plain",
             # "seed": seed,
@@ -166,8 +166,8 @@ class OCRGeminiProVision:
             self.generation_config["temperature"] = temperature
         if top_p:
             self.generation_config["top_p"] = top_p
-        if top_k:
-            self.generation_config["top_k"] = top_k
+        # if top_k:
+        #     self.generation_config["top_k"] = top_k
         if max_output_tokens:
             self.generation_config["max_output_tokens"] = max_output_tokens
         # self.generation_config["seed"] = seed
@@ -269,7 +269,7 @@ if __name__ == "__main__":
     ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.0-flash-exp")
 
     for image_path in image_paths:
-        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0)
+        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)
         print(response)
 
 

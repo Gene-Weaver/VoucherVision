@@ -50,6 +50,8 @@ def build_VV_config(loaded_cfg=None):
         tool_WFO = True
         tool_wikipedia = True
 
+        tool_google = False
+
         check_for_illegal_filenames = True
 
         LLM_version_user = 'Gemini 2.0 Flash' # 'Gemini 1.5 Pro' 'Azure GPT 4' #'Azure GPT 4 Turbo 1106-preview'
@@ -79,7 +81,7 @@ def build_VV_config(loaded_cfg=None):
                         prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, 
                         trOCR_model_path, florence_model_path, qwen_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
-                        tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
+                        tool_GEO, tool_WFO, tool_wikipedia,tool_google,specimen_rotate,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
     else:
         dir_home = os.path.dirname(os.path.dirname(__file__))
@@ -108,6 +110,8 @@ def build_VV_config(loaded_cfg=None):
         tool_WFO = loaded_cfg['leafmachine']['project']['tool_WFO']
         tool_wikipedia = loaded_cfg['leafmachine']['project']['tool_wikipedia']
 
+        tool_google = loaded_cfg['leafmachine']['project']['tool_google']
+
         specimen_rotate = loaded_cfg['leafmachine']['project']['specimen_rotate']
 
         pdf_conversion_dpi = loaded_cfg['leafmachine']['project']['pdf_conversion_dpi']
@@ -133,7 +137,7 @@ def build_VV_config(loaded_cfg=None):
                         prompt_version, do_create_OCR_helper_image, do_use_trOCR, do_use_florence, 
                         trOCR_model_path, florence_model_path, qwen_model_path, OCR_option, OCR_option_llava, 
                         OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations,
-                        tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
+                        tool_GEO, tool_WFO, tool_wikipedia,tool_google,specimen_rotate,
                         check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False)
 
 
@@ -143,7 +147,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
                     prompt_version, do_create_OCR_helper_image_user, do_use_trOCR, do_use_florence, 
                     trOCR_model_path, florence_model_path, qwen_model_path, OCR_option, OCR_option_llava, 
                     OCR_option_llava_bit, OCR_GPT_4o_mini_resolution, double_OCR, save_cropped_annotations, 
-                    tool_GEO, tool_WFO, tool_wikipedia,specimen_rotate,
+                    tool_GEO, tool_WFO, tool_wikipedia,tool_google,specimen_rotate,
                     check_for_illegal_filenames, skip_vertical, pdf_conversion_dpi, use_domain_knowledge=False):
     
 
@@ -201,6 +205,7 @@ def assemble_config(dir_home, run_name, dir_images_local,dir_output,
         'tool_GEO': tool_GEO, 
         'tool_WFO': tool_WFO, 
         'tool_wikipedia': tool_wikipedia,
+        'tool_google': tool_google,
         'specimen_rotate': specimen_rotate,
     }
 
@@ -656,10 +661,13 @@ def check_if_usable(is_hf): ####################################################
         
         has_key_google_OCR = has_API_key(cfg_private['google']['GOOGLE_APPLICATION_CREDENTIALS'])
 
+        has_key_google = has_API_key(cfg_private['google']['GOOGLE_PALM_API'])
+
         has_key_MISTRAL = has_API_key(cfg_private['mistral']['MISTRAL_API_KEY'])
 
 
-        if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google_OCR):
+        if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google or has_key_google_OCR):
+        # if has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google_OCR or has_key_google:
             return True
         else:
             return False

@@ -27,7 +27,7 @@ vouchervision/LLM_MistralAI_Azure_endpoints.py
 !/custom_prompts/BGBMvM_default.yaml
 !/custom_prompts/OSC_Symbiota.yaml
 !/custom_prompts/SLTPvM_default_v2.yaml
-
+!/custom_prompts/SLTPvM_geolocate_flag_multispecimen.yaml
 # Dirs
 custom_prompts_deprecated/
 demo/demo_output/*

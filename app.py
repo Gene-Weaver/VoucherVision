@@ -1951,6 +1951,11 @@ def content_tools():
     st.session_state.config['leafmachine']['project']['tool_wikipedia'] = st.checkbox(label="Enable Wikipedia verification",
                                                                                       help="",
                                                                                       value=tool_wikipedia)
+    
+    tool_google = st.session_state.config['leafmachine']['project']['tool_google']
+    st.session_state.config['leafmachine']['project']['tool_google'] = st.checkbox(label="Enable Google Search Grounding with Gemini-2.5-Pro",
+                                                                                      help="ONLY available with Gemini-2.5-Pro",
+                                                                                      value=tool_google)
 
 def content_llm_cost():
     st.write("---")
