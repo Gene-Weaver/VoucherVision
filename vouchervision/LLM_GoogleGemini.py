@@ -13,6 +13,7 @@ from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, 
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
 from google import genai
 from google.genai import types
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 
 class GoogleGeminiHandler: 
 
@@ -20,7 +21,7 @@ class GoogleGeminiHandler:
     MAX_RETRIES = 3  # Maximum number of retries
     TOKENIZER_NAME = 'gpt-4'
     VENDOR = 'google'
-    STARTING_TEMP = 0.5
+    STARTING_TEMP = 1
 
     THINK_BUDGET = 2048
 
@@ -31,6 +32,10 @@ class GoogleGeminiHandler:
         self.tool_WFO = self.cfg['leafmachine']['project']['tool_WFO']
         self.tool_GEO = self.cfg['leafmachine']['project']['tool_GEO']
         self.tool_wikipedia = self.cfg['leafmachine']['project']['tool_wikipedia']
+        try:
+            self.tool_google = self.cfg['leafmachine']['project']['tool_google']
+        except:
+            self.tool_google = False
 
         self.logger = logger
         self.model_name = model_name
@@ -41,6 +46,8 @@ class GoogleGeminiHandler:
         self.monitor = SystemLoadMonitor(logger)
 
         self.parser = JsonOutputParser()
+
+        self.google_search_tool = Tool(google_search = GoogleSearch())
 
         # Define the prompt template
         self.prompt = PromptTemplate(
@@ -109,7 +116,7 @@ class GoogleGeminiHandler:
                                         top_p=self.config.get('top_p'),
                                         temperature=self.config.get('temperature'),
                                         api_key=os.environ.get("API_KEY")
-                                        )    
+                                        )
         # self.llm_model = VertexAI(model='gemini-1.0-pro', 
         #                           max_output_tokens=self.config.get('max_output_tokens'),
         #                           top_p=self.config.get('top_p'))   
@@ -131,13 +138,26 @@ class GoogleGeminiHandler:
                 except:
                     client = genai.Client(api_key=os.environ.get("API_KEY"))
 
-                response = client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt_text.text,
-                    config=types.GenerateContentConfig(
-                        thinking_config=types.ThinkingConfig(thinking_budget=self.THINK_BUDGET)
-                    ),
-                )
+                if self.tool_google:
+                    response = client.models.generate_content(
+                        model=self.model_name,
+                        contents=prompt_text.text,
+                        config=types.GenerateContentConfig(
+                            tools=[self.google_search_tool],
+                            thinking_config=types.ThinkingConfig(thinking_budget=self.THINK_BUDGET),
+                            response_modalities=["TEXT"],
+                        ),
+                    )
+                else:
+                    response = client.models.generate_content(
+                        model=self.model_name,
+                        contents=prompt_text.text,
+                        config=types.GenerateContentConfig(
+                            thinking_config=types.ThinkingConfig(thinking_budget=self.THINK_BUDGET),
+                            response_modalities=["TEXT"],
+                        ),
+                    )
+
             except Exception as e:
                 print(f"Failed to init genai.Client for {self.model_name}: {e}")
                 return "Failed to parse text"
