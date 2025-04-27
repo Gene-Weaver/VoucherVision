@@ -13,7 +13,7 @@ from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, 
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
 from google import genai
 from google.genai import types
-from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
+from google.genai.types import Tool, GoogleSearch, GenerateContentConfig
 
 class GoogleGeminiHandler: 
 
@@ -48,6 +48,7 @@ class GoogleGeminiHandler:
         self.parser = JsonOutputParser()
 
         self.google_search_tool = Tool(google_search = GoogleSearch())
+        # self.google_search_tool = {'google_search': {}}
 
         # Define the prompt template
         self.prompt = PromptTemplate(
@@ -86,6 +87,37 @@ class GoogleGeminiHandler:
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
         }
         self._build_model_chain_parser()
+
+    def log_response_metrics(self, response):
+        metrics = {
+            'Search Query': None,
+            'Search Pages': None,
+            'Prompt Tokens': None,
+            'Thoughts Tokens': [None, self.THINK_BUDGET],
+            'Output Tokens': None,
+            'Total Tokens': None
+        }
+        
+        try: metrics['Search Query'] = response.candidates[0].grounding_metadata.web_search_queries
+        except: pass
+        try: metrics['Search Pages'] = ", ".join([site.web.title for site in response.candidates[0].grounding_metadata.grounding_chunks])
+        except: pass
+        try: metrics['Prompt Tokens'] = response.usage_metadata.prompt_token_count
+        except: pass
+        try: metrics['Thoughts Tokens'][0] = response.usage_metadata.thoughts_token_count
+        except: pass
+        try: metrics['Output Tokens'] = response.usage_metadata.candidates_token_count
+        except: pass
+        try: metrics['Total Tokens'] = response.usage_metadata.total_token_count
+        except: pass
+        
+        for key, value in metrics.items():
+            if key == 'Thoughts Tokens':
+                self.logger.info(f'[GEMINI] {key}: {value[0]} / {value[1]}')
+            else:
+                self.logger.info(f'[GEMINI] {key}: {value}')
+                
+        return True
         
     def _adjust_config(self):
         new_temp = self.adjust_temp + self.temp_increment
@@ -139,6 +171,7 @@ class GoogleGeminiHandler:
                     client = genai.Client(api_key=os.environ.get("API_KEY"))
 
                 if self.tool_google:
+                    self.logger.info(f'[GEMINI] {self.model_name} --- THINK[{self.THINK_BUDGET}] --- TOOLS[GOOGLE SEARCH]')
                     response = client.models.generate_content(
                         model=self.model_name,
                         contents=prompt_text.text,
@@ -149,6 +182,7 @@ class GoogleGeminiHandler:
                         ),
                     )
                 else:
+                    self.logger.info(f'[GEMINI] {self.model_name} --- THINK[{self.THINK_BUDGET}] --- TOOLS[NONE]')
                     response = client.models.generate_content(
                         model=self.model_name,
                         contents=prompt_text.text,
@@ -164,6 +198,7 @@ class GoogleGeminiHandler:
         else:
             model = GenerativeModel(self.model_name)
             response = model.generate_content(prompt_text.text)
+        self.log_response_metrics(response)
         return response.text
     
     def call_llm_api_GoogleGemini(self, prompt_template, json_report, paths):
