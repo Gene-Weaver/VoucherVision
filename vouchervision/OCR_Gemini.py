@@ -154,8 +154,8 @@ class OCRGeminiProVision:
         
         return self.exponential_backoff(generate)
 
-    def ocr_gemini(self, image_path, prompt=None, temperature=None, top_p=None, top_k=None, max_output_tokens=None, seed=123456):
-        """
+    def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456):
+        """temperature=1, top_p=0.95
         Transcribes the text in the image using the Gemini model.
 
         :param image_path: Path to the image file.
