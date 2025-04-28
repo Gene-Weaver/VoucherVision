@@ -16,7 +16,7 @@ LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pr
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
   3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
-  4. Redacted or stricken text might be between three tildes. Handwritten text might be between three asterisks. 
+  4. Redacted or stricken text will have three tildes on either side (~~~crossed text~~~). Handwritten text will have triple angle bracket symbols on either side (<<<handwritten text>>>). 
   5. If you see Text in the OCR that reports on the OCR engine itself, do not include that in the JSON. 
   6. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
   7. Duplicate dictionary fields are not allowed.
@@ -25,8 +25,7 @@ instructions: 1. Refactor the unstructured OCR text into a dictionary based on t
   10. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
   11. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
   12. Only return a JSON dictionary represented as a string. You should not explain your answer.
-
-  After you create the JSON, if there are not already coordinates in the decimalLatitude and decimalLongitude fields, then use all of the information to geolocate the specimen using Google Search. If there is only state-level or country-level location information, then it is okay to return empty strings; that is preferable to vague or guesstimate coordinates. Otherwise, use landmarks and all other locality information to search for the best coordinates.
+  13. After you create the JSON, if there are not already coordinates in the decimalLatitude and decimalLongitude fields, then use all of the information to geolocate the specimen using Google Search. Query the internet using the text to determine the precise coordinates. If there is only state-level or country-level location information, then it is okay to return empty strings; that is preferable to vague or guesstimate coordinates. Otherwise, use landmarks and all other locality information to search for the best coordinates.
 json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
 rules:
   catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.

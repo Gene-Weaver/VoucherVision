@@ -9,6 +9,15 @@ class OCRPromptCatalog:
             "default_plus_minorcorrect_excludestricken_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but exclude text that has been stricken, crossed out, or redacted. Also correct any minor typos for scientific species names. Identify any handwritten text. Do not explain your answer, only return the verbatim text:""",
             
             "default_plus_minorcorrect_addressstricken_idhandwriting": """Please perform OCR on this scientific image and extract all of the words and text verbatim, but place three tildes on either side of text that has been stricken, crossed out, or redacted because these are likely to be old species names. Also correct any minor typos for scientific species names. Identify any handwritten text by placing three asterisks symbols on either side. If there are multiple barcodes in the image, then include this in the reported OCR '[MULTIPLE BARCODES]'.Do not explain your answer, only return the verbatim text with the appropriate annotations:""",
+            
+            "verbatim_with_annotations": """Please perform OCR on this scientific image and extract all of the words and text verbatim. I also need you to annotate the verbatim text following these steps:
+1. Place three tildes on either side of text that has been stricken, crossed out, or redacted because these are likely to be old species names (~~~crossed text~~~)
+2. Identify any handwritten text by placing triple angle brackets symbols on either side (<<<handwritten text>>>)
+3. Correct any minor typos for scientific species names
+4. Carefully assess whether there are multiple barcodes in the image that represent multiple specimens on the same herbarium sheet; if there are multiple barcodes in the image, then include "[MULTIPLE BARCODES]" otherwise just skip this step
+5. Ignore rulers
+6. Maintain the relative text positions by using indentation and paragraph breaks
+7. Do not explain your answer, only return the final text with the appropriate annotations. The final text should not be markdown.""",
 
             "default_plus_minorcorrect_excludestricken_gpt4": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted. Use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Your corrections should be minimal and should focus character recognition errors. The correction cannot have more or fewer characters than the original word. Do not explain your answer, only return the verbatim text:""",
             

@@ -33,11 +33,17 @@ class OCRGeminiProVision:
         self.model = genai.GenerativeModel(
             model_name=self.model_name, generation_config=self.generation_config
         )
-
     def exponential_backoff(self, func, *args, **kwargs):
         """
         Exponential backoff for a given function.
-        Returns "" if it still fails after all retries.
+        
+        Args:
+            func (function): The function to retry.
+            *args: Positional arguments for the function.
+            **kwargs: Keyword arguments for the function.
+        
+        Returns:
+            The result of the function if successful.
         """
         max_retries = 5
         for attempt in range(max_retries):
@@ -48,9 +54,38 @@ class OCRGeminiProVision:
                 wait_time = (2 ** attempt) + random.uniform(0, 1)
                 print(f"Attempt {attempt + 1} failed with error: {e}. Retrying in {wait_time:.2f} seconds...")
                 time.sleep(wait_time)
-
-        print(f"Failed to complete {func.__name__} after {max_retries} attempts. Returning empty string.")
+        
         return ""
+        # raise Exception(f"Failed to complete {func.__name__} after {max_retries} attempts.")
+    
+    
+    # def exponential_backoff(self, func, *args, **kwargs):
+    #     """
+    #     Exponential backoff for a given function.
+    #     Returns the longest successful result if possible, else "".
+    #     """
+    #     max_retries = 3
+    #     best_result = ""
+        
+    #     for attempt in range(max_retries):
+    #         try:
+    #             result = func(*args, **kwargs)
+    #             if isinstance(result, str) and len(result.strip()) > len(best_result.strip()):
+    #                 best_result = result
+    #             elif hasattr(result, 'text') and len(result.text.strip()) > len(best_result.strip()):
+    #                 best_result = result
+    #             return result  # if you want to return on first success
+    #         except Exception as e:
+    #             wait_time = (2 ** attempt) + random.uniform(0, 1)
+    #             print(f"Attempt {attempt + 1} failed with error: {e}. Retrying in {wait_time:.2f} seconds...")
+    #             time.sleep(wait_time)
+
+    #     if best_result != "":
+    #         print(f"Failed after {max_retries} attempts, but returning longest partial result.")
+    #         return best_result
+    #     else:
+    #         print(f"Failed after {max_retries} attempts with no valid response. Returning empty string.")
+    #         return ""
     
     def download_image_from_url(self, image_url):
         """
@@ -146,8 +181,8 @@ class OCRGeminiProVision:
             )
             
             # NEW: Check if the response is suspiciously short
-            if not response.text or len(response.text.strip()) < 30:
-                raise Exception(f"Short or empty response (length={len(response.text.strip())}), retrying...")
+            # if not response.text or len(response.text.strip()) < 30:
+            #     raise Exception(f"Short or empty response (length={len(response.text.strip())}), retrying...")
             
             return response
 
@@ -182,14 +217,16 @@ class OCRGeminiProVision:
 
         # try: 
         if prompt is not None:
-            keys = ["default_plus_minorcorrect_addressstricken_idhandwriting",]
+            # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting",]
+            keys = ["verbatim_with_annotations",]
 
         else:
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
             # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
 
-            # USE # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
-            keys = ["default_plus_minorcorrect_addressstricken_idhandwriting", "species_only",]
+            # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
+            # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting", "species_only",] # last prior to annotations
+            keys = ["verbatim_with_annotations",] # last prior to annotations
             
             # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting",]
