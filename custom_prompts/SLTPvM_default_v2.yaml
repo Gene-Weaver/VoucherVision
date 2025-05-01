@@ -13,10 +13,9 @@ instructions: 1. Refactor the unstructured OCR text into a dictionary based on t
   6. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
   7. Duplicate dictionary fields are not allowed.
   8. Ensure all JSON keys are in camel case.
-  9. Ensure new JSON field values follow sentence case capitalization, but if the text represents abbreviations, acronyms, or initialisms then leave the capitalization as found in the OCR.
-  10. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
-  11. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
-  12. Only return a JSON dictionary represented as a string. You should not explain your answer.
+  9. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  10. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  11. Only return a JSON dictionary represented as a string. You should not explain your answer.
 json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
 rules:
   catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.
