@@ -213,6 +213,9 @@ class OCRGeminiProVision:
         overall_total_cost = 0
         overall_tokens_in = 0
         overall_tokens_out = 0
+        rates_in = 0
+        rates_out = 0
+        total_cost = 0
         overall_response = ""
 
         # try: 
