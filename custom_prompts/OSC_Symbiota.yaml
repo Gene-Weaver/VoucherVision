@@ -1,19 +1,38 @@
 prompt_author: James Mickley         
 prompt_author_institution: Oregon State University
 prompt_name: OSC_Symbiota
-prompt_version: v-0-1
+prompt_version: v-0-2
 prompt_description: |
   Prompt developed by James Mickley, adapted for Symbiota fields. 
-  Based loosely on SLTPvA_medium v1.0 and SLTPvM_default v1.0, with additions from OSC herbarium experience. 
+
+    Based loosely on SLTPvA_medium v1.0 and SLTPvM_default v1.0, with additions from OSC herbarium experience. 
+    Compared to SLTPvM_default v1.0, there are the following changes in the intial version
+    * Adds fields for associatedCollectors, family, infraspecificEpithet, datum, and associatedSpecies
+    * Uses collector instead of collectedBy
+    * Remove authors from scientificName    
+    * Removes instruction to add indet to genus name if not IDed to genus (some collections wouldn't use this)
+    * Convert abbreviations to full names for country, stateProvince
+    * Do not include the type of region or abbreviation in county (e.g., County, CO)
+    * Remove elevation and coordinates from locality
+    * Remove elevation from verbatimCoordinates
+    * Remove description of the specimen itself in the habitat
+    * Removes minimumElevationInMeters, maximumElevationInMeters, and elevationUnits fields, these have tended to be error-prone, especially when converting units
+    * Removes collectionDateEnd, more error-prone relative to how uncommon it is
+    * Removes identificationHistory
+    * Language tweaks to instructions for collectorNumber, verbatimCollectionDate, continent, country, stateProvince, county, 
+      locality, verbatimCoordinates, habitat, specimenDescription
+
   ~ Changelog ~
     * v-0-1 - 2025-04-16 - Initial version
+    * v-0-2 - 2025-05-08 - Removes section of instruction 6 to follow sentence case capitalization. Models were starting to observe this and decapitalize proper names.
 LLM: General Purpose (tested with Google Gemini)
-instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+instructions: 
+  1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
   3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
   4. Duplicate dictionary fields are not allowed.
   5. Ensure all JSON keys are in camel case and are enclosed in double quotes.
-  6. Ensure new JSON field values follow sentence case capitalization and are enclosed in double quotes.
+  6. Ensure new JSON field values are enclosed in double quotes.
   7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
   8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
   9. Only return a JSON dictionary represented as a string. You should not explain your answer.
@@ -24,11 +43,11 @@ rules:
   associatedCollectors:  A comma separated list of full names for additional collectors, if any.
   collectorNumber: Number or unique identifier associated with the collector.
   verbatimCollectionDate: The verbatim original representation of the date and time information for when 
-      the specimen was collected. Date of collection exactly as it appears on the label. 
+      the specimen was collected. Date of collection exactly as it appears in the OCR text. 
       Do not change the format or correct typos.
   collectionDate: "Date the specimen was collected formatted as YYYY-MM-DD. If
       specific components of the date are unknown, they should be replaced with
-      zeros. Examples: '0000-00-00' if the entire date is unknown, 'YYYY-00-00'
+      zeros. Use '0000-00-00' if the entire date is unknown, 'YYYY-00-00'
       if only the year is known, and 'YYYY-MM-00' if year and month are known
       but day is not."
   scientificName: The scientific name of the taxon including genus, specific epithet, 
@@ -38,7 +57,7 @@ rules:
   family: Taxonomic determination to family. Family must be capitalized.
   genus: Taxonomic determination to genus. Genus must be capitalized. If genus is not present, 
       use taxonomic family name.
-  specificEpithet: The name of the first or species epithet of the scientificName. Only include the species epithet.
+  specificEpithet: The name of the species epithet of the scientificName. Only include the species epithet.
   infraspecificEpithet: "The infraspecific epithet specified in the taxonomic name 
       ('var.', 'ssp.', 'subsp.', 'f.'). Prefix with the infraspecific rank."
   identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon 
@@ -47,14 +66,14 @@ rules:
       Record this information if it is present. Some examples are '?', 'cf.', 'aff.', 'sensu lato', 's.l.', 
       'sensu stricto', 's.s.', 'probably', '? hybrid'. The Confidence field is for short comments about the 
       determination (16 characters maximum). Periods are used in abbreviations in this field."
-  identifiedDate: Date that the most recent determination was given, in the following format. YYYY-MM-DD.
-      If specific components of the date are unknown, they should be replaced with
-      zeros. 
+  identifiedDate: Date that the most recent determination was given, in the following format. 
+      YYYY-MM-DD (zeros may be used if only partial date)
   identifiedRemarks: If a determiner has longer comments or measurements to support the determination, enter them here.
   continent: Use your knowledge to infer the continent where the specimen was collected.
-  country: "Use your knowledge and the OCR text to infer the country where the specimen was collected. 
-      Spell out the country's full name if abbreviation is given." 
-  stateProvince: The name of the state, province, canton or region where the specimen was collected.
+  country: Use your knowledge and the OCR text to infer the country where the specimen was collected. 
+      Spell out the full name if an abbreviation is given.
+  stateProvince: The name of the state, province, canton or region where the specimen was collected. 
+      Spell out the full name if an abbreviation is given.
   county: The full, unabbreviated name of the county, parish, shire or borough where the specimen 
       was collected. Do not include the type of region or its abbreviation.
   locality: Description of geographic location, landscape, landmarks, regional
@@ -65,7 +84,7 @@ rules:
   decimalLongitude: Longitude decimal coordinate. Correct and convert the verbatim coordinates to conform 
       with the decimal degrees GPS coordinate format.
   verbatimCoordinates: Latitude/Longitude, TRS, or UTM coordinates exactly as they appear in the 
-      unformatted OCR text. Do not convert formats. Exclude elevation.
+      OCR text. Do not convert formats. Exclude elevation.
   datum: Datum specified in the unformatted text. Possible values include [WGS84, NAD83, NAD27].
   verbatimElevation: The elevation in the unformatted OCR text. Include any units.
   cultivated: If the text includes the word 'cult' or 'cultivated' then this value is 'yes'.
