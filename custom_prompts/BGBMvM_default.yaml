@@ -1,8 +1,8 @@
 prompt_author: Megi         
 prompt_author_institution: BGBM  
 prompt_name: BGBMvM_default
-prompt_version: v-1-0      
-prompt_description: Prompt base on SLTPvM_default.
+prompt_version: v-1-1     
+prompt_description: Prompt base on SLTPvM_default and OSC_Symbiota (associatedCollectors) .
 LLM: General Purpose
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
@@ -20,7 +20,8 @@ rules:
   genus: Taxonomic determination to genus. Genus must be capitalized. If genus is not present use the taxonomic family name followed by the word 'indet'.
   specificEpithet: The name of the species epithet of the scientificName. Only include the species epithet.
   scientificNameAuthorship: The authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclatural code.
-  collectedBy: A comma separated list of names of people, groups, or organizations responsible for observing, recording, collecting, or presenting the original specimen. The primary collector or observer should be listed first. 
+  collector: The name of the primary collector of the specimen.
+  associatedCollectors:  A comma separated list of full names for additional collectors, if any.
   collectorNumber: An identifier given to the occurrence at the time it was recorded, the specimen collector's number.
   identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon to the subject organism, the determiner. This is not the specimen collector. 
   identifiedDate: Date that the most recent determination was given, in the following format. YYYY-MM-DD (zeros may be used if only partial date). 
@@ -67,7 +68,8 @@ mapping:
   - identifiedBy
   - identifiedDate
   COLLECTING:
-  - collectedBy
+  - collector
+  - associatedCollectors
   - collectorNumber
   - verbatimCollectionDate
   - collectionDate
