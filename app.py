@@ -1240,8 +1240,8 @@ def create_private_file():
                                                 type='password')
 
         st.write("---")
-        st.subheader("Google Vision  (*Required*) / Google PaLM 2 / Google Gemini")
-        st.markdown("VoucherVision currently uses [Google Vision API](https://cloud.google.com/vision/docs/ocr) for OCR. Generating an API key for this is more involved than the others. [Please carefully follow the instructions outlined here to create and setup your account.](https://cloud.google.com/vision/docs/setup). You do NOT need to complete any of the steps beyond where it says to 'Enable the API'. Below that is not required and may not work.")
+        st.subheader("Google Vision / Google Gemini")
+        st.markdown("VoucherVision currently uses Google Gemini models for OCR or the legacy [Google Vision API](https://cloud.google.com/vision/docs/ocr). Generating an API key for this is more involved than the others. [Please carefully follow the instructions outlined here to create and setup your account.](https://cloud.google.com/vision/docs/setup). You do NOT need to complete any of the steps beyond where it says to 'Enable the API'. Below that is not required and may not work.")
         st.markdown("""Once your account is created, [visit this page](https://console.cloud.google.com) and create a project. Then follow these instructions:""")
 
         with st.expander("**View Google API Instructions**"):
@@ -1316,9 +1316,9 @@ def create_private_file():
             
             blog_text('Google project ID', ': The project ID is the "project_id"  value from the JSON file.')
             blog_text('Google project location', ': The project location specifies the location of the Google server that your project resources will utilize. It should not really make a difference which location you choose. We use `us-central1`, but you might want to choose a location closer to where you live. [please see this page for a list of available regions](https://cloud.google.com/vertex-ai/docs/general/locations)')
-            st.markdown("""Create a [Google API Key](https://aistudio.google.com/app/apikey). Google has multiple ways of authenticating their products. Please also create this API key.""")
+            st.markdown("""Create a [Google API Key](https://console.cloud.google.com/apis/credentials). This will be the GOOGLE_PALM_API key. Make sure that it is an unrestricted API key.""")
             blog_text_and_image(text="Follow the prompts and Create API Key", 
-                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','gemini6.JPG'))
+                                fullpath=os.path.join(st.session_state.dir_home, 'demo','google','gemini6B.JPG'))
 
             
         google_application_credentials = st.text_input(label = 'Full path to Google Cloud JSON API key file', value = cfg_private['google'].get('GOOGLE_APPLICATION_CREDENTIALS', ''),
