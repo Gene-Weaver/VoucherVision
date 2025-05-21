@@ -1316,7 +1316,7 @@ def create_private_file():
             
             blog_text('Google project ID', ': The project ID is the "project_id"  value from the JSON file.')
             blog_text('Google project location', ': The project location specifies the location of the Google server that your project resources will utilize. It should not really make a difference which location you choose. We use `us-central1`, but you might want to choose a location closer to where you live. [please see this page for a list of available regions](https://cloud.google.com/vertex-ai/docs/general/locations)')
-            st.markdown("""Create a [Google API Key](https://console.cloud.google.com/apis/credentials). This will be the GOOGLE_PALM_API key. Make sure that it is an unrestricted API key.""")
+            st.markdown("""Create a [Google API Key](https://console.cloud.google.com/apis/credentials).  This will be the GOOGLE_PALM_API key. Make sure that it is an unrestricted API key.""")
             blog_text_and_image(text="Follow the prompts and Create API Key", 
                                 fullpath=os.path.join(st.session_state.dir_home, 'demo','google','gemini6B.JPG'))
 
