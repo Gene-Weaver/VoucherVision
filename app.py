@@ -2328,9 +2328,9 @@ def content_ocr_method():
     demo_text_trp = demo_text_p + '\n' + demo_text_tr
 
     options = [
+                "Gemini-2.0-Flash",
                 "Gemini-2.5-Pro",
                 "Gemini-2.5-Flash",
-                "Gemini-2.0-Flash",
                 "Gemini-1.5-Pro",
                 "Google Vision Handwritten", 
                 "Google Vision Printed", 
@@ -2408,9 +2408,9 @@ def content_ocr_method():
             "GPT-4o-mini": "GPT-4o-mini",
             "GPT-4o": "GPT-4o",
 
+            "Gemini-2.0-Flash": "Gemini-2.0-Flash",
             "Gemini-2.5-Pro": "Gemini-2.5-Pro",
             "Gemini-2.5-Flash": "Gemini-2.5-Flash",
-            "Gemini-2.0-Flash": "Gemini-2.0-Flash",
             "Gemini-1.5-Pro": "Gemini-1.5-Pro",
             "Gemini-1.5-Flash": "Gemini-1.5-Flash",
             "Gemini-1.5-Flash-8B": "Gemini-1.5-Flash-8B",
