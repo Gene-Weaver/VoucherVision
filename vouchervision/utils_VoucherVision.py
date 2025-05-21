@@ -1,5 +1,5 @@
 import openai
-import os, json, glob, shutil, yaml, torch, logging, gc
+import os, json, glob, shutil, yaml, torch, logging, gc, traceback
 import openpyxl
 from openpyxl import Workbook, load_workbook
 import vertexai
@@ -7,6 +7,7 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from langchain_openai import AzureChatOpenAI
 from google.oauth2 import service_account
 from transformers import AutoTokenizer, AutoModel
+import pandas as pd
 
 import queue
 import threading
@@ -859,6 +860,264 @@ class VoucherVision():
 
     
 
+    # def send_to_LLM(self, is_azure, progress_report, json_report, model_name):
+    #     self.n_failed_LLM_calls = 0
+    #     self.n_failed_OCR = 0
+
+    #     final_JSON_response = None
+    #     final_WFO_record = None
+    #     final_GEO_record = None
+
+    #     self.initialize_token_counters()
+    #     self.update_progress_report_initial(progress_report)
+
+    #     MODEL_NAME_FORMATTED = ModelMaps.get_API_name(model_name)
+    #     name_parts = model_name.split("_")
+        
+    #     self.setup_JSON_dict_structure()
+
+    #     Copy_Prompt = PromptCatalog()
+    #     Copy_Prompt.copy_prompt_template_to_new_dir(self.Dirs.transcription_prompt, self.path_custom_prompts)
+        
+    #     if json_report:
+    #         json_report.set_text(text_main=f'Loading {MODEL_NAME_FORMATTED}')
+    #         json_report.set_JSON({}, {}, {})
+            
+    #     llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, 
+    #                                         self.JSON_dict_structure, name_parts, is_azure, 
+    #                                         self.llm, self.config_vals_for_permutation)
+
+    #     # Create an OCR Engine that will be used by the main thread
+    #     main_OCR_Engine = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, 
+    #                                 self.cfg, self.trOCR_model_version, self.trOCR_model, 
+    #                                 self.trOCR_processor, self.device)
+        
+    #     # Filter out specimens that should be skipped
+    #     valid_img_paths = []
+    #     for i, path_to_crop in enumerate(self.img_paths):
+    #         if not self.should_skip_specimen(path_to_crop):
+    #             valid_img_paths.append((i, path_to_crop))
+    #         else:
+    #             self.log_skipping_specimen(path_to_crop)
+        
+    #     # Create job queue and result list with locks
+    #     job_queue = queue.Queue()
+    #     results = {}
+    #     results_lock = threading.Lock()
+    #     ocr_stats_lock = threading.Lock()  # For updating OCR related statistics
+        
+    #     # Add all jobs to the queue
+    #     for i, path_to_crop in valid_img_paths:
+    #         job_queue.put((i, path_to_crop))
+        
+    #     # Worker function
+    #     def worker():
+    #         # Each worker gets its own OCR Engine
+    #         worker_OCR_Engine = None  # Lazy initialization
+    #         json_report = None
+            
+    #         while True:
+    #             try:
+    #                 # Get a job from the queue, non-blocking
+    #                 try:
+    #                     i, path_to_crop = job_queue.get(block=False)
+    #                 except queue.Empty:
+    #                     # No more jobs
+    #                     break
+                    
+    #                 self.logger.info(f'Working on {i+1}/{len(valid_img_paths)} --- {os.path.basename(path_to_crop)}')
+                    
+    #                 # Initialize worker's OCR Engine if needed
+    #                 if worker_OCR_Engine is None:
+    #                     worker_OCR_Engine = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, 
+    #                                                 self.cfg, self.trOCR_model_version, self.trOCR_model, 
+    #                                                 self.trOCR_processor, self.device)
+                    
+    #                 # Generate paths
+    #                 paths = self.generate_paths(path_to_crop, i)
+    #                 filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt = paths
+                    
+    #                 # Perform OCR
+    #                 if json_report:
+    #                     json_report.set_text(text_main='Starting OCR')
+                    
+    #                 self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, 
+    #                                                 txt_file_path_OCR, txt_file_path_OCR_bounds, 
+    #                                                 path_to_crop, worker_OCR_Engine)
+                    
+    #                 # Capture OCR stats
+    #                 ocr_cost = worker_OCR_Engine.cost
+    #                 ocr_tokens_in = worker_OCR_Engine.tokens_in
+    #                 ocr_tokens_out = worker_OCR_Engine.tokens_out
+    #                 ocr_cost_in = worker_OCR_Engine.cost_in
+    #                 ocr_cost_out = worker_OCR_Engine.cost_out
+    #                 ocr_method = str(worker_OCR_Engine.ocr_method)
+    #                 ocr_success = bool(self.OCR)
+                    
+    #                 # Update OCR stats atomically
+    #                 with ocr_stats_lock:
+    #                     self.OCR_cost += ocr_cost
+    #                     self.OCR_tokens_in += ocr_tokens_in
+    #                     self.OCR_tokens_out += ocr_tokens_out
+    #                     self.OCR_cost_in += ocr_cost_in
+    #                     self.OCR_cost_out += ocr_cost_out
+    #                     self.ocr_method = ocr_method
+    #                     if not ocr_success:
+    #                         self.n_failed_OCR += 1
+                    
+    #                 if json_report:
+    #                     json_report.set_text(text_main='Finished OCR')
+                    
+    #                 # If OCR failed, record result and continue
+    #                 if not ocr_success:
+    #                     with results_lock:
+    #                         results[i] = {
+    #                             'path_to_crop': path_to_crop,
+    #                             'ocr_failed': True,
+    #                             'llm_failed': False,
+    #                             'nt_in': 0,
+    #                             'nt_out': 0,
+    #                             'response': None,
+    #                             'wfo_record': None,
+    #                             'geo_record': None,
+    #                             'usage_report': None
+    #                         }
+    #                     job_queue.task_done()
+    #                     continue
+                    
+    #                 # Setup prompt and call LLM
+    #                 prompt = self.setup_prompt()
+                    
+    #                 # LLM call
+    #                 self.logger.info(f'Waiting for {model_name} API call --- Using {MODEL_NAME_FORMATTED}')
+                    
+    #                 try:
+    #                     # Call the appropriate LLM based on model name
+    #                     if 'PALM2' in name_parts:
+    #                         response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GooglePalm2(prompt, json_report, paths)
+                        
+    #                     elif 'GEMINI' in name_parts:
+    #                         response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GoogleGemini(prompt, json_report, paths)
+                        
+    #                     elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
+    #                         response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_MistralAI(prompt, json_report, paths)
+                        
+    #                     elif 'Hyperbolic' in name_parts:
+    #                         response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_Hyperbolic(prompt, json_report, paths)
+                        
+    #                     elif 'LOCAL' in name_parts:
+    #                         if 'MISTRAL' in name_parts or 'MIXTRAL' in name_parts:
+    #                             if 'CPU' in name_parts:     
+    #                                 response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_cpu_MistralAI(prompt, json_report, paths) 
+    #                             else:
+    #                                 response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_MistralAI(prompt, json_report, paths) 
+                        
+    #                     elif "/" in ''.join(name_parts):
+    #                         response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_local_custom_fine_tune(self.OCR, json_report, paths)
+                        
+    #                     else:
+    #                         response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_OpenAI(prompt, json_report, paths)
+                        
+    #                     llm_failed = response_candidate is None
+                        
+    #                     if llm_failed:
+    #                         with results_lock:
+    #                             self.n_failed_LLM_calls += 1
+                        
+    #                     # Update token counters atomically
+    #                     with results_lock:
+    #                         self.update_token_counters(nt_in, nt_out)
+                        
+    #                     self.logger.info(f'Prompt tokens IN --- {nt_in}')
+    #                     self.logger.info(f'Prompt tokens OUT --- {nt_out}')
+                        
+    #                 except Exception as e:
+    #                     self.logger.error(f"Error in LLM call: {str(e)}")
+    #                     response_candidate = None
+    #                     nt_in = 0
+    #                     nt_out = 0
+    #                     WFO_record = None
+    #                     GEO_record = None
+    #                     usage_report = None
+    #                     llm_failed = True
+                        
+    #                     with results_lock:
+    #                         self.n_failed_LLM_calls += 1
+                    
+    #                 # Store result
+    #                 with results_lock:
+    #                     results[i] = {
+    #                         'path_to_crop': path_to_crop,
+    #                         'paths': paths,
+    #                         'ocr_failed': False,
+    #                         'llm_failed': llm_failed,
+    #                         'nt_in': nt_in,
+    #                         'nt_out': nt_out,
+    #                         'response': response_candidate,
+    #                         'wfo_record': WFO_record,
+    #                         'geo_record': GEO_record,
+    #                         'usage_report': usage_report
+    #                     }
+                    
+    #                 self.logger.info(f'Finished LLM call')
+                    
+    #                 # Mark job as done
+    #                 job_queue.task_done()
+                    
+    #             except Exception as e:
+    #                 self.logger.error(f"Unexpected error in worker: {str(e)}")
+    #                 # Try to mark as done to avoid hanging
+    #                 try:
+    #                     job_queue.task_done()
+    #                 except:
+    #                     pass
+        
+    #     # Create worker threads (16 workers)
+    #     worker_threads = []
+    #     for _ in range(min(16, len(valid_img_paths))):  # Don't create more threads than jobs
+    #         t = threading.Thread(target=worker)
+    #         t.daemon = True  # Make thread terminate when main thread ends
+    #         worker_threads.append(t)
+    #         t.start()
+        
+    #     # Wait for all jobs to be completed
+    #     job_queue.join()
+        
+    #     # Process results in order
+    #     for i in range(len(valid_img_paths)):
+    #         if i in results:
+    #             result = results[i]
+                
+    #             # Update progress report
+    #             self.update_progress_report_batch(progress_report, i)
+                
+    #             # If successful, update final response
+    #             if not result['ocr_failed'] and not result['llm_failed']:
+    #                 path_to_crop = result['path_to_crop']
+    #                 paths = result['paths']
+    #                 response_candidate = result['response']
+    #                 WFO_record = result['wfo_record']
+    #                 GEO_record = result['geo_record']
+    #                 usage_report = result['usage_report']
+                    
+    #                 final_JSON_response, final_WFO_record, final_GEO_record = self.update_final_response(
+    #                     response_candidate, WFO_record, GEO_record, usage_report, 
+    #                     MODEL_NAME_FORMATTED, paths, path_to_crop, 
+    #                     result['nt_in'], result['nt_out']
+    #                 )
+                    
+    #                 if json_report:
+    #                     json_report.set_JSON(final_JSON_response, final_WFO_record, final_GEO_record)
+        
+    #     # Clean up
+    #     del main_OCR_Engine
+    #     torch.cuda.empty_cache()
+    #     gc.collect()
+        
+    #     self.update_progress_report_final(progress_report)
+    #     final_JSON_response = self.parse_final_json_response(final_JSON_response)
+        
+    #     return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out, self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out, self.OCR_cost_in, self.OCR_cost_out, self.ocr_method
     def send_to_LLM(self, is_azure, progress_report, json_report, model_name):
         self.n_failed_LLM_calls = 0
         self.n_failed_OCR = 0
@@ -881,7 +1140,7 @@ class VoucherVision():
         if json_report:
             json_report.set_text(text_main=f'Loading {MODEL_NAME_FORMATTED}')
             json_report.set_JSON({}, {}, {})
-            
+                
         llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED, 
                                             self.JSON_dict_structure, name_parts, is_azure, 
                                             self.llm, self.config_vals_for_permutation)
@@ -902,20 +1161,125 @@ class VoucherVision():
         # Create job queue and result list with locks
         job_queue = queue.Queue()
         results = {}
+        excel_rows = []  # To store data for Excel file
         results_lock = threading.Lock()
         ocr_stats_lock = threading.Lock()  # For updating OCR related statistics
+        excel_rows_lock = threading.Lock()  # For updating excel rows
         
         # Add all jobs to the queue
         for i, path_to_crop in valid_img_paths:
             job_queue.put((i, path_to_crop))
         
+        # Split the save_json_and_xlsx function into save_json and prepare_excel_row
+        def save_json(response, filename_without_extension, txt_file_path):
+            """Save JSON to file, but don't update Excel"""
+            if response is None:
+                response = self.JSON_dict_structure.copy()
+                # Insert 'filename' as the first key
+                response = {'filename': filename_without_extension, **{k: v for k, v in response.items() if k != 'filename'}}
+            else:
+                response = self.clean_catalog_number(response, filename_without_extension)
+            
+            self.write_json_to_file(txt_file_path, response)
+            return response
+        
+        def prepare_excel_row(response, WFO_record, GEO_record, usage_report, 
+                            MODEL_NAME_FORMATTED, filename_without_extension, path_to_crop, 
+                            txt_file_path, jpg_file_path_OCR_helper, nt_in, nt_out):
+            """Prepare a row for Excel without writing to file"""
+            # Create a dictionary to store the Excel row data
+            row_data = {
+                # Basic fields
+                'filename': filename_without_extension,
+                'path_to_crop': path_to_crop,
+                'path_to_content': txt_file_path,
+                'path_to_helper': jpg_file_path_OCR_helper,
+                'tokens_in': nt_in,
+                'tokens_out': nt_out,
+                'prompt': os.path.basename(self.path_custom_prompts),
+                'run_name': self.Dirs.run_name,
+                'LM2_collage': self.cfg['leafmachine']['use_RGB_label_images'],
+                'LLM': MODEL_NAME_FORMATTED
+            }
+            
+            # OCR related fields
+            ocr_method = self.cfg['leafmachine']['project']['OCR_option']
+            if isinstance(ocr_method, list):
+                ocr_method = '|'.join(map(str, ocr_method))
+            
+            row_data['OCR_method'] = ocr_method
+            row_data['OCR_double'] = self.cfg['leafmachine']['project']['double_OCR']
+            row_data['OCR_trOCR'] = self.cfg['leafmachine']['project']['do_use_trOCR']
+            
+            # Path to original
+            if self.cfg['leafmachine']['use_RGB_label_images'] in [1, 2]:
+                fname = os.path.basename(path_to_crop)
+                base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(path_to_crop))))
+                path_to_original = os.path.join(base, 'Original_Images', fname)
+            else:
+                fname = os.path.basename(path_to_crop)
+                base = os.path.dirname(os.path.dirname(path_to_crop))
+                path_to_original = os.path.join(base, 'Original_Images', fname)
+            
+            row_data['path_to_original'] = path_to_original
+            
+            # Process response data
+            if response is not None:
+                if isinstance(response, str):
+                    try:
+                        response = json.loads(response)
+                    except json.JSONDecodeError:
+                        self.logger.error(f"Failed to parse response: {response}")
+                        response = {}
+                
+                # Add response data to row_data
+                for key, value in response.items():
+                    if key not in self.catalog_name_options:
+                        if isinstance(value, dict):
+                            # If it's a dictionary, extract the 'value' field
+                            row_data[key] = value.get('value', '')
+                        else:
+                            # If it's not a dictionary, use it directly
+                            row_data[key] = value
+                
+            # Add WFO data
+            if WFO_record:
+                for header in self.wfo_headers_no_lists:
+                    if header in WFO_record:
+                        row_data[header] = WFO_record[header]
+                
+                # Handle WFO_candidate_names specially
+                candidate_names = WFO_record.get("WFO_candidate_names", '')
+                if isinstance(candidate_names, list):
+                    row_data["WFO_candidate_names"] = '|'.join(candidate_names)
+                else:
+                    row_data["WFO_candidate_names"] = candidate_names
+            
+            # Add GEO data
+            if GEO_record:
+                for header in self.geo_headers:
+                    if header in GEO_record:
+                        row_data[header] = GEO_record[header]
+            
+            # Add usage data
+            if usage_report:
+                for header in self.usage_headers:
+                    if header in usage_report:
+                        row_data[header] = usage_report[header]
+            
+            return row_data
+        
         # Worker function
         def worker():
             # Each worker gets its own OCR Engine
             worker_OCR_Engine = None  # Lazy initialization
+            worker_id = threading.current_thread().name
             json_report = None
             
             while True:
+                i = None
+                path_to_crop = None
+                
                 try:
                     # Get a job from the queue, non-blocking
                     try:
@@ -924,51 +1288,43 @@ class VoucherVision():
                         # No more jobs
                         break
                     
-                    self.logger.info(f'Working on {i+1}/{len(valid_img_paths)} --- {os.path.basename(path_to_crop)}')
+                    self.logger.info(f'[{worker_id}] Working on {i+1}/{len(valid_img_paths)} --- {os.path.basename(path_to_crop)}')
                     
                     # Initialize worker's OCR Engine if needed
                     if worker_OCR_Engine is None:
-                        worker_OCR_Engine = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, 
-                                                    self.cfg, self.trOCR_model_version, self.trOCR_model, 
-                                                    self.trOCR_processor, self.device)
+                        try:
+                            worker_OCR_Engine = OCREngine(self.logger, json_report, self.dir_home, self.is_hf, 
+                                                        self.cfg, self.trOCR_model_version, self.trOCR_model, 
+                                                        self.trOCR_processor, self.device)
+                            self.logger.info(f'[{worker_id}] Successfully initialized OCR Engine')
+                        except Exception as e:
+                            self.logger.error(f'[{worker_id}] Error initializing OCR Engine: {str(e)}')
+                            self.logger.error(traceback.format_exc())
+                            # Use main OCR Engine as fallback
+                            worker_OCR_Engine = main_OCR_Engine
+                            self.logger.info(f'[{worker_id}] Using main OCR Engine as fallback')
                     
                     # Generate paths
                     paths = self.generate_paths(path_to_crop, i)
                     filename_without_extension, txt_file_path, txt_file_path_OCR, txt_file_path_OCR_bounds, jpg_file_path_OCR_helper, json_file_path_wiki, txt_file_path_ind_prompt = paths
                     
-                    # Perform OCR
-                    if json_report:
-                        json_report.set_text(text_main='Starting OCR')
-                    
-                    self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, 
-                                                    txt_file_path_OCR, txt_file_path_OCR_bounds, 
-                                                    path_to_crop, worker_OCR_Engine)
-                    
-                    # Capture OCR stats
-                    ocr_cost = worker_OCR_Engine.cost
-                    ocr_tokens_in = worker_OCR_Engine.tokens_in
-                    ocr_tokens_out = worker_OCR_Engine.tokens_out
-                    ocr_cost_in = worker_OCR_Engine.cost_in
-                    ocr_cost_out = worker_OCR_Engine.cost_out
-                    ocr_method = str(worker_OCR_Engine.ocr_method)
-                    ocr_success = bool(self.OCR)
-                    
-                    # Update OCR stats atomically
-                    with ocr_stats_lock:
-                        self.OCR_cost += ocr_cost
-                        self.OCR_tokens_in += ocr_tokens_in
-                        self.OCR_tokens_out += ocr_tokens_out
-                        self.OCR_cost_in += ocr_cost_in
-                        self.OCR_cost_out += ocr_cost_out
-                        self.ocr_method = ocr_method
-                        if not ocr_success:
-                            self.n_failed_OCR += 1
-                    
-                    if json_report:
-                        json_report.set_text(text_main='Finished OCR')
-                    
-                    # If OCR failed, record result and continue
-                    if not ocr_success:
+                    # Verify the image file exists
+                    if not os.path.isfile(path_to_crop):
+                        self.logger.error(f'[{worker_id}] Image file not found: {path_to_crop}')
+                        
+                        # Save JSON for failed image processing
+                        null_response = save_json(None, filename_without_extension, txt_file_path)
+                        
+                        # Prepare Excel row
+                        row_data = prepare_excel_row(
+                            null_response, None, None, None, MODEL_NAME_FORMATTED,
+                            filename_without_extension, path_to_crop, txt_file_path, 
+                            jpg_file_path_OCR_helper, 0, 0
+                        )
+                        
+                        with excel_rows_lock:
+                            excel_rows.append(row_data)
+                        
                         with results_lock:
                             results[i] = {
                                 'path_to_crop': path_to_crop,
@@ -976,19 +1332,138 @@ class VoucherVision():
                                 'llm_failed': False,
                                 'nt_in': 0,
                                 'nt_out': 0,
-                                'response': None,
+                                'response': null_response,
                                 'wfo_record': None,
                                 'geo_record': None,
-                                'usage_report': None
+                                'usage_report': None,
+                                'error': 'Image file not found'
+                            }
+                            self.n_failed_OCR += 1
+                        
+                        job_queue.task_done()
+                        continue
+                    
+                    # Perform OCR with detailed error handling
+                    if json_report:
+                        json_report.set_text(text_main=f'Starting OCR for {os.path.basename(path_to_crop)}')
+                    
+                    ocr_success = False
+                    try:
+                        self.logger.info(f'[{worker_id}] Starting OCR for {os.path.basename(path_to_crop)}')
+                        self.perform_OCR_and_save_results(i, json_report, jpg_file_path_OCR_helper, 
+                                                        txt_file_path_OCR, txt_file_path_OCR_bounds, 
+                                                        path_to_crop, worker_OCR_Engine)
+                        
+                        # Capture OCR stats
+                        ocr_cost = worker_OCR_Engine.cost
+                        ocr_tokens_in = worker_OCR_Engine.tokens_in
+                        ocr_tokens_out = worker_OCR_Engine.tokens_out
+                        ocr_cost_in = worker_OCR_Engine.cost_in
+                        ocr_cost_out = worker_OCR_Engine.cost_out
+                        ocr_method = str(worker_OCR_Engine.ocr_method)
+                        ocr_success = bool(self.OCR)
+                        
+                        # Update OCR stats atomically
+                        with ocr_stats_lock:
+                            self.OCR_cost += ocr_cost
+                            self.OCR_tokens_in += ocr_tokens_in
+                            self.OCR_tokens_out += ocr_tokens_out
+                            self.OCR_cost_in += ocr_cost_in
+                            self.OCR_cost_out += ocr_cost_out
+                            self.ocr_method = ocr_method
+                            if not ocr_success:
+                                self.n_failed_OCR += 1
+                        
+                        self.logger.info(f'[{worker_id}] OCR {"succeeded" if ocr_success else "failed"} for {os.path.basename(path_to_crop)}')
+                    except Exception as e:
+                        self.logger.error(f'[{worker_id}] OCR error for {os.path.basename(path_to_crop)}: {str(e)}')
+                        self.logger.error(traceback.format_exc())
+                        ocr_success = False
+                        with ocr_stats_lock:
+                            self.n_failed_OCR += 1
+                    
+                    if json_report:
+                        json_report.set_text(text_main=f'Finished OCR for {os.path.basename(path_to_crop)}')
+                    
+                    # If OCR failed, save JSON for failed OCR and continue
+                    if not ocr_success:
+                        # Save JSON for failed OCR
+                        null_response = save_json(None, filename_without_extension, txt_file_path)
+                        
+                        # Prepare Excel row
+                        row_data = prepare_excel_row(
+                            null_response, None, None, None, MODEL_NAME_FORMATTED,
+                            filename_without_extension, path_to_crop, txt_file_path, 
+                            jpg_file_path_OCR_helper, 0, 0
+                        )
+                        
+                        with excel_rows_lock:
+                            excel_rows.append(row_data)
+                        
+                        with results_lock:
+                            results[i] = {
+                                'path_to_crop': path_to_crop,
+                                'ocr_failed': True,
+                                'llm_failed': False,
+                                'nt_in': 0,
+                                'nt_out': 0,
+                                'response': null_response,
+                                'wfo_record': None,
+                                'geo_record': None,
+                                'usage_report': None,
+                                'error': 'OCR failed'
                             }
                         job_queue.task_done()
                         continue
                     
-                    # Setup prompt and call LLM
-                    prompt = self.setup_prompt()
+                    # Setup prompt for LLM
+                    try:
+                        prompt = self.setup_prompt()
+                        self.logger.info(f'[{worker_id}] Successfully created prompt for {os.path.basename(path_to_crop)}')
+                    except Exception as e:
+                        self.logger.error(f'[{worker_id}] Error creating prompt for {os.path.basename(path_to_crop)}: {str(e)}')
+                        self.logger.error(traceback.format_exc())
+                        
+                        # Save JSON for failed prompt creation
+                        null_response = save_json(None, filename_without_extension, txt_file_path)
+                        
+                        # Prepare Excel row
+                        row_data = prepare_excel_row(
+                            null_response, None, None, None, MODEL_NAME_FORMATTED,
+                            filename_without_extension, path_to_crop, txt_file_path, 
+                            jpg_file_path_OCR_helper, 0, 0
+                        )
+                        
+                        with excel_rows_lock:
+                            excel_rows.append(row_data)
+                        
+                        with results_lock:
+                            results[i] = {
+                                'path_to_crop': path_to_crop,
+                                'ocr_failed': False,
+                                'llm_failed': True,
+                                'nt_in': 0,
+                                'nt_out': 0,
+                                'response': null_response,
+                                'wfo_record': None,
+                                'geo_record': None,
+                                'usage_report': None,
+                                'error': f'Prompt creation error: {str(e)}'
+                            }
+                            self.n_failed_LLM_calls += 1
+                        job_queue.task_done()
+                        continue
                     
-                    # LLM call
-                    self.logger.info(f'Waiting for {model_name} API call --- Using {MODEL_NAME_FORMATTED}')
+                    # LLM call with detailed error handling
+                    self.logger.info(f'[{worker_id}] Waiting for {model_name} API call for {os.path.basename(path_to_crop)} --- Using {MODEL_NAME_FORMATTED}')
+                    
+                    response_candidate = None
+                    nt_in = 0
+                    nt_out = 0
+                    WFO_record = None
+                    GEO_record = None
+                    usage_report = None
+                    llm_error = None
                     
                     try:
                         # Call the appropriate LLM based on model name
@@ -1022,88 +1497,227 @@ class VoucherVision():
                         if llm_failed:
                             with results_lock:
                                 self.n_failed_LLM_calls += 1
+                            self.logger.error(f'[{worker_id}] LLM call failed for {os.path.basename(path_to_crop)}')
+                        else:
+                            self.logger.info(f'[{worker_id}] LLM call succeeded for {os.path.basename(path_to_crop)}')
+                            self.logger.info(f'[{worker_id}] Prompt tokens IN: {nt_in}, Prompt tokens OUT: {nt_out}')
                         
+                    except Exception as e:
+                        self.logger.error(f'[{worker_id}] Error in LLM call for {os.path.basename(path_to_crop)}: {str(e)}')
+                        self.logger.error(traceback.format_exc())
+                        llm_error = str(e)
+                        llm_failed = True
+                        with results_lock:
+                            self.n_failed_LLM_calls += 1
+                    
+                    # Save the JSON response immediately, but prepare Excel row for later
+                    try:
                         # Update token counters atomically
                         with results_lock:
                             self.update_token_counters(nt_in, nt_out)
                         
-                        self.logger.info(f'Prompt tokens IN --- {nt_in}')
-                        self.logger.info(f'Prompt tokens OUT --- {nt_out}')
+                        # Just save JSON (don't update Excel)
+                        final_response = save_json(response_candidate, filename_without_extension, txt_file_path)
+                        
+                        # Prepare Excel row for later
+                        row_data = prepare_excel_row(
+                            final_response, WFO_record, GEO_record, usage_report, MODEL_NAME_FORMATTED,
+                            filename_without_extension, path_to_crop, txt_file_path, 
+                            jpg_file_path_OCR_helper, nt_in, nt_out
+                        )
+                        
+                        with excel_rows_lock:
+                            excel_rows.append(row_data)
+                        
+                        self.logger.info(f'[{worker_id}] Saved JSON for {os.path.basename(path_to_crop)}')
+                        
+                        # Store result
+                        with results_lock:
+                            results[i] = {
+                                'path_to_crop': path_to_crop,
+                                'paths': paths,
+                                'ocr_failed': False,
+                                'llm_failed': llm_failed,
+                                'nt_in': nt_in,
+                                'nt_out': nt_out,
+                                'response': final_response,
+                                'wfo_record': WFO_record,
+                                'geo_record': GEO_record,
+                                'usage_report': usage_report,
+                                'error': llm_error
+                            }
                         
                     except Exception as e:
-                        self.logger.error(f"Error in LLM call: {str(e)}")
-                        response_candidate = None
-                        nt_in = 0
-                        nt_out = 0
-                        WFO_record = None
-                        GEO_record = None
-                        usage_report = None
-                        llm_failed = True
+                        self.logger.error(f'[{worker_id}] Error saving JSON for {os.path.basename(path_to_crop)}: {str(e)}')
+                        self.logger.error(traceback.format_exc())
                         
-                        with results_lock:
-                            self.n_failed_LLM_calls += 1
+                        # Try one more time to save a null response
+                        try:
+                            null_response = save_json(None, filename_without_extension, txt_file_path)
+                            
+                            # Prepare Excel row
+                            row_data = prepare_excel_row(
+                                null_response, None, None, None, MODEL_NAME_FORMATTED,
+                                filename_without_extension, path_to_crop, txt_file_path, 
+                                jpg_file_path_OCR_helper, nt_in, nt_out
+                            )
+                            
+                            with excel_rows_lock:
+                                excel_rows.append(row_data)
+                            
+                            with results_lock:
+                                results[i] = {
+                                    'path_to_crop': path_to_crop,
+                                    'ocr_failed': False,
+                                    'llm_failed': True,
+                                    'nt_in': nt_in,
+                                    'nt_out': nt_out,
+                                    'response': null_response,
+                                    'wfo_record': None,
+                                    'geo_record': None,
+                                    'usage_report': None,
+                                    'error': f'JSON saving error: {str(e)}'
+                                }
+                        except Exception as save_error:
+                            self.logger.error(f'[{worker_id}] Failed to save even null JSON for {os.path.basename(path_to_crop)}: {str(save_error)}')
                     
-                    # Store result
-                    with results_lock:
-                        results[i] = {
-                            'path_to_crop': path_to_crop,
-                            'paths': paths,
-                            'ocr_failed': False,
-                            'llm_failed': llm_failed,
-                            'nt_in': nt_in,
-                            'nt_out': nt_out,
-                            'response': response_candidate,
-                            'wfo_record': WFO_record,
-                            'geo_record': GEO_record,
-                            'usage_report': usage_report
-                        }
-                    
-                    self.logger.info(f'Finished LLM call')
+                    self.logger.info(f'[{worker_id}] Finished processing {os.path.basename(path_to_crop)}')
                     
                     # Mark job as done
                     job_queue.task_done()
                     
                 except Exception as e:
-                    self.logger.error(f"Unexpected error in worker: {str(e)}")
+                    error_msg = f"Unexpected error in worker: {str(e)}"
+                    self.logger.error(error_msg)
+                    self.logger.error(traceback.format_exc())
+                    
                     # Try to mark as done to avoid hanging
-                    try:
-                        job_queue.task_done()
-                    except:
-                        pass
+                    if i is not None:
+                        # Try to save a null response for this image
+                        try:
+                            path_to_crop = path_to_crop or "unknown"
+                            paths = self.generate_paths(path_to_crop, i)
+                            filename_without_extension, txt_file_path, _, _, jpg_file_path_OCR_helper, _, _ = paths
+                            
+                            null_response = save_json(None, filename_without_extension, txt_file_path)
+                            
+                            # Prepare Excel row
+                            row_data = prepare_excel_row(
+                                null_response, None, None, None, MODEL_NAME_FORMATTED,
+                                filename_without_extension, path_to_crop, txt_file_path, 
+                                jpg_file_path_OCR_helper, 0, 0
+                            )
+                            
+                            with excel_rows_lock:
+                                excel_rows.append(row_data)
+                            
+                            with results_lock:
+                                results[i] = {
+                                    'path_to_crop': path_to_crop,
+                                    'ocr_failed': True,
+                                    'llm_failed': True,
+                                    'nt_in': 0,
+                                    'nt_out': 0,
+                                    'response': null_response,
+                                    'wfo_record': None,
+                                    'geo_record': None,
+                                    'usage_report': None,
+                                    'error': error_msg
+                                }
+                        except:
+                            self.logger.error(f"Could not save null response for failed job {i}")
+                        
+                        try:
+                            job_queue.task_done()
+                        except:
+                            pass
         
         # Create worker threads (16 workers)
         worker_threads = []
-        for _ in range(min(16, len(valid_img_paths))):  # Don't create more threads than jobs
-            t = threading.Thread(target=worker)
+        num_workers = min(16, len(valid_img_paths))  # Don't create more threads than jobs
+        self.logger.info(f"Starting {num_workers} worker threads")
+        
+        for w in range(num_workers):
+            t = threading.Thread(target=worker, name=f"Worker-{w+1}")
             t.daemon = True  # Make thread terminate when main thread ends
             worker_threads.append(t)
             t.start()
         
         # Wait for all jobs to be completed
-        job_queue.join()
+        try:
+            job_queue.join()
+            self.logger.info("All jobs completed")
+        except Exception as e:
+            self.logger.error(f"Error waiting for jobs to complete: {str(e)}")
         
-        # Process results in order
-        for i in range(len(valid_img_paths)):
+        # Now that all workers are done, save the Excel file with all collected rows
+        try:
+            self.logger.info("Saving Excel file with all results")
+            
+            # Check if we have any rows to save
+            if excel_rows:
+                # Create or load the Excel file
+                excel_path = self.path_transcription
+                if os.path.exists(excel_path):
+                    try:
+                        # Try to open the existing Excel file
+                        wb = openpyxl.load_workbook(excel_path)
+                        sheet = wb.active
+                        
+                        # Get the headers from the first row
+                        headers = [cell.value for cell in sheet[1]]
+                        
+                        # Start from the next empty row
+                        next_row = sheet.max_row + 1
+                        
+                        # For each prepared row, add it to the Excel file
+                        for row_data in excel_rows:
+                            for i, header in enumerate(headers, start=1):
+                                if header in row_data:
+                                    sheet.cell(row=next_row, column=i, value=row_data[header])
+                            next_row += 1
+                        
+                        # Save the workbook
+                        wb.save(excel_path)
+                        self.logger.info(f"Successfully updated Excel file with {len(excel_rows)} new rows")
+                    
+                    except Exception as e:
+                        self.logger.error(f"Error updating existing Excel file: {str(e)}")
+                        self.logger.error(traceback.format_exc())
+                        
+                        # Try creating a new Excel file as fallback
+                        try:
+                            # Convert excel_rows to a pandas DataFrame
+                            df = pd.DataFrame(excel_rows)
+                            # Save to Excel
+                            df.to_excel(excel_path, index=False)
+                            self.logger.info(f"Created new Excel file with {len(excel_rows)} rows as fallback")
+                        except Exception as e2:
+                            self.logger.error(f"Failed to create fallback Excel file: {str(e2)}")
+                else:
+                    # File doesn't exist, create a new one
+                    df = pd.DataFrame(excel_rows)
+                    df.to_excel(excel_path, index=False)
+                    self.logger.info(f"Created new Excel file with {len(excel_rows)} rows")
+            else:
+                self.logger.warning("No Excel rows to save")
+        
+        except Exception as e:
+            self.logger.error(f"Error saving Excel file: {str(e)}")
+            self.logger.error(traceback.format_exc())
+        
+        # Process results to update the progress report and find the final result
+        for i, _ in valid_img_paths:
             if i in results:
-                result = results[i]
-                
                 # Update progress report
                 self.update_progress_report_batch(progress_report, i)
                 
-                # If successful, update final response
+                # Get a result for final return value
+                result = results[i]
                 if not result['ocr_failed'] and not result['llm_failed']:
-                    path_to_crop = result['path_to_crop']
-                    paths = result['paths']
-                    response_candidate = result['response']
-                    WFO_record = result['wfo_record']
-                    GEO_record = result['geo_record']
-                    usage_report = result['usage_report']
-                    
-                    final_JSON_response, final_WFO_record, final_GEO_record = self.update_final_response(
-                        response_candidate, WFO_record, GEO_record, usage_report, 
-                        MODEL_NAME_FORMATTED, paths, path_to_crop, 
-                        result['nt_in'], result['nt_out']
-                    )
+                    final_JSON_response = result['response']
+                    final_WFO_record = result['wfo_record']
+                    final_GEO_record = result['geo_record']
                     
                     if json_report:
                         json_report.set_JSON(final_JSON_response, final_WFO_record, final_GEO_record)
@@ -1114,7 +1728,13 @@ class VoucherVision():
         gc.collect()
         
         self.update_progress_report_final(progress_report)
-        final_JSON_response = self.parse_final_json_response(final_JSON_response)
+        
+        try:
+            if final_JSON_response:
+                final_JSON_response = self.parse_final_json_response(final_JSON_response)
+        except Exception as e:
+            self.logger.error(f'Error parsing final JSON response: {str(e)}')
+            self.logger.error(traceback.format_exc())
         
         return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out, self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out, self.OCR_cost_in, self.OCR_cost_out, self.ocr_method
 
