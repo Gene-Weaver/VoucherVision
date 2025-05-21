@@ -306,7 +306,7 @@ if __name__ == "__main__":
     # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
     # image_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     
-    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.0-flash-exp")
+    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.0-flash")
 
     for image_path in image_paths:
         response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)

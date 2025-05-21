@@ -14,7 +14,7 @@ https://ai.google.dev/gemini-api/docs/vision?lang=python
 '''
 
 class ToolCorrection:
-    def __init__(self, api_key, model_name="gemini-2.0-flash-exp", max_output_tokens=8192, temperature=1, top_p=0.95, top_k=40):
+    def __init__(self, api_key, model_name="gemini-2.0-flash", max_output_tokens=8192, temperature=1, top_p=0.95, top_k=40):
         """
         "top_p": 0.95,
         "top_k": 40,
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 }"""
     print(f"ORIGINAL\n{JSON}\n\n")
     
-    Tool_Correction = ToolCorrection(api_key=API_KEY, model_name="gemini-2.0-flash-exp")
+    Tool_Correction = ToolCorrection(api_key=API_KEY, model_name="gemini-2.0-flash")
 
     # response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = Tool_Correction.make_correction(prompt="fix_capitalization", verbose=False, JSON=JSON, temperature=1)
     # print(f"CAPITALIZATION\n{response}\n\n")
