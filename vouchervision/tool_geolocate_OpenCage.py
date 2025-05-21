@@ -124,7 +124,7 @@ def main():
     from tqdm import tqdm
 
     # Set OpenCage API key
-    os.environ['OPENCAGE_API_KEY'] = "03332ffc6609417dac7bad144ce01054"
+    os.environ['OPENCAGE_API_KEY'] = ""
 
     # Read the CSV file
     input_file = 'D:/T_Downloads/Nesom_2025_revisted.xlsx'  # Change this to your input filename
