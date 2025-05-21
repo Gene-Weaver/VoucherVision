@@ -45,7 +45,7 @@ class OCRGeminiProVision:
         Returns:
             The result of the function if successful.
         """
-        max_retries = 5
+        max_retries = 3
         for attempt in range(max_retries):
             try:
                 result = func(*args, **kwargs)

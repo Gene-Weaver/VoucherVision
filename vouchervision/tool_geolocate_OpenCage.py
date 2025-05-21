@@ -70,18 +70,42 @@ def validate_coordinates_opencage(record, replace_if_success_geo=False):
     results = geocoder.geocode(query_loc, no_annotations='1')
 
     if results:
-        GEO_dict['GEO_method'] = 'OpenCageGeocode_forward'
-        GEO_dict['GEO_formatted_full_string'] = results[0]['formatted']
-        GEO_dict['GEO_decimal_lat'] = results[0]['geometry']['lat']
-        GEO_dict['GEO_decimal_long'] = results[0]['geometry']['lng']
+        # Find the result with the highest confidence
+        best_result_index = 0
+        highest_confidence = 0
+        
+        for i, result in enumerate(results):
+            # Check if confidence field exists and is higher than current highest
+            if 'confidence' in result and result['confidence'] > highest_confidence:
+                highest_confidence = result['confidence']
+                best_result_index = i
 
-        GEO_dict['GEO_city'] = results[0]['components']['city']
-        GEO_dict['GEO_county'] = results[0]['components']['county']
-        GEO_dict['GEO_state'] = results[0]['components']['state']
-        GEO_dict['GEO_state_code'] = results[0]['components']['state_code']
-        GEO_dict['GEO_country'] = results[0]['components']['country']
-        GEO_dict['GEO_country_code'] = results[0]['components']['country_code']
-        GEO_dict['GEO_continent'] = results[0]['components']['continent']
+        best_result = results[best_result_index]
+        GEO_dict['GEO_method'] = 'OpenCageGeocode_forward'
+        GEO_dict['GEO_formatted_full_string'] = best_result['formatted']
+        GEO_dict['GEO_decimal_lat'] = best_result['geometry']['lat']
+        GEO_dict['GEO_decimal_long'] = best_result['geometry']['lng']
+
+        try:
+            GEO_dict['GEO_city'] = best_result['components']['city']
+        except:
+            try:
+                GEO_dict['GEO_city'] = best_result['components']['town']
+            except:
+                GEO_dict['GEO_city'] = ''
+
+        try:
+            GEO_dict['GEO_county'] = best_result['components']['county']
+        except:
+            try:
+                GEO_dict['GEO_county'] = record.get('county', '').strip()
+            except:
+                GEO_dict['GEO_county'] = ''
+        GEO_dict['GEO_state'] = best_result['components']['state']
+        GEO_dict['GEO_state_code'] = best_result['components']['state_code']
+        GEO_dict['GEO_country'] = best_result['components']['country']
+        GEO_dict['GEO_country_code'] = best_result['components']['country_code']
+        GEO_dict['GEO_continent'] = best_result['components']['continent']
     
     if GEO_dict['GEO_formatted_full_string'] and replace_if_success_geo:
         GEO_dict['GEO_override_OCR'] = True
@@ -93,3 +117,59 @@ def validate_coordinates_opencage(record, replace_if_success_geo=False):
     return record, GEO_dict
 
 
+
+
+def main():
+    import pandas as pd
+    from tqdm import tqdm
+
+    # Set OpenCage API key
+    os.environ['OPENCAGE_API_KEY'] = "03332ffc6609417dac7bad144ce01054"
+
+    # Read the CSV file
+    input_file = 'D:/T_Downloads/Nesom_2025_revisted.xlsx'  # Change this to your input filename
+    output_file = 'D:/T_Downloads/Nesom_2025_revisted_ww.xlsx'  # Change this to your desired output filename
+    
+    # Read CSV into pandas DataFrame
+    df = pd.read_excel(input_file)
+    
+    # Ensure we have the required columns
+    required_columns = ['State', 'County', 'Locality']
+    for col in required_columns:
+        if col not in df.columns:
+            print(f"Error: Required column '{col}' not found in CSV file.")
+            return
+    
+    # Create a new DataFrame to store results
+    results = []
+    
+    # Process each row
+    for _, row in tqdm(df.iterrows(), total=len(df), desc="Geocoding locations"):
+        # Create a record dictionary with the renamed columns needed by validate_coordinates_opencage
+        record = {
+            'municipality': row['Locality'].strip() if pd.notna(row['Locality']) else '',
+            'county': row['County'].strip() if pd.notna(row['County']) else '',
+            'stateProvince': row['State'].strip() if pd.notna(row['State']) else '',
+            'country': 'United States',  # Assuming all records are from US
+            'decimalLatitude': '',
+            'decimalLongitude': '',
+            'verbatimCoordinates': ''
+        }
+        
+        # Call the validation function
+        validated_record, geo_info = validate_coordinates_opencage(record)
+        
+        # Combine the original row data with geocoding results
+        result = row.to_dict()
+        for key, value in geo_info.items():
+            result[key] = value
+        
+        results.append(result)
+    
+    # Convert results to DataFrame and save to CSV
+    result_df = pd.DataFrame(results)
+    result_df.to_excel(output_file, index=False)
+    print(f"Geocoding complete. Results saved to {output_file}")
+
+if __name__ == "__main__":
+    main()

@@ -474,46 +474,92 @@ def split_into_batches(Project, logger, cfg):
     logger.info(m)
     return Project, n_batches, m 
 
-def make_images_in_dir_vertical(dir_images_unprocessed, cfg):
-    skip_vertical = cfg['leafmachine']['do']['skip_vertical']
+import threading
+import concurrent.futures
+n_rotate = 0
+n_rotate_lock = threading.Lock()
+n_corrupt = 0
+n_corrupt_lock = threading.Lock()
+
+def process_image_vertical(image_path, dir_images_unprocessed, rotate_lock, corrupt_lock):
+    global n_rotate, n_corrupt
+
+    try:
+        image = cv2.imread(os.path.join(dir_images_unprocessed, image_path))
+        h, w, img_c = image.shape
+        image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
+        if did_rotate:
+            with rotate_lock:
+                n_rotate += 1
+        os.remove(os.path.join(dir_images_unprocessed, image_path))
+        cv2.imwrite(os.path.join(dir_images_unprocessed, image_path), image)
+    except:
+        with corrupt_lock:
+            n_corrupt += 1
+        os.remove(os.path.join(dir_images_unprocessed, image_path))
+
+def make_images_in_dir_vertical(dir_images_unprocessed, cfg, N_THREADS=16):
+    global n_rotate, n_corrupt
+
     if cfg['leafmachine']['do']['check_for_corrupt_images_make_vertical']:
         n_rotate = 0
         n_corrupt = 0
         n_total = len(os.listdir(dir_images_unprocessed))
-        for image_name_jpg in tqdm(os.listdir(dir_images_unprocessed), desc=f'{bcolors.BOLD}     Checking Image Dimensions{bcolors.ENDC}',colour="cyan",position=0,total = n_total):
-            if image_name_jpg.endswith((".jpg",".JPG",".jpeg",".JPEG")):
-                try:
-                    image = cv2.imread(os.path.join(dir_images_unprocessed, image_name_jpg))
-                    if not skip_vertical:
-                        h, w, img_c = image.shape
-                        image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
-                        if did_rotate:
-                            n_rotate += 1
-                    cv2.imwrite(os.path.join(dir_images_unprocessed,image_name_jpg), image)
-                except:
-                    n_corrupt +=1
-                    os.remove(os.path.join(dir_images_unprocessed, image_name_jpg))
-            # TODO check that below works as intended 
-            elif image_name_jpg.endswith((".tiff",".tif",".png",".PNG",".TIFF",".TIF",".jp2",".JP2",".bmp",".BMP",".dib",".DIB")):
-                try:
-                    image = cv2.imread(os.path.join(dir_images_unprocessed, image_name_jpg))
-                    if not skip_vertical:
-                        h, w, img_c = image.shape
-                        image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
-                        if did_rotate:
-                            n_rotate += 1
-                    image_name_jpg = '.'.join([image_name_jpg.split('.')[0], 'jpg'])
-                    cv2.imwrite(os.path.join(dir_images_unprocessed,image_name_jpg), image)
-                except:
-                    n_corrupt +=1
-                    os.remove(os.path.join(dir_images_unprocessed, image_name_jpg))
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=N_THREADS) as executor:
+            image_paths = [image_name for image_name in os.listdir(dir_images_unprocessed) if image_name.lower().endswith((".jpg", ".jpeg", ".tiff", ".tif", ".png", ".jp2", ".bmp", ".dib"))]
+            futures = [executor.submit(process_image_vertical, image_path, dir_images_unprocessed, n_rotate_lock, n_corrupt_lock) for image_path in image_paths]
+            for _ in tqdm(concurrent.futures.as_completed(futures), desc=f'{bcolors.BOLD}     Checking Image Dimensions{bcolors.ENDC}', colour="cyan", position=0, total=n_total):
+                pass
+
         m = ''.join(['Number of Images Rotated: ', str(n_rotate)])
         Print_Verbose(cfg, 2, m).bold()
         m2 = ''.join(['Number of Images Corrupted: ', str(n_corrupt)])
         if n_corrupt > 0:
-            Print_Verbose(cfg, 2, m2).warning
+            Print_Verbose(cfg, 2, m2).warning()
         else:
-            Print_Verbose(cfg, 2, m2).bold
+            Print_Verbose(cfg, 2, m2).bold()
+
+# def make_images_in_dir_vertical(dir_images_unprocessed, cfg):
+#     skip_vertical = cfg['leafmachine']['do']['skip_vertical']
+#     if cfg['leafmachine']['do']['check_for_corrupt_images_make_vertical']:
+#         n_rotate = 0
+#         n_corrupt = 0
+#         n_total = len(os.listdir(dir_images_unprocessed))
+#         for image_name_jpg in tqdm(os.listdir(dir_images_unprocessed), desc=f'{bcolors.BOLD}     Checking Image Dimensions{bcolors.ENDC}',colour="cyan",position=0,total = n_total):
+#             if image_name_jpg.endswith((".jpg",".JPG",".jpeg",".JPEG")):
+#                 try:
+#                     image = cv2.imread(os.path.join(dir_images_unprocessed, image_name_jpg))
+#                     if not skip_vertical:
+#                         h, w, img_c = image.shape
+#                         image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
+#                         if did_rotate:
+#                             n_rotate += 1
+#                     cv2.imwrite(os.path.join(dir_images_unprocessed,image_name_jpg), image)
+#                 except:
+#                     n_corrupt +=1
+#                     os.remove(os.path.join(dir_images_unprocessed, image_name_jpg))
+#             # TODO check that below works as intended 
+#             elif image_name_jpg.endswith((".tiff",".tif",".png",".PNG",".TIFF",".TIF",".jp2",".JP2",".bmp",".BMP",".dib",".DIB")):
+#                 try:
+#                     image = cv2.imread(os.path.join(dir_images_unprocessed, image_name_jpg))
+#                     if not skip_vertical:
+#                         h, w, img_c = image.shape
+#                         image, img_h, img_w, did_rotate = make_image_vertical(image, h, w, do_rotate_180=False)
+#                         if did_rotate:
+#                             n_rotate += 1
+#                     image_name_jpg = '.'.join([image_name_jpg.split('.')[0], 'jpg'])
+#                     cv2.imwrite(os.path.join(dir_images_unprocessed,image_name_jpg), image)
+#                 except:
+#                     n_corrupt +=1
+#                     os.remove(os.path.join(dir_images_unprocessed, image_name_jpg))
+#         m = ''.join(['Number of Images Rotated: ', str(n_rotate)])
+#         Print_Verbose(cfg, 2, m).bold()
+#         m2 = ''.join(['Number of Images Corrupted: ', str(n_corrupt)])
+#         if n_corrupt > 0:
+#             Print_Verbose(cfg, 2, m2).warning
+#         else:
+#             Print_Verbose(cfg, 2, m2).bold
 
 def make_image_vertical(image, h, w, do_rotate_180):
     did_rotate = False
@@ -536,7 +582,6 @@ def make_image_vertical(image, h, w, do_rotate_180):
             img_w = w
             # print("      Not Rotated")
     return image, img_h, img_w, did_rotate
-    
 
 def make_image_horizontal(image, h, w, do_rotate_180):
     if h > w:
