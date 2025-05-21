@@ -666,7 +666,8 @@ def check_if_usable(is_hf): ####################################################
         has_key_MISTRAL = has_API_key(cfg_private['mistral']['MISTRAL_API_KEY'])
 
 
-        if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google or has_key_google_OCR):
+        if (has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google or has_key_google_OCR):
+        # if has_key_google_OCR and (has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google or has_key_google_OCR):
         # if has_key_azure_openai or has_key_openai or has_key_MISTRAL or has_key_google_OCR or has_key_google:
             return True
         else:
