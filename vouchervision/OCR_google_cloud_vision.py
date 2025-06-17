@@ -159,9 +159,9 @@ class OCREngine:
             from OCR_Gemini import OCRGeminiProVision
 
         if "Gemini-2.5-Pro" in self.OCR_option:
-            self.GeminiProVision_2_5_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-pro-preview-03-25") #TODO UPDATE AS NEEDED
+            self.GeminiProVision_2_5_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-pro")
         if "Gemini-2.5-Flash" in self.OCR_option:  
-            self.GeminiProVision_2_5_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-flash-preview-04-17") #TODO UPDATE AS NEEDED
+            self.GeminiProVision_2_5_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-flash") 
         if "Gemini-2.0-Flash" in self.OCR_option:
             self.GeminiProVision_2_0_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.0-flash")
         if 'Gemini-1.5-Pro' in self.OCR_option:
