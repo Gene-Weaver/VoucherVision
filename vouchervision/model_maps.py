@@ -148,7 +148,7 @@ class ModelMaps:
                     'LOCAL CPU Mistral 7B Instruct v0.2 GGUF',
                     'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05']
 
-    MODELS_GUI_DEFAULT = 'Gemini 1.5 Pro' #'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
+    MODELS_GUI_DEFAULT = 'Gemini 2.0 Flash' #'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
 
     MODEL_FAMILY = {
                     'OpenAI': MODELS_OPENAI,
@@ -452,10 +452,10 @@ class ModelMaps:
             return 'gemini-2.0-flash'
         
         elif key == 'GEMINI_2_5_FLASH':
-            return 'gemini-2.5-flash-preview-04-17' # TODO UPDATE AS NEEDED
+            return 'gemini-2.5-flash' # TODO UPDATE AS NEEDED
         
         elif key == 'GEMINI_2_5_PRO':
-            return 'gemini-2.5-pro-preview-03-25' # TODO UPDATE AS NEEDED
+            return 'gemini-2.5-pro' # TODO UPDATE AS NEEDED
 
         # elif key == 'GEMINI_2_0_PRO':
         #     return 'gemini-2.0-pro' 

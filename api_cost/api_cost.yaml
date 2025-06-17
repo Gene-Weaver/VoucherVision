@@ -81,8 +81,8 @@ GEMINI_2_5_PRO:
   in: 1.25
   out: 10.00
 GEMINI_2_5_FLASH:
-  in: 0.15
-  out: 0.60
+  in: 0.30
+  out: 2.50
 GEMINI_2_0_FLASH:
   in: 0.1
   out: 0.4
