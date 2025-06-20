@@ -1,6 +1,7 @@
 import os, random, time, requests
 import tempfile
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from PIL import Image
 from OCR_resize_for_VLMs import resize_image_to_min_max_pixels
 from OCR_Prompt_Catalog import OCRPromptCatalog
@@ -9,30 +10,42 @@ from general_utils import calculate_cost
 
 '''
 Does not need to be downsampled like the other APIs or local 
-https://ai.google.dev/gemini-api/docs/vision?lang=python
+Updated to use new Google GenAI SDK with dynamic thinking enabled
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.0-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False):
+    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
+        self.supports_thinking = [
+            'gemini-2.5-flash',
+            'gemini-2.5-pro',
+            ]
         self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
         self.api_key = api_key
         self.do_resize_img = do_resize_img
-        genai.configure(api_key=self.api_key)
+        self.client = genai.Client(api_key=self.api_key)
         self.model_name = model_name
-        self.generation_config = {
-            "temperature": temperature,
-            "top_p": top_p,
-            # "top_k": top_k,
-            "max_output_tokens": max_output_tokens,
-            "response_mime_type": "text/plain",
-            # "seed": seed,
-        }
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name, generation_config=self.generation_config
-        )
+        if model_name not in self.supports_thinking:
+            self.generation_config = types.GenerateContentConfig(
+                temperature=temperature,
+                top_p=top_p,
+                # top_k=top_k,
+                max_output_tokens=max_output_tokens,
+                # seed=seed,  
+            )
+        else:
+            self.generation_config = types.GenerateContentConfig(
+                temperature=temperature,
+                top_p=top_p,
+                # top_k=top_k,  
+                max_output_tokens=max_output_tokens,
+                # seed=seed,  
+                thinking_config=types.ThinkingConfig(thinking_budget=-1)  # Enable dynamic thinking
+            )
+
+
     def exponential_backoff(self, func, *args, **kwargs):
         """
         Exponential backoff for a given function.
@@ -114,16 +127,13 @@ class OCRGeminiProVision:
         return self.exponential_backoff(download)
 
 
-    def upload_to_gemini_with_backoff(self, image_source, mime_type="image/jpeg"):
+    def upload_to_gemini_with_backoff(self, image_source):
         """
         Upload an image file to Gemini with exponential backoff.
         
         :param image_source: Path to the image file or URL of the image.
-        :param mime_type: MIME type of the image.
         :return: Uploaded file object with URI.
         """
-        genai.configure(api_key=self.api_key)
-
         def upload():
             temp_files = []  # Keep track of temporary files to clean up
             
@@ -147,8 +157,8 @@ class OCRGeminiProVision:
                     temp_files.append(temp_path)
                     image.save(temp_path, format="JPEG")
                 
-                # Upload the file
-                file = genai.upload_file(temp_path, mime_type=mime_type)
+                # Upload the file using new SDK
+                file = self.client.files.upload(file=temp_path)
                 return file
             
             finally:
@@ -175,9 +185,10 @@ class OCRGeminiProVision:
         :return: The response from the LLM.
         """
         def generate():
-            response = self.model.generate_content(
-                [prompt, uploaded_file],
-                generation_config=self.generation_config
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[prompt, uploaded_file],
+                config=self.generation_config
             )
             
             # NEW: Check if the response is suspiciously short
@@ -197,15 +208,16 @@ class OCRGeminiProVision:
         :param prompt: Instruction for the transcription task.
         :return: Transcription result as plain text.
         """
+        # Update generation config with provided parameters
         if temperature:
-            self.generation_config["temperature"] = temperature
+            self.generation_config.temperature = temperature
         if top_p:
-            self.generation_config["top_p"] = top_p
+            self.generation_config.top_p = top_p
         # if top_k:
-        #     self.generation_config["top_k"] = top_k
+        #     self.generation_config.top_k = top_k  # Still commented as in original
         if max_output_tokens:
-            self.generation_config["max_output_tokens"] = max_output_tokens
-        # self.generation_config["seed"] = seed
+            self.generation_config.max_output_tokens = max_output_tokens
+        # self.generation_config.seed = seed  # Still commented as in original
 
         
         overall_cost_in = 0
@@ -298,17 +310,18 @@ if __name__ == "__main__":
     run_sweep = False
     API_KEY = "" #os.environ.get("GOOGLE_PALM_API")  # Replace with your actual API key
     
-    image_paths = ["/Users/williamweaver/Desktop/translate/00515126.jpg",
-        "/Users/williamweaver/Desktop/translate/04322236.jpg",
-        "/Users/williamweaver/Desktop/translate/04357250.jpg",]
+    image_paths = ["D:/D_Desktop/temp_50_2/ASC_3091190300_Asteraceae_Bidens_cernua.jpg",
+        "D:/D_Desktop/temp_50_2/ASC_3091244339_Polygonaceae_Rumex_crispus.jpg",
+        "D:/D_Desktop/temp_50_2/ASC_3091215365_Martyniaceae_Proboscidea_parviflora.jpg",]
 
 
     # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
     # image_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     
-    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.0-flash")
+    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.5-pro")
 
-    for image_path in image_paths:
+    for i, image_path in enumerate(image_paths):
+        print(f"WORKING ON [{i}]")
         response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)
         print(response)
 
@@ -379,4 +392,3 @@ if __name__ == "__main__":
                 success = success_counts.get(params, 0)
                 fail = fail_counts.get(params, 0)
                 writer.writerow([t, k, p, success, fail, response])
-
