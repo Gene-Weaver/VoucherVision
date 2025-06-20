@@ -27,11 +27,18 @@ class GoogleGeminiHandler:
 
     def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False, exit_early_with_WFO=False):
         self.exit_early_for_JSON = exit_early_for_JSON
+        self.exit_early_with_WFO = exit_early_with_WFO
 
         self.cfg = cfg
-        self.tool_WFO = self.cfg['leafmachine']['project']['tool_WFO']
-        self.tool_GEO = self.cfg['leafmachine']['project']['tool_GEO']
-        self.tool_wikipedia = self.cfg['leafmachine']['project']['tool_wikipedia']
+        if self.exit_early_for_JSON and self.exit_early_with_WFO: # Add WFO to the output
+            self.tool_WFO = True
+            self.tool_GEO = False
+            self.tool_wikipedia = False
+        else:
+            self.tool_WFO = self.cfg['leafmachine']['project']['tool_WFO']
+            self.tool_GEO = self.cfg['leafmachine']['project']['tool_GEO']
+            self.tool_wikipedia = self.cfg['leafmachine']['project']['tool_wikipedia']
+
         try:
             self.tool_google = self.cfg['leafmachine']['project']['tool_google']
         except:
@@ -242,8 +249,15 @@ class GoogleGeminiHandler:
                     # self.logger.info(f"output after\n{output}") #####################################################################################
 
                     ### This allows VVGO to just get the JSON and exit
-                    if self.exit_early_for_JSON:
-                        return output, nt_in, nt_out, None, None, None
+                    if self.exit_early_for_JSON and not self.exit_early_with_WFO:
+                        return output, nt_in, nt_out, None, None, None, ""
+                    
+                    elif self.exit_early_for_JSON and self.exit_early_with_WFO:
+                        _, WFO_record, __, ___ = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
+                        self.logger.info(f"WFO Record:\n{WFO_record}")
+                        return output, nt_in, nt_out, None, None, None, WFO_record
+                    
+                    
 
                     if output is None:
                         self.logger.error(f'[Attempt {ind}] Failed to extract JSON from:\n{response}')
@@ -300,3 +314,5 @@ class GoogleGeminiHandler:
         if self.json_report:            
             self.json_report.set_text(text_main=f'LLM call failed')
         return None, nt_in, nt_out, None, None, usage_report
+
+
