@@ -1,8 +1,8 @@
 prompt_author: Megi         
 prompt_author_institution: BGBM  
 prompt_name: BGBMvM_default
-prompt_version: v-1-1     
-prompt_description: Prompt base on SLTPvM_default and OSC_Symbiota (associatedCollectors) .
+prompt_version: v-1-2     
+prompt_description: Prompt base on SLTPvM_default and OSC_Symbiota (associatedCollectors).
 LLM: General Purpose
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
@@ -20,6 +20,7 @@ rules:
   genus: Taxonomic determination to genus. Genus must be capitalized. If genus is not present use the taxonomic family name followed by the word 'indet'.
   specificEpithet: The name of the species epithet of the scientificName. Only include the species epithet.
   scientificNameAuthorship: The authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclatural code.
+  scientificNameNoAuthor: The scientific name of the taxon including genus, specific epithet, and any lower classifications. Excluding scientificNameAuthorship.
   collector: The name of the primary collector of the specimen.
   associatedCollectors:  A comma separated list of full names for additional collectors, if any.
   collectorNumber: An identifier given to the occurrence at the time it was recorded, the specimen collector's number.
@@ -28,6 +29,7 @@ rules:
   verbatimCollectionDate: The verbatim original representation of the date and time information for when the specimen was collected. Date of collection exactly as it appears on the label. Do not change the format or correct typos.
   collectionDate: Date the specimen was collected formatted as year-month-day, YYYY-MM-DD. If specific components of the date are unknown, they should be replaced with zeros. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
   collectionDateEnd: If a range of collection dates is provided, this is the latter end date while collectionDate is the beginning date. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
+  verbatimAccessionDate: 'The verbatim stamped date, when the label was delivered to the herbarium. Include all the stamped information like acc. and verbatim date.'
   accessionDate: 'A stamped date, when the label was delivered to the herbarium. The stamp includes ''acc.'' and after the date.'
   accessionNumber: 'A nine-digit accession number that is sperated into four hyphen-delimited groups. This number looks like this on the label 000-00-00-00 and infront of it there might be text like the following examples: ''ACC-Nr.:'', ''Querverweis Lebendsammlung:'', ''Acc.-No.''.'
   habitat: Verbatim category or description of the habitat where the specimen collection event occurred.
@@ -64,7 +66,8 @@ mapping:
   - scientificName
   - genus
   - specificEpithet
-  - speciesNameAuthorship
+  - scientificNameAuthorship
+  - scientificNameNoAuthor
   - identifiedBy
   - identifiedDate
   COLLECTING:
@@ -74,6 +77,7 @@ mapping:
   - verbatimCollectionDate
   - collectionDate
   - collectionDateEnd
+  - verbatimAccessionDate
   - accessionDate
   - accessionNumber
   - cultivated
