@@ -328,8 +328,17 @@ class OCRGeminiProVision:
                 response = self.generate_content_with_backoff(model_contents, request_generation_config)
 
         try:
-            tokens_in = response.usage_metadata.prompt_token_count
-            tokens_out = response.usage_metadata.candidates_token_count
+            tokens_in = 0
+            tokens_out = 0
+
+            if response and hasattr(response, 'usage_metadata') and response.usage_metadata:
+                tokens_in = getattr(response.usage_metadata, 'prompt_token_count', 0)
+                tokens_out = getattr(response.usage_metadata, 'candidates_token_count', 0)
+                # Ensure they are not None, default to 0 if they are
+                tokens_in = tokens_in if tokens_in is not None else 0
+                tokens_out = tokens_out if tokens_out is not None else 0
+            else:
+                self.logger.warning(f"Response from {self.model_name} did not include usage_metadata.")
             
             cost_in, cost_out, total_cost, rates_in, rates_out = (0,0,0,0,0) # Default
 
