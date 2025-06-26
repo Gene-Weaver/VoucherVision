@@ -1517,9 +1517,11 @@ class VoucherVision():
                 from vouchervision.LLM_OpenAI import OpenAIHandler
                 return OpenAIHandler(cfg, logger, model_name, JSON_dict_structure, is_azure, llm_object, config_vals_for_permutation)
 
-    def setup_prompt(self):
+    def setup_prompt(self, ocr_text):
+        """Generates a prompt using the provided OCR text."""
         Catalog = PromptCatalog()
-        prompt, _ = Catalog.prompt_SLTP(self.path_custom_prompts, OCR=self.OCR)
+        # Pass the ocr_text directly as a parameter
+        prompt, _ = Catalog.prompt_SLTP(self.path_custom_prompts, OCR=ocr_text)
         return prompt
     
     def setup_JSON_dict_structure(self):
