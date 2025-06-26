@@ -250,12 +250,12 @@ class GoogleGeminiHandler:
 
                     ### This allows VVGO to just get the JSON and exit
                     if self.exit_early_for_JSON and not self.exit_early_with_WFO:
-                        return output, nt_in, nt_out, None, None, None, ""
+                        return output, nt_in, nt_out, "", None, None
                     
                     elif self.exit_early_for_JSON and self.exit_early_with_WFO:
                         _, WFO_record, __, ___ = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
                         self.logger.info(f"WFO Record:\n{WFO_record}")
-                        return output, nt_in, nt_out, None, None, None, WFO_record
+                        return output, nt_in, nt_out, WFO_record, None, None
                     
                     
 
