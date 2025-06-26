@@ -28,6 +28,14 @@ class OCRGeminiProVision:
             'gemini-2.5-pro',
             'gemini-2.5-flash',
         ]
+
+        self.safety_settings = {
+            types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: types.HarmBlockThreshold.BLOCK_NONE,
+            types.HarmCategory.HARM_CATEGORY_HARASSMENT: types.HarmBlockThreshold.BLOCK_NONE,
+            types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: types.HarmBlockThreshold.BLOCK_NONE,
+            types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: types.HarmBlockThreshold.BLOCK_NONE,
+        }
+
         self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
         self.api_key = api_key
         self.do_resize_img = do_resize_img
@@ -269,6 +277,7 @@ class OCRGeminiProVision:
             temperature=temperature,
             top_p=top_p,
             max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
+            safety_settings=self.safety_settings,
         )
 
         # try: 
@@ -289,58 +298,77 @@ class OCRGeminiProVision:
         
         prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
 
+        # Initialize variables for cost aggregation
+        overall_cost_in, overall_cost_out, overall_total_cost = 0, 0, 0
+        overall_tokens_in, overall_tokens_out = 0, 0
+        rates_in, rates_out = 0, 0
+        response = None
+        
         # --- CONDITIONAL LOGIC FOR API WORKFLOW ---
-        use_inline_method = self.model_name in self.MODELS_REQUIRING_INLINE_IMAGE
-
-        if use_inline_method:
-            # --- NEW METHOD: Inline Image Data (for gemini-2.5 and newer) ---
+        if self.model_name in self.MODELS_REQUIRING_INLINE_IMAGE:
             self.logger.info(f"Using INLINE image method for model: {self.model_name}")
             try:
                 if image_path.startswith(('http://', 'https://')):
-                    response = requests.get(image_path)
-                    response.raise_for_status()
-                    image = Image.open(io.BytesIO(response.content))
+                    img_response = requests.get(image_path)
+                    img_response.raise_for_status()
+                    image = Image.open(io.BytesIO(img_response.content))
                 else:
                     image = Image.open(image_path)
                 if self.do_resize_img:
                     image = resize_image_to_min_max_pixels(image)
-            except Exception as e:
-                print(f"Failed to load image for inline method: {e}")
-                return "", 0, 0, 0, 0, 0, 0, 0
-
-            for key, prompt_text in zip(keys, prompts):
-                model_contents = [prompt_text, image]
+                
+                # We only have one prompt for now, so no loop needed
+                model_contents = [prompts[0], image]
                 response = self.generate_content_with_backoff(model_contents, request_generation_config)
 
+            except Exception as e:
+                self.logger.error(f"Failed to load image for inline method: {e}", exc_info=True)
+                return "", 0, 0, 0, 0, 0, 0, 0
         else:
-            # --- OLD METHOD: File API (for gemini-2.0 and older) ---
             self.logger.info(f"Using FILE API method for model: {self.model_name}")
             try:
                 uploaded_file = self._upload_file_for_older_models(image_path)
                 if not uploaded_file:
                     raise Exception("File upload failed for older model workflow.")
-            except Exception as e:
-                print(f"Failed to upload file for older model method: {e}")
-                return "", 0, 0, 0, 0, 0, 0, 0
-
-            for key, prompt_text in zip(keys, prompts):
-                model_contents = [prompt_text, uploaded_file]
+                
+                model_contents = [prompts[0], uploaded_file]
                 response = self.generate_content_with_backoff(model_contents, request_generation_config)
 
-        try:
-            tokens_in = 0
-            tokens_out = 0
+            except Exception as e:
+                self.logger.error(f"Failed during File API workflow: {e}", exc_info=True)
+                return "", 0, 0, 0, 0, 0, 0, 0
 
-            if response and hasattr(response, 'usage_metadata') and response.usage_metadata:
-                tokens_in = getattr(response.usage_metadata, 'prompt_token_count', 0)
-                tokens_out = getattr(response.usage_metadata, 'candidates_token_count', 0)
-                # Ensure they are not None, default to 0 if they are
-                tokens_in = tokens_in if tokens_in is not None else 0
-                tokens_out = tokens_out if tokens_out is not None else 0
-            else:
-                self.logger.warning(f"Response from {self.model_name} did not include usage_metadata.")
-            
-            cost_in, cost_out, total_cost, rates_in, rates_out = (0,0,0,0,0) # Default
+        # --- DEBUGGING AND RESULT PROCESSING ---
+        try:
+            # --- DEBUG LINE ---
+            # This will log the entire structure of the response object from Google
+            self.logger.info(f"RAW GEMINI RESPONSE for {self.model_name}:\n{response}\n")
+
+            if not response:
+                raise ValueError("API call returned no response after retries.")
+
+            # Check for safety blocks BEFORE trying to access text or usage_metadata
+            if response.prompt_feedback.block_reason:
+                self.logger.error(f"PROMPT BLOCKED for model {self.model_name}. Reason: {response.prompt_feedback.block_reason.name}")
+                # You might want to return here or handle it differently
+                # return "", 0, 0, 0, 0, 0, 0, 0
+
+            # Check if there are any candidates
+            if not response.candidates:
+                 self.logger.error(f"RESPONSE BLOCKED for model {self.model_name}. No candidates returned. Finish Reason: {getattr(response, 'finish_reason', 'N/A')}")
+                 # Check safety ratings on the first candidate if it exists, even if blocked
+                 if response.candidates and response.candidates[0].safety_ratings:
+                     self.logger.error(f"Safety ratings: {response.candidates[0].safety_ratings}")
+                 return "", 0, 0, 0, 0, 0, 0, 0
+
+
+            # --- ROBUST DATA ACCESS ---
+            tokens_in = getattr(response.usage_metadata, 'prompt_token_count', 0) if hasattr(response, 'usage_metadata') else 0
+            tokens_out = getattr(response.usage_metadata, 'candidates_token_count', 0) if hasattr(response, 'usage_metadata') else 0
+            parsed_answer = getattr(response, 'text', '')
+
+            tokens_in = tokens_in if tokens_in is not None else 0
+            tokens_out = tokens_out if tokens_out is not None else 0
 
             if self.model_name == 'gemini-1.5-pro':
                 total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
@@ -370,8 +398,10 @@ class OCRGeminiProVision:
                 overall_response += (parsed_answer + "\n\n")
             else:
                 overall_response = parsed_answer
+                
         except Exception as e:
-            print(f"OCR result parsing failed: {e}")
+            self.logger.error(f"OCR result parsing failed: {e}", exc_info=True)
+            overall_response = ""
 
         return (overall_response, overall_cost_in, overall_cost_out, overall_total_cost, 
                 rates_in, rates_out, overall_tokens_in, overall_tokens_out)
