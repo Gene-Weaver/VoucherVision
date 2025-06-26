@@ -11,7 +11,7 @@ prompt_description: |
   this has occurred because the verbatimCoordinates field will be empty even though the
   decimalLatitude and decimalLongitude fields are populated. This relies completely on the LLM.
   It will try to be conservative and only report coordinates if specific landmarks or localities
-  are present, avoiding returning coordinates when only broad-scale geography is present, like states/provinces.
+  are present, avoiding returning coordinates when only broad-scale geography is present like states/provinces.
 LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pro. 
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
