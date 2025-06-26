@@ -1,4 +1,4 @@
-import os, random, time, requests
+import os, random, time, requests, io
 import tempfile
 from google import genai
 from google.genai import types
@@ -6,7 +6,7 @@ from PIL import Image
 from OCR_resize_for_VLMs import resize_image_to_min_max_pixels
 from OCR_Prompt_Catalog import OCRPromptCatalog
 from general_utils import calculate_cost
-
+import logging
 
 '''
 Does not need to be downsampled like the other APIs or local 
@@ -14,14 +14,20 @@ Updated to use new Google GenAI SDK with dynamic thinking enabled
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False):
+    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False, logger=None):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
+        self.logger = logger if logger is not None else logging.getLogger(__name__)
+
         self.supports_thinking = [
             'gemini-2.5-flash',
             'gemini-2.5-pro',
             ]
+        self.MODELS_REQUIRING_INLINE_IMAGE = [
+            'gemini-2.5-pro',
+            'gemini-2.5-flash',
+        ]
         self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
         self.api_key = api_key
         self.do_resize_img = do_resize_img
@@ -44,6 +50,44 @@ class OCRGeminiProVision:
                 # seed=seed,  
                 thinking_config=types.ThinkingConfig(thinking_budget=-1)  # Enable dynamic thinking
             )
+
+    def _upload_file_for_older_models(self, image_source):
+        """
+        [DEPRECATED WORKFLOW] Uploads an image file using the File API for older Gemini models.
+        :param image_source: Path to the image file or URL of the image.
+        :return: Uploaded file object.
+        """
+        def upload():
+            image = None # Ensure image is defined
+            temp_files_to_clean = []
+            try:
+                if isinstance(image_source, str) and image_source.startswith(('http://', 'https://')):
+                    response = requests.get(image_source)
+                    response.raise_for_status()
+                    image = Image.open(io.BytesIO(response.content))
+                else:
+                    image = Image.open(image_source)
+
+                if self.do_resize_img:
+                    image = resize_image_to_min_max_pixels(image)
+
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+                    temp_path = temp_file.name
+                    temp_files_to_clean.append(temp_path)
+                    image.save(temp_path, format="JPEG")
+
+                file_handle = self.client.files.upload(file=temp_path)
+                return file_handle
+            finally:
+                if image:
+                    image.close()
+                for path in temp_files_to_clean:
+                    try:
+                        os.remove(path)
+                    except OSError as e:
+                        print(f"Warning: Failed to remove temporary file {path}: {e}")
+
+        return self.exponential_backoff(upload)
 
 
     def exponential_backoff(self, func, *args, **kwargs):
@@ -176,28 +220,19 @@ class OCRGeminiProVision:
 
         return self.exponential_backoff(upload)
 
-    def generate_content_with_backoff(self, prompt, uploaded_file, generation_config):
+    def generate_content_with_backoff(self, model_contents, generation_config):
         """
         Generate content with exponential backoff.
-        
-        :param prompt: The prompt for the LLM.
-        :param uploaded_file: The uploaded file object.
-        :return: The response from the LLM.
+        This method is now universal for both inline and File API workflows.
         """
         def generate():
             response = self.client.models.generate_content(
                 model=self.model_name,
-                contents=[prompt, uploaded_file],
+                contents=model_contents,
                 config=generation_config
             )
-            
-            # NEW: Check if the response is suspiciously short
-            # if not response.text or len(response.text.strip()) < 30:
-            #     raise Exception(f"Short or empty response (length={len(response.text.strip())}), retrying...")
-            
             return response
 
-        
         return self.exponential_backoff(generate)
 
     def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456):
@@ -253,62 +288,84 @@ class OCRGeminiProVision:
             # keys = ["default_plus_minorcorrect_idhandwriting",]
         
         prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
-        for key, prompt in zip(keys, prompts):
-            
-            # Upload the image to Gemini
-            uploaded_file = self.upload_to_gemini_with_backoff(image_path)
 
-            # Generate content directly without starting a chat session
-            response = self.generate_content_with_backoff(prompt, uploaded_file, request_generation_config)
+        # --- CONDITIONAL LOGIC FOR API WORKFLOW ---
+        use_inline_method = self.model_name in self.MODELS_REQUIRING_INLINE_IMAGE
 
+        if use_inline_method:
+            # --- NEW METHOD: Inline Image Data (for gemini-2.5 and newer) ---
+            self.logger.info(f"Using INLINE image method for model: {self.model_name}")
             try:
-                tokens_in = response.usage_metadata.prompt_token_count
-                tokens_out = response.usage_metadata.candidates_token_count
-
-                default_cost = (0, 0, 0, 0, 0)
-                total_cost = default_cost
-
-                if self.model_name == 'gemini-1.5-pro':
-                    total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
-                elif self.model_name == 'gemini-1.5-flash':
-                    total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
-                elif self.model_name == 'gemini-1.5-flash-8b':
-                    total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)                        
-                elif self.model_name == 'gemini-2.0-flash-exp':
-                    total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
-                elif self.model_name == 'gemini-2.0-flash':
-                    total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out) 
-                elif 'gemini-2.5-flash' in self.model_name:
-                    total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)   
-                elif 'gemini-2.5-pro' in self.model_name:
-                    total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)   
-
-                cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
-                overall_cost_in += cost_in
-                overall_cost_out += cost_out
-                overall_total_cost += total_cost
-                overall_tokens_in += tokens_in
-                overall_tokens_out += tokens_out
-
-                parsed_answer = response.text
-                # if key == "species_only":
-                #     parsed_answer = f"Based on context, determine which of these scientific names is the primary name: {parsed_answer}"
-
-                if len(keys) > 1:
-                    overall_response += (parsed_answer + "\n\n")
+                if image_path.startswith(('http://', 'https://')):
+                    response = requests.get(image_path)
+                    response.raise_for_status()
+                    image = Image.open(io.BytesIO(response.content))
                 else:
-                    overall_response = parsed_answer
+                    image = Image.open(image_path)
+                if self.do_resize_img:
+                    image = resize_image_to_min_max_pixels(image)
             except Exception as e:
-                print(f"OCR failed: {e}")
-        # finally:  # Use a finally block to *guarantee* deletion
-        #     if uploaded_file.uri: # Check to ensure file was uploaded
-        #         self.delete_gcs_file(uploaded_file.uri['uri'])
+                print(f"Failed to load image for inline method: {e}")
+                return "", 0, 0, 0, 0, 0, 0, 0
+
+            for key, prompt_text in zip(keys, prompts):
+                model_contents = [prompt_text, image]
+                response = self.generate_content_with_backoff(model_contents, request_generation_config)
+
+        else:
+            # --- OLD METHOD: File API (for gemini-2.0 and older) ---
+            self.logger.info(f"Using FILE API method for model: {self.model_name}")
+            try:
+                uploaded_file = self._upload_file_for_older_models(image_path)
+                if not uploaded_file:
+                    raise Exception("File upload failed for older model workflow.")
+            except Exception as e:
+                print(f"Failed to upload file for older model method: {e}")
+                return "", 0, 0, 0, 0, 0, 0, 0
+
+            for key, prompt_text in zip(keys, prompts):
+                model_contents = [prompt_text, uploaded_file]
+                response = self.generate_content_with_backoff(model_contents, request_generation_config)
 
         try:
-            return overall_response, overall_cost_in, overall_cost_out, overall_total_cost, rates_in, rates_out, overall_tokens_in, overall_tokens_out
+            tokens_in = response.usage_metadata.prompt_token_count
+            tokens_out = response.usage_metadata.candidates_token_count
+            
+            cost_in, cost_out, total_cost, rates_in, rates_out = (0,0,0,0,0) # Default
+
+            if self.model_name == 'gemini-1.5-pro':
+                total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
+            elif self.model_name == 'gemini-1.5-flash':
+                total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
+            elif self.model_name == 'gemini-1.5-flash-8b':
+                total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)                        
+            elif self.model_name == 'gemini-2.0-flash-exp':
+                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+            elif self.model_name == 'gemini-2.0-flash':
+                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out) 
+            elif 'gemini-2.5-flash' in self.model_name:
+                total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+            elif 'gemini-2.5-pro' in self.model_name:
+                total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)   
+            
+            cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
+
+            overall_cost_in += cost_in
+            overall_cost_out += cost_out
+            overall_total_cost += total_cost
+            overall_tokens_in += tokens_in
+            overall_tokens_out += tokens_out
+
+            parsed_answer = response.text
+            if len(keys) > 1:
+                overall_response += (parsed_answer + "\n\n")
+            else:
+                overall_response = parsed_answer
         except Exception as e:
-            print(f"overall_response failed: {e}")
-            return "", overall_cost_in, overall_cost_out, overall_total_cost, rates_in, rates_out, overall_tokens_in, overall_tokens_out
+            print(f"OCR result parsing failed: {e}")
+
+        return (overall_response, overall_cost_in, overall_cost_out, overall_total_cost, 
+                rates_in, rates_out, overall_tokens_in, overall_tokens_out)
 
 
 # Example usage
