@@ -349,22 +349,11 @@ class OCRGeminiProVision:
             self.logger.info(f"RAW GEMINI RESPONSE for {self.model_name}:\n{response}\n")
 
             if not response:
-                raise ValueError("API call returned no response after retries.")
+                return "", 0, 0, 0, 0, 0, 0, 0
 
             # Check for safety blocks BEFORE trying to access text or usage_metadata
-            if response.prompt_feedback.block_reason:
-                self.logger.error(f"PROMPT BLOCKED for model {self.model_name}. Reason: {response.prompt_feedback.block_reason.name}")
-                # You might want to return here or handle it differently
-                # return "", 0, 0, 0, 0, 0, 0, 0
-
-            # Check if there are any candidates
-            if not response.candidates:
-                 self.logger.error(f"RESPONSE BLOCKED for model {self.model_name}. No candidates returned. Finish Reason: {getattr(response, 'finish_reason', 'N/A')}")
-                 # Check safety ratings on the first candidate if it exists, even if blocked
-                 if response.candidates and response.candidates[0].safety_ratings:
-                     self.logger.error(f"Safety ratings: {response.candidates[0].safety_ratings}")
-                 return "", 0, 0, 0, 0, 0, 0, 0
-
+            if not response.text:
+                return "", 0, 0, 0, 0, 0, 0, 0           
 
             # --- ROBUST DATA ACCESS ---
             tokens_in = getattr(response.usage_metadata, 'prompt_token_count', 0) if hasattr(response, 'usage_metadata') else 0
@@ -424,7 +413,7 @@ if __name__ == "__main__":
     # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
     # image_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     
-    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.5-pro")
+    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.5-flash")
 
     for i, image_path in enumerate(image_paths):
         print(f"WORKING ON [{i}]")
