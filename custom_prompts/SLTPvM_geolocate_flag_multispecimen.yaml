@@ -1,7 +1,7 @@
 prompt_author: Will Weaver          
 prompt_author_institution: University of Michigan    
 prompt_name: SLTPvM_geolocate_flag_multispecimen
-prompt_version: v-1-11     
+prompt_version: v-1-0    
 prompt_description: |
   Prompt developed by the University of Michigan Herbarium (MICH).
 

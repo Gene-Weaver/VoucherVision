@@ -29,12 +29,16 @@ class OCRGeminiProVision:
             'gemini-2.5-flash',
         ]
 
-        self.safety_settings = {
+        safety_settings_dict = {
             types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: types.HarmBlockThreshold.BLOCK_NONE,
             types.HarmCategory.HARM_CATEGORY_HARASSMENT: types.HarmBlockThreshold.BLOCK_NONE,
             types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: types.HarmBlockThreshold.BLOCK_NONE,
             types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: types.HarmBlockThreshold.BLOCK_NONE,
         }
+        self.safety_settings = [
+            types.SafetySetting(category=category, threshold=threshold)
+            for category, threshold in safety_settings_dict.items()
+        ]
 
         self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
         self.api_key = api_key
