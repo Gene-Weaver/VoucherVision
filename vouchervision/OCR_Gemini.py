@@ -14,7 +14,7 @@ Updated to use new Google GenAI SDK with dynamic thinking enabled
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False, logger=None):
+    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=8192, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False, logger=None):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
