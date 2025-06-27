@@ -63,6 +63,84 @@ class OCRGeminiProVision:
                 thinking_config=types.ThinkingConfig(thinking_budget=-1)  # Enable dynamic thinking
             )
 
+    def _prepare_image_for_api(self, image):
+        """
+        Prepare image for API call based on model requirements
+        """
+        try:
+            # For newer models that require types.Part.from_bytes
+            if self.model_name in self.MODELS_REQUIRING_INLINE_IMAGE:
+                self.logger.info(f"Using new inline method for {self.model_name}")
+                
+                # Convert PIL image to bytes
+                img_byte_array = io.BytesIO()
+                
+                # Ensure image is in RGB mode for JPEG
+                if image.mode in ('RGBA', 'LA', 'P'):
+                    # Create white background for transparency
+                    background = Image.new('RGB', image.size, (255, 255, 255))
+                    if image.mode == 'P':
+                        image = image.convert('RGBA')
+                    background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+                    image = background
+                elif image.mode != 'RGB':
+                    image = image.convert('RGB')
+                
+                # Save as JPEG with high quality
+                image.save(img_byte_array, format='JPEG', quality=95)
+                img_bytes = img_byte_array.getvalue()
+                
+                # Create Part object for new API
+                return types.Part.from_bytes(
+                    data=img_bytes,
+                    mime_type='image/jpeg'
+                )
+            
+            # Fallback to File API for very old models
+            else:
+                self.logger.info(f"Using File API method for {self.model_name}")
+                return self._upload_image_via_file_api(image)
+                
+        except Exception as e:
+            self.logger.error(f"Error preparing image for API: {e}", exc_info=True)
+            raise
+
+    def _upload_image_via_file_api(self, image):
+        """
+        Upload image via File API for older models
+        """
+        temp_path = None
+        try:
+            # Save image to temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+                temp_path = temp_file.name
+                
+                # Ensure RGB mode
+                if image.mode != 'RGB':
+                    if image.mode in ('RGBA', 'LA', 'P'):
+                        background = Image.new('RGB', image.size, (255, 255, 255))
+                        if image.mode == 'P':
+                            image = image.convert('RGBA')
+                        background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+                        image = background
+                    else:
+                        image = image.convert('RGB')
+                
+                image.save(temp_path, format="JPEG", quality=95)
+
+            # Upload file
+            file_handle = self.client.files.upload(file=temp_path)
+            return file_handle
+            
+        finally:
+            # Clean up temp file
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except OSError as e:
+                    self.logger.warning(f"Failed to remove temporary file {temp_path}: {e}")
+
+
     def _upload_file_for_older_models(self, image_source):
         """
         [DEPRECATED WORKFLOW] Uploads an image file using the File API for older Gemini models.
@@ -284,6 +362,9 @@ class OCRGeminiProVision:
             safety_settings=self.safety_settings,
         )
 
+        if self.model_name in self.supports_thinking:
+            request_generation_config.thinking_config = types.ThinkingConfig(thinking_budget=-1)
+
         # try: 
         if prompt is not None:
             # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting",]
@@ -308,61 +389,52 @@ class OCRGeminiProVision:
         rates_in, rates_out = 0, 0
         response = None
         
-        # --- CONDITIONAL LOGIC FOR API WORKFLOW ---
-        if self.model_name in self.MODELS_REQUIRING_INLINE_IMAGE:
-            self.logger.info(f"Using INLINE image method for model: {self.model_name}")
-            try:
-                if image_path.startswith(('http://', 'https://')):
-                    img_response = requests.get(image_path)
-                    img_response.raise_for_status()
-                    image = Image.open(io.BytesIO(img_response.content))
-                else:
-                    image = Image.open(image_path)
-                if self.do_resize_img:
-                    image = resize_image_to_min_max_pixels(image)
-                
-                # We only have one prompt for now, so no loop needed
-                model_contents = [prompts[0], image]
-                response = self.generate_content_with_backoff(model_contents, request_generation_config)
-
-            except Exception as e:
-                self.logger.error(f"Failed to load image for inline method: {e}", exc_info=True)
-                return "", 0, 0, 0, 0, 0, 0, 0
-        else:
-            self.logger.info(f"Using FILE API method for model: {self.model_name}")
-            try:
-                uploaded_file = self._upload_file_for_older_models(image_path)
-                if not uploaded_file:
-                    raise Exception("File upload failed for older model workflow.")
-                
-                model_contents = [prompts[0], uploaded_file]
-                response = self.generate_content_with_backoff(model_contents, request_generation_config)
-
-            except Exception as e:
-                self.logger.error(f"Failed during File API workflow: {e}", exc_info=True)
-                return "", 0, 0, 0, 0, 0, 0, 0
-
-        # --- DEBUGGING AND RESULT PROCESSING ---
         try:
-            # --- DEBUG LINE ---
-            # This will log the entire structure of the response object from Google
-            self.logger.info(f"RAW GEMINI RESPONSE for {self.model_name}:\n{response}\n")
+            # Load and process image
+            if image_path.startswith(('http://', 'https://')):
+                self.logger.info(f"Loading image from URL: {image_path}")
+                img_response = requests.get(image_path)
+                img_response.raise_for_status()
+                image = Image.open(io.BytesIO(img_response.content))
+            else:
+                self.logger.info(f"Loading image from file: {image_path}")
+                image = Image.open(image_path)
+            
+            # Log original image info
+            self.logger.info(f"Original image: size={image.size}, mode={image.mode}")
+            
+            # Resize if needed
+            if self.do_resize_img:
+                self.logger.info("Image resizing is ENABLED")
+                original_size = image.size
+                image = resize_image_to_min_max_pixels(image)
+                self.logger.info(f"Image resized from {original_size} to {image.size}")
+            else:
+                self.logger.info("Image resizing is DISABLED")
+            
+            # Prepare image for API based on model
+            prepared_image = self._prepare_image_for_api(image)
+            
+            # Create model contents
+            model_contents = [prompts[0], prepared_image]
+            self.logger.info(f"Using prompt: {prompts[0][:100]}...")
+            
+            # Make API call
+            response = self.generate_content_with_backoff(model_contents, request_generation_config)
 
-            if not response:
+            # Process response
+            if not response or not response.text:
+                self.logger.warning("Empty response from API")
                 return "", 0, 0, 0, 0, 0, 0, 0
 
-            # Check for safety blocks BEFORE trying to access text or usage_metadata
-            if not response.text:
-                return "", 0, 0, 0, 0, 0, 0, 0           
-
-            # --- ROBUST DATA ACCESS ---
+            # Extract usage metadata
             tokens_in = getattr(response.usage_metadata, 'prompt_token_count', 0) if hasattr(response, 'usage_metadata') else 0
             tokens_out = getattr(response.usage_metadata, 'candidates_token_count', 0) if hasattr(response, 'usage_metadata') else 0
-            parsed_answer = getattr(response, 'text', '')
-
+            
             tokens_in = tokens_in if tokens_in is not None else 0
             tokens_out = tokens_out if tokens_out is not None else 0
 
+            # Calculate costs
             if self.model_name == 'gemini-1.5-pro':
                 total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
             elif self.model_name == 'gemini-1.5-flash':
@@ -386,14 +458,12 @@ class OCRGeminiProVision:
             overall_tokens_in += tokens_in
             overall_tokens_out += tokens_out
 
-            parsed_answer = response.text
-            if len(keys) > 1:
-                overall_response += (parsed_answer + "\n\n")
-            else:
-                overall_response = parsed_answer
+            overall_response = response.text
+            
+            self.logger.info(f"OCR completed successfully. Response length: {len(overall_response)}")
                 
         except Exception as e:
-            self.logger.error(f"OCR result parsing failed: {e}", exc_info=True)
+            self.logger.error(f"OCR processing failed: {e}", exc_info=True)
             overall_response = ""
 
         return (overall_response, overall_cost_in, overall_cost_out, overall_total_cost, 
