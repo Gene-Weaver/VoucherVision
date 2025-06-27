@@ -1596,6 +1596,130 @@ class VoucherVision():
     #     return final_JSON_response, final_WFO_record, final_GEO_record, self.total_tokens_in, self.total_tokens_out, self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out, self.OCR_cost_in, self.OCR_cost_out, self.ocr_method
     # --- Replace the existing send_to_LLM method inside the VoucherVision class ---
 
+
+    # The version of send_to_LLM() is bad for parallelization bc it is stateful. Needs to be stateless
+    # def send_to_LLM(self, is_azure, progress_report, json_report, model_name):
+    #     self.n_failed_LLM_calls = 0
+    #     self.n_failed_OCR = 0
+    #     self.initialize_token_counters()
+    #     self.update_progress_report_initial(progress_report)
+
+    #     MODEL_NAME_FORMATTED = ModelMaps.get_API_name(model_name)
+    #     name_parts = model_name.split("_")
+
+    #     self.setup_JSON_dict_structure()
+    #     Copy_Prompt = PromptCatalog()
+    #     Copy_Prompt.copy_prompt_template_to_new_dir(self.Dirs.transcription_prompt, self.path_custom_prompts)
+
+    #     if json_report:
+    #         json_report.set_text(text_main=f'Loading {MODEL_NAME_FORMATTED}')
+    #         json_report.set_JSON({}, {}, {})
+
+    #     # Initialize the LLM model once
+    #     llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED,
+    #                                         self.JSON_dict_structure, name_parts, is_azure,
+    #                                         self.llm, self.config_vals_for_permutation)
+
+    #     # Filter out specimens that should be skipped
+    #     valid_img_paths = []
+    #     for i, path_to_crop in enumerate(self.img_paths):
+    #         if not self.should_skip_specimen(path_to_crop):
+    #             valid_img_paths.append((i, path_to_crop))
+    #         else:
+    #             self.log_skipping_specimen(path_to_crop)
+
+    #     # --- Prepare Jobs for Parallel Processing ---
+    #     jobs = []
+    #     total_images = len(valid_img_paths)
+    #     for i, path_to_crop in valid_img_paths:
+    #         # Each thread gets its own fresh OCR Engine instance to prevent state conflicts
+    #         ocr_engine_for_thread = OCREngine(self.logger, None, self.dir_home, self.is_hf,
+    #                                         self.cfg, self.trOCR_model_version, self.trOCR_model,
+    #                                         self.trOCR_processor, self.device)
+    #         job_args = (
+    #             i, path_to_crop, total_images, llm_model, ocr_engine_for_thread,
+    #             self, MODEL_NAME_FORMATTED, name_parts # 'self' is passed for access to stateless helpers
+    #         )
+    #         jobs.append(job_args)
+
+    #     # --- Execute Jobs in Parallel ---
+    #     all_results = [None] * len(self.img_paths)
+    #     num_workers = min(16, len(valid_img_paths))
+    #     self.logger.info(f"Starting {num_workers} worker threads for {len(jobs)} images.")
+
+    #     with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+    #         # Use a progress bar
+    #         with tqdm(total=len(jobs), desc="Processing Images", unit="image") as pbar:
+    #             # map jobs to the worker function
+    #             future_to_job = {executor.submit(process_single_image_worker, job): job for job in jobs}
+
+    #             for future in concurrent.futures.as_completed(future_to_job):
+    #                 try:
+    #                     result_package = future.result()
+    #                     # Place the result in the correct position using its index
+    #                     all_results[result_package['index']] = result_package
+    #                 except Exception as e:
+    #                     self.logger.error(f"A worker failed unexpectedly: {e}")
+    #                     self.logger.error(traceback.format_exc())
+    #                 finally:
+    #                     pbar.update(1)
+
+    #     # --- Process and Aggregate Results Serially and Safely ---
+    #     final_JSON_response, final_WFO_record, final_GEO_record = None, None, None
+    #     collected_ocr_methods = set()
+
+    #     for result in all_results:
+    #         if result is None:
+    #             continue # This was a skipped image
+
+    #         i = result['index']
+    #         path_to_crop = result['path_to_crop']
+    #         self.update_progress_report_batch(progress_report, i)
+
+    #         # Aggregate failures
+    #         if result['ocr_failed']: self.n_failed_OCR += 1
+    #         if result['llm_failed']: self.n_failed_LLM_calls += 1
+
+    #         # Aggregate costs and tokens
+    #         self.OCR_cost += result.get('ocr_cost', 0)
+    #         self.OCR_tokens_in += result.get('ocr_tokens_in', 0)
+    #         self.OCR_tokens_out += result.get('ocr_tokens_out', 0)
+    #         self.OCR_cost_in += result.get('ocr_cost_in', 0)
+    #         self.OCR_cost_out += result.get('ocr_cost_out', 0)
+    #         self.update_token_counters(result.get('nt_in', 0), result.get('nt_out', 0))
+    #         if result.get('ocr_method'):
+    #             collected_ocr_methods.add(result['ocr_method'])
+
+    #         # Save individual file results
+    #         final_JSON_response, final_WFO_record, final_GEO_record = self.update_final_response(
+    #             result['response_candidate'],
+    #             result['WFO_record'],
+    #             result['GEO_record'],
+    #             result['usage_report'],
+    #             MODEL_NAME_FORMATTED,
+    #             result['paths'],
+    #             path_to_crop,
+    #             result['nt_in'],
+    #             result['nt_out']
+    #         )
+            
+    #         # Update the GUI with the last processed item's result
+    #         if json_report:
+    #             json_report.set_JSON(final_JSON_response, final_WFO_record, final_GEO_record)
+
+    #     # Clean up and finalize
+    #     self.ocr_method = "|".join(sorted(list(collected_ocr_methods)))
+    #     torch.cuda.empty_cache()
+    #     gc.collect()
+
+    #     self.update_progress_report_final(progress_report)
+    #     if final_JSON_response:
+    #         final_JSON_response = self.parse_final_json_response(final_JSON_response)
+
+    #     return (final_JSON_response, final_WFO_record, final_GEO_record,
+    #             self.total_tokens_in, self.total_tokens_out,
+    #             self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out,
+    #             self.OCR_cost_in, self.OCR_cost_out, self.ocr_method)
     def send_to_LLM(self, is_azure, progress_report, json_report, model_name):
         self.n_failed_LLM_calls = 0
         self.n_failed_OCR = 0
@@ -1613,10 +1737,7 @@ class VoucherVision():
             json_report.set_text(text_main=f'Loading {MODEL_NAME_FORMATTED}')
             json_report.set_JSON({}, {}, {})
 
-        # Initialize the LLM model once
-        llm_model = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED,
-                                            self.JSON_dict_structure, name_parts, is_azure,
-                                            self.llm, self.config_vals_for_permutation)
+        # --- NO LONGER INITIALIZE LLM MODEL HERE ---
 
         # Filter out specimens that should be skipped
         valid_img_paths = []
@@ -1634,8 +1755,15 @@ class VoucherVision():
             ocr_engine_for_thread = OCREngine(self.logger, None, self.dir_home, self.is_hf,
                                             self.cfg, self.trOCR_model_version, self.trOCR_model,
                                             self.trOCR_processor, self.device)
+            
+            # CORRECTED: Each thread also gets its own fresh LLM model instance.
+            # This is the critical fix to prevent the race condition.
+            llm_model_for_thread = self.initialize_llm_model(self.cfg, self.logger, MODEL_NAME_FORMATTED,
+                                                            self.JSON_dict_structure, name_parts, is_azure,
+                                                            self.llm, self.config_vals_for_permutation)
+            
             job_args = (
-                i, path_to_crop, total_images, llm_model, ocr_engine_for_thread,
+                i, path_to_crop, total_images, llm_model_for_thread, ocr_engine_for_thread,
                 self, MODEL_NAME_FORMATTED, name_parts # 'self' is passed for access to stateless helpers
             )
             jobs.append(job_args)
@@ -1718,7 +1846,6 @@ class VoucherVision():
                 self.total_tokens_in, self.total_tokens_out,
                 self.OCR_cost, self.OCR_tokens_in, self.OCR_tokens_out,
                 self.OCR_cost_in, self.OCR_cost_out, self.ocr_method)
-
 
 
 
