@@ -828,7 +828,8 @@ class OCREngine:
                 part_OCR = "\CRAFT trOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
                 self.OCR = self.OCR + part_OCR + part_OCR
             else:
-                self.OCR = self.OCR + "\CRAFT trOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
+                self.OCR = self.OCR + "\\CRAFT trOCR:\n" + self.detect_text_with_trOCR_using_google_bboxes(self.do_use_trOCR, logger)
+
             # logger.info(f"CRAFT trOCR:\n{self.OCR}")
 
         if 'LLaVA' in self.OCR_option: # This option does not produce an OCR helper image
