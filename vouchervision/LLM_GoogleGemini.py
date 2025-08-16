@@ -23,7 +23,7 @@ class GoogleGeminiHandler:
     VENDOR = 'google'
     STARTING_TEMP = 1
 
-    THINK_BUDGET = 2048
+    THINK_BUDGET = 128
 
     def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False, exit_early_with_WFO=False):
         self.exit_early_for_JSON = exit_early_for_JSON

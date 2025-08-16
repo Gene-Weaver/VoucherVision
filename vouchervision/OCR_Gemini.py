@@ -60,7 +60,7 @@ class OCRGeminiProVision:
                 # top_k=top_k,  
                 max_output_tokens=max_output_tokens,
                 # seed=seed,  
-                thinking_config=types.ThinkingConfig(thinking_budget=-1)  # Enable dynamic thinking
+                thinking_config=types.ThinkingConfig(thinking_budget=128)  # Enable dynamic thinking
             )
 
     def _prepare_image_for_api(self, image):
@@ -363,7 +363,7 @@ class OCRGeminiProVision:
         )
 
         if self.model_name in self.supports_thinking:
-            request_generation_config.thinking_config = types.ThinkingConfig(thinking_budget=-1)
+            request_generation_config.thinking_config = types.ThinkingConfig(thinking_budget=128)
 
         # try: 
         if prompt is not None:
