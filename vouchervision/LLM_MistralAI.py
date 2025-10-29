@@ -144,7 +144,7 @@ class MistralHandler:
 
                         save_individual_prompt(sanitize_prompt(prompt_template), txt_file_path_ind_prompt)
 
-                        self.logger.info(f"Formatted JSON:\n{json.dumps(output,indent=4)}")
+                        self.logger.info(f"Formatted JSON Pre-Sanitize:\n{json.dumps(output,indent=4)}")
                         
                         usage_report = self.monitor.stop_monitoring_report_usage()    
 

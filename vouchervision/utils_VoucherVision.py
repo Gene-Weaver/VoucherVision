@@ -19,6 +19,7 @@ from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
 from vouchervision.general_utils import get_cfg_from_full_path
 from vouchervision.OCR_google_cloud_vision import OCREngine 
+from OCR_sanitize import write_excel_safe, sanitize_excel_record
 
 '''
 * For the prefix_removal, the image names have 'MICH-V-' prior to the barcode, so that is used for matching
@@ -61,6 +62,7 @@ def process_single_image_worker(job_args):
         # Perform OCR using the provided engine instance
         ocr_engine.process_image(vv_instance.do_create_OCR_helper_image, path_to_crop, logger)
         ocr_text = ocr_engine.OCR
+        # ocr_text_sanitizezd = sanitize_for_storage(ocr_text)
         
         # Capture OCR stats from the engine instance used by this worker
         ocr_cost = ocr_engine.cost
@@ -111,6 +113,8 @@ def process_single_image_worker(job_args):
             if response_candidate is None:
                 llm_failed = True
                 logger.error(f"[{worker_id}] LLM call failed for {os.path.basename(path_to_crop)}")
+            else:
+                response_candidate_sanitized = sanitize_excel_record(response_candidate)
 
         except Exception as e:
             llm_failed = True
@@ -124,7 +128,7 @@ def process_single_image_worker(job_args):
         'paths': paths,
         'ocr_failed': ocr_failed,
         'llm_failed': llm_failed,
-        'response_candidate': response_candidate,
+        'response_candidate': response_candidate_sanitized,
         'nt_in': nt_in,
         'nt_out': nt_out,
         'WFO_record': WFO_record,
@@ -449,100 +453,180 @@ class VoucherVision():
                 print(f"Failed to parse response: {response}")
                 return
 
+        ################### old method that was not safe  enough writing to xlsx
         # iterate over headers in the first row
-        for i, header in enumerate(sheet[1], start=1):
-            # check if header value is in response keys
-            if (header.value in response) and (header.value not in self.catalog_name_options): ####################### Catalog Number pre-defined
-                # check if the response value is a dictionary
-                if isinstance(response[header.value], dict):
-                    # if it is a dictionary, extract the 'value' field
-                    cell_value = response[header.value].get('value', '')
-                else:
-                    # if it's not a dictionary, use it directly
-                    cell_value = response[header.value]
-                
-                try:
-                    # write the value to the cell
-                    sheet.cell(row=next_row, column=i, value=cell_value)
-                except:
-                    sheet.cell(row=next_row, column=i, value=cell_value[0])
+        # for i, header in enumerate(sheet[1], start=1):
+        #     key = header.value
 
-            elif header.value in self.catalog_name_options: 
-                # if self.prefix_removal:
-                #     filename_without_extension = filename_without_extension.replace(self.prefix_removal, "")
-                # if self.suffix_removal:
-                #     filename_without_extension = filename_without_extension.replace(self.suffix_removal, "")
-                # if self.catalog_numerical_only:
-                #     filename_without_extension = self.remove_non_numbers(filename_without_extension)
-                sheet.cell(row=next_row, column=i, value=filename_without_extension)
-            elif header.value == "path_to_crop":
-                sheet.cell(row=next_row, column=i, value=path_to_crop)
-            elif header.value == "path_to_original":
-                if self.cfg['leafmachine']['use_RGB_label_images'] in [1,2]:
-                    fname = os.path.basename(path_to_crop)
+        #     # check if header value is in response keys
+        #     if (header.value in response) and (header.value not in self.catalog_name_options): ####################### Catalog Number pre-defined
+        #         # check if the response value is a dictionary
+        #         if isinstance(response[header.value], dict):
+        #             # if it is a dictionary, extract the 'value' field
+        #             cell_value = response[header.value].get('value', '')
+        #         else:
+        #             # if it's not a dictionary, use it directly
+        #             cell_value = response[header.value]
+                
+        #         try:
+        #             # write the value to the cell
+        #             sheet.cell(row=next_row, column=i, value=cell_value)
+        #         except:
+        #             sheet.cell(row=next_row, column=i, value=cell_value[0])
+
+        #     elif header.value in self.catalog_name_options: 
+        #         # if self.prefix_removal:
+        #         #     filename_without_extension = filename_without_extension.replace(self.prefix_removal, "")
+        #         # if self.suffix_removal:
+        #         #     filename_without_extension = filename_without_extension.replace(self.suffix_removal, "")
+        #         # if self.catalog_numerical_only:
+        #         #     filename_without_extension = self.remove_non_numbers(filename_without_extension)
+        #         sheet.cell(row=next_row, column=i, value=filename_without_extension)
+        #     elif header.value == "path_to_crop":
+        #         sheet.cell(row=next_row, column=i, value=path_to_crop)
+        #     elif header.value == "path_to_original":
+        #         if self.cfg['leafmachine']['use_RGB_label_images'] in [1,2]:
+        #             fname = os.path.basename(path_to_crop)
+        #             base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(path_to_crop))))
+        #             path_to_original = os.path.join(base, 'Original_Images', fname)
+        #             sheet.cell(row=next_row, column=i, value=path_to_original)
+        #         else:
+        #             fname = os.path.basename(path_to_crop)
+        #             base = os.path.dirname(os.path.dirname(path_to_crop))
+        #             path_to_original = os.path.join(base, 'Original_Images', fname)
+        #             sheet.cell(row=next_row, column=i, value=path_to_original)
+        #     elif header.value == "path_to_content":
+        #         sheet.cell(row=next_row, column=i, value=path_to_content)
+        #     elif header.value == "path_to_helper":
+        #         sheet.cell(row=next_row, column=i, value=path_to_helper)
+        #     elif header.value == "tokens_in":
+        #         sheet.cell(row=next_row, column=i, value=nt_in)
+        #     elif header.value == "tokens_out":
+        #         sheet.cell(row=next_row, column=i, value=nt_out)
+        #     elif header.value == "filename":
+        #         sheet.cell(row=next_row, column=i, value=filename_without_extension)
+        #     elif header.value == "prompt":
+        #         sheet.cell(row=next_row, column=i, value=os.path.basename(self.path_custom_prompts))
+        #     elif header.value == "run_name":
+        #         sheet.cell(row=next_row, column=i, value=Dirs.run_name)
+        #     elif header.value == "LM2_collage":
+        #         sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['use_RGB_label_images'])
+        #     elif header.value == "OCR_method":
+        #         value_to_insert = self.cfg['leafmachine']['project']['OCR_option']
+        #         if isinstance(value_to_insert, list):
+        #             value_to_insert = '|'.join(map(str, value_to_insert))
+        #         sheet.cell(row=next_row, column=i, value=value_to_insert)
+        #     elif header.value == "OCR_double":
+        #         sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['double_OCR'])
+        #     elif header.value == "OCR_trOCR":
+        #         sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['do_use_trOCR'])
+        #     # "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"
+        #     elif header.value in self.wfo_headers_no_lists:
+        #         sheet.cell(row=next_row, column=i, value=WFO_record.get(header.value, ''))
+        #     # elif header.value == "WFO_exact_match":
+        #     #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_exact_match",''))
+        #     # elif header.value == "WFO_exact_match_name":
+        #     #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_exact_match_name",''))
+        #     # elif header.value == "WFO_best_match":
+        #     #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_best_match",''))
+        #     # elif header.value == "WFO_placement":
+        #     #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_placement",''))
+        #     elif header.value == "WFO_candidate_names":
+        #         candidate_names = WFO_record.get("WFO_candidate_names", '')
+        #         # Check if candidate_names is a list and convert to a string if it is
+        #         if isinstance(candidate_names, list):
+        #             candidate_names_str = '|'.join(candidate_names)
+        #         else:
+        #             candidate_names_str = candidate_names
+        #         sheet.cell(row=next_row, column=i, value=candidate_names_str)
+            
+        #     # "GEO_method", "GEO_formatted_full_string", "GEO_decimal_lat", "GEO_decimal_long",
+        #     # "GEO_city", "GEO_county", "GEO_state", "GEO_state_code", "GEO_country", "GEO_country_code", "GEO_continent"
+        #     elif header.value in self.geo_headers:
+        #         sheet.cell(row=next_row, column=i, value=GEO_record.get(header.value, ''))
+
+        #     elif header.value in self.usage_headers:
+        #         sheet.cell(row=next_row, column=i, value=usage_report.get(header.value, ''))
+
+        #     elif header.value == "LLM":
+        #         sheet.cell(row=next_row, column=i, value=MODEL_NAME_FORMATTED)
+        for i, header in enumerate(sheet[1], start=1):
+            key = header.value
+
+            if (key in response) and (key not in self.catalog_name_options):
+                val = response[key]
+                if isinstance(val, dict):
+                    val = val.get("value", "")
+                write_excel_safe(sheet, next_row, i, val)
+
+            elif key in self.catalog_name_options:
+                write_excel_safe(sheet, next_row, i, filename_without_extension)
+
+            elif key == "path_to_crop":
+                write_excel_safe(sheet, next_row, i, path_to_crop)
+
+            elif key == "path_to_original":
+                fname = os.path.basename(path_to_crop)
+                if self.cfg['leafmachine']['use_RGB_label_images'] in [1, 2]:
                     base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(path_to_crop))))
-                    path_to_original = os.path.join(base, 'Original_Images', fname)
-                    sheet.cell(row=next_row, column=i, value=path_to_original)
                 else:
-                    fname = os.path.basename(path_to_crop)
                     base = os.path.dirname(os.path.dirname(path_to_crop))
-                    path_to_original = os.path.join(base, 'Original_Images', fname)
-                    sheet.cell(row=next_row, column=i, value=path_to_original)
-            elif header.value == "path_to_content":
-                sheet.cell(row=next_row, column=i, value=path_to_content)
-            elif header.value == "path_to_helper":
-                sheet.cell(row=next_row, column=i, value=path_to_helper)
-            elif header.value == "tokens_in":
-                sheet.cell(row=next_row, column=i, value=nt_in)
-            elif header.value == "tokens_out":
-                sheet.cell(row=next_row, column=i, value=nt_out)
-            elif header.value == "filename":
-                sheet.cell(row=next_row, column=i, value=filename_without_extension)
-            elif header.value == "prompt":
-                sheet.cell(row=next_row, column=i, value=os.path.basename(self.path_custom_prompts))
-            elif header.value == "run_name":
-                sheet.cell(row=next_row, column=i, value=Dirs.run_name)
-            elif header.value == "LM2_collage":
-                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['use_RGB_label_images'])
-            elif header.value == "OCR_method":
+                path_to_original = os.path.join(base, 'Original_Images', fname)
+                write_excel_safe(sheet, next_row, i, path_to_original)
+
+            elif key == "path_to_content":
+                write_excel_safe(sheet, next_row, i, path_to_content)
+
+            elif key == "path_to_helper":
+                write_excel_safe(sheet, next_row, i, path_to_helper)
+
+            elif key == "tokens_in":
+                write_excel_safe(sheet, next_row, i, nt_in)
+
+            elif key == "tokens_out":
+                write_excel_safe(sheet, next_row, i, nt_out)
+
+            elif key == "filename":
+                write_excel_safe(sheet, next_row, i, filename_without_extension)
+
+            elif key == "prompt":
+                write_excel_safe(sheet, next_row, i, os.path.basename(self.path_custom_prompts))
+
+            elif key == "run_name":
+                write_excel_safe(sheet, next_row, i, Dirs.run_name)
+
+            elif key == "LM2_collage":
+                write_excel_safe(sheet, next_row, i, self.cfg['leafmachine']['use_RGB_label_images'])
+
+            elif key == "OCR_method":
                 value_to_insert = self.cfg['leafmachine']['project']['OCR_option']
                 if isinstance(value_to_insert, list):
                     value_to_insert = '|'.join(map(str, value_to_insert))
-                sheet.cell(row=next_row, column=i, value=value_to_insert)
-            elif header.value == "OCR_double":
-                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['double_OCR'])
-            elif header.value == "OCR_trOCR":
-                sheet.cell(row=next_row, column=i, value=self.cfg['leafmachine']['project']['do_use_trOCR'])
-            # "WFO_exact_match","WFO_exact_match_name","WFO_best_match","WFO_candidate_names","WFO_placement"
-            elif header.value in self.wfo_headers_no_lists:
-                sheet.cell(row=next_row, column=i, value=WFO_record.get(header.value, ''))
-            # elif header.value == "WFO_exact_match":
-            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_exact_match",''))
-            # elif header.value == "WFO_exact_match_name":
-            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_exact_match_name",''))
-            # elif header.value == "WFO_best_match":
-            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_best_match",''))
-            # elif header.value == "WFO_placement":
-            #     sheet.cell(row=next_row, column=i, value= WFO_record.get("WFO_placement",''))
-            elif header.value == "WFO_candidate_names":
+                write_excel_safe(sheet, next_row, i, value_to_insert)
+
+            elif key == "OCR_double":
+                write_excel_safe(sheet, next_row, i, self.cfg['leafmachine']['project']['double_OCR'])
+
+            elif key == "OCR_trOCR":
+                write_excel_safe(sheet, next_row, i, self.cfg['leafmachine']['project']['do_use_trOCR'])
+
+            elif key in self.wfo_headers_no_lists:
+                write_excel_safe(sheet, next_row, i, WFO_record.get(key, ''))
+
+            elif key == "WFO_candidate_names":
                 candidate_names = WFO_record.get("WFO_candidate_names", '')
-                # Check if candidate_names is a list and convert to a string if it is
                 if isinstance(candidate_names, list):
-                    candidate_names_str = '|'.join(candidate_names)
-                else:
-                    candidate_names_str = candidate_names
-                sheet.cell(row=next_row, column=i, value=candidate_names_str)
-            
-            # "GEO_method", "GEO_formatted_full_string", "GEO_decimal_lat", "GEO_decimal_long",
-            # "GEO_city", "GEO_county", "GEO_state", "GEO_state_code", "GEO_country", "GEO_country_code", "GEO_continent"
-            elif header.value in self.geo_headers:
-                sheet.cell(row=next_row, column=i, value=GEO_record.get(header.value, ''))
+                    candidate_names = ' | '.join(map(str, candidate_names))
+                write_excel_safe(sheet, next_row, i, candidate_names)
 
-            elif header.value in self.usage_headers:
-                sheet.cell(row=next_row, column=i, value=usage_report.get(header.value, ''))
+            elif key in self.geo_headers:
+                write_excel_safe(sheet, next_row, i, GEO_record.get(key, ''))
 
-            elif header.value == "LLM":
-                sheet.cell(row=next_row, column=i, value=MODEL_NAME_FORMATTED)
+            elif key in self.usage_headers:
+                write_excel_safe(sheet, next_row, i, usage_report.get(key, ''))
+
+            elif key == "LLM":
+                write_excel_safe(sheet, next_row, i, MODEL_NAME_FORMATTED)
 
         # save the workbook
         wb.save(path_transcription)

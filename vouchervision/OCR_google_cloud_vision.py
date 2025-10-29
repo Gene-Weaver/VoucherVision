@@ -10,6 +10,7 @@ from google.oauth2 import service_account
 ### LLaVA should only be installed if the user will actually use it.
 ### It requires the most recent pytorch/Python and can mess with older systems
 
+from OCR_sanitize import sanitize_for_storage
 
 '''
 @misc{li2021trocr,
@@ -767,15 +768,17 @@ class OCREngine:
         results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_helper.ocr_hyperbolic(
             self.path, max_tokens=1024
         )
+
         self.cost += total_cost
         self.tokens_in += tokens_in
         self.tokens_out += tokens_out
         self.cost_in += cost_in
         self.cost_out += cost_out
 
+        results_text_sanitized = sanitize_for_storage(results_text)
 
         # Store results in JSON
-        self.OCR_JSON_to_file[json_key] = results_text
+        self.OCR_JSON_to_file[json_key] = results_text_sanitized
 
         # Update the OCR string
         if self.double_OCR:
@@ -802,8 +805,10 @@ class OCREngine:
         self.cost_in += cost_in
         self.cost_out += cost_out
 
+        results_text_sanitized = sanitize_for_storage(results_text)
+
         # Store results in JSON
-        self.OCR_JSON_to_file[json_key] = results_text
+        self.OCR_JSON_to_file[json_key] = results_text_sanitized
 
         # Update the OCR string
         if self.double_OCR:
@@ -857,8 +862,9 @@ class OCREngine:
 
             self.logger.info(f"Florence-2 Usage Report for Model [{self.Florence.model_id}]")
             results_text, results_text_dirty, results, usage_report = self.Florence.ocr_florence(self.path, task_prompt='<OCR>', text_input=None)
+            results_text_sanitized = sanitize_for_storage(results_text)
 
-            self.OCR_JSON_to_file['OCR_Florence'] = results_text
+            self.OCR_JSON_to_file['OCR_Florence'] = results_text_sanitized
 
             if self.double_OCR:
                 self.OCR = self.OCR + f"\nFlorence-2 OCR:\n{results_text}" + f"\nFlorence-2 OCR:\n{results_text}"
@@ -873,11 +879,12 @@ class OCREngine:
 
             self.logger.info(f"Qwen-2-VL Usage Report for Model [{self.Qwen2VL.model_id}]")
             results_text, usage_report = self.Qwen2VL.ocr_with_vlm(self.path, workflow_option=1)
+            results_text_sanitized = sanitize_for_storage(results_text)
 
-            self.OCR_JSON_to_file['OCR_Qwen2VL'] = results_text
+            self.OCR_JSON_to_file['OCR_Qwen2VL'] = results_text_sanitized
 
             if self.double_OCR:
-                self.OCR = self.OCR + f"\nQwen2VL OCR:\n{results_text}" + f"\nnQwen2VL OCR:\n{results_text}"
+                self.OCR = self.OCR + f"\nQwen2VL OCR:\n{results_text}" + f"\nQwen2VL OCR:\n{results_text}"
             else:
                 self.OCR = self.OCR + f"\nQwen2VL OCR:\n{results_text}"
 
@@ -896,7 +903,9 @@ class OCREngine:
             self.cost_in += cost_in
             self.cost_out += cost_out
 
-            self.OCR_JSON_to_file['OCR_GPT_4o_mini'] = results_text
+            results_text_sanitized = sanitize_for_storage(results_text)
+
+            self.OCR_JSON_to_file['OCR_GPT_4o_mini'] = results_text_sanitized
 
             if self.double_OCR:
                 self.OCR = self.OCR + f"\nGPT-4o-mini OCR:\n{results_text}" + f"\nGPT-4o-mini OCR:\n{results_text}"
@@ -918,7 +927,9 @@ class OCREngine:
             self.cost_in += cost_in
             self.cost_out += cost_out
 
-            self.OCR_JSON_to_file['OCR_GPT_4o'] = results_text
+            results_text_sanitized = sanitize_for_storage(results_text)
+
+            self.OCR_JSON_to_file['OCR_GPT_4o'] = results_text_sanitized
 
             if self.double_OCR:
                 self.OCR = self.OCR + f"\nGPT-4o OCR:\n{results_text}" + f"\nGPT-4o OCR:\n{results_text}"

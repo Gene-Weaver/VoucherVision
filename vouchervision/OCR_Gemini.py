@@ -376,7 +376,12 @@ class OCRGeminiProVision:
 
             # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting", "species_only",] # last prior to annotations
-            keys = ["verbatim_with_annotations",] # last prior to annotations
+            if prompt == "verbatim_with_annotations":
+                keys = ["verbatim_with_annotations",] # last prior to annotations
+            elif prompt == "verbatim_notebook":
+                keys = ["verbatim_notebook",] # last prior to annotations
+            else:
+                keys = ["verbatim_with_annotations",] # last prior to annotations
             
             # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
             # keys = ["default_plus_minorcorrect_idhandwriting",]
