@@ -366,11 +366,11 @@ class OCRGeminiProVision:
             request_generation_config.thinking_config = types.ThinkingConfig(thinking_budget=128)
 
         # try: 
-        if prompt is not None:
+        if prompt is None:
             # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting",]
             keys = ["verbatim_with_annotations",]
-
-        else:
+        
+        else: ### Special OCR Prompts
             # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
             # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
 
