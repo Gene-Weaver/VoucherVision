@@ -367,7 +367,7 @@ class OCRGeminiProVision:
 
         # try: 
         if prompt is None:
-            self.logger.info(f"[Prompt] None")
+            self.logger.info(f"[Prompt] verbatim_with_annotations --> None")
             # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting",]
             keys = ["verbatim_with_annotations",]
         elif prompt == "verbatim_with_annotations":
@@ -379,7 +379,7 @@ class OCRGeminiProVision:
             keys = ["verbatim_notebook",]
 
         else:
-            self.logger.info(f"[Prompt] verbatim_with_annotations ELSE")
+            self.logger.info(f"[Prompt] verbatim_with_annotations --> ELSE")
             keys = ["verbatim_with_annotations",] 
         
         # else: ### Special OCR Prompts
