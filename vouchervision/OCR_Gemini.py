@@ -367,24 +367,36 @@ class OCRGeminiProVision:
 
         # try: 
         if prompt is None:
+            self.logger.info(f"[Prompt] None")
             # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting",]
             keys = ["verbatim_with_annotations",]
-        
-        else: ### Special OCR Prompts
-            # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
-            # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
+        elif prompt == "verbatim_with_annotations":
+            self.logger.info(f"[Prompt] {prompt}")
+            keys = ["verbatim_with_annotations",]
 
-            # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
-            # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting", "species_only",] # last prior to annotations
-            if prompt == "verbatim_with_annotations":
-                keys = ["verbatim_with_annotations",] # last prior to annotations
-            elif prompt == "verbatim_notebook":
-                keys = ["verbatim_notebook",] # last prior to annotations
-            else:
-                keys = ["verbatim_with_annotations",] # last prior to annotations
+        elif prompt == "verbatim_notebook":
+            self.logger.info(f"[Prompt] {prompt}")
+            keys = ["verbatim_notebook",]
+
+        else:
+            self.logger.info(f"[Prompt] verbatim_with_annotations ELSE")
+            keys = ["verbatim_with_annotations",] 
+        
+        # else: ### Special OCR Prompts
+        #     # keys = ["default", "default_plus_minorcorrect", "default_plus_minorcorrect_idhandwriting", "handwriting_only", "species_only", "detailed_metadata"]
+        #     # keys = ["default_plus_minorcorrect_idhandwriting", "default_plus_minorcorrect_idhandwriting_translate", "species_only",]
+
+        #     # keys = ["default_plus_minorcorrect_excludestricken_idhandwriting", "species_only",]
+        #     # keys = ["default_plus_minorcorrect_addressstricken_idhandwriting", "species_only",] # last prior to annotations
+        #     if prompt == "verbatim_with_annotations":
+        #         keys = ["verbatim_with_annotations",] # last prior to annotations
+        #     elif prompt == "verbatim_notebook":
+        #         keys = ["verbatim_notebook",] # last prior to annotations
+        #     else:
+        #         keys = ["verbatim_with_annotations",] # last prior to annotations
             
-            # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
-            # keys = ["default_plus_minorcorrect_idhandwriting",]
+        #     # keys = ["default_plus_minorcorrect_idhandwriting", "species_only",]
+        #     # keys = ["default_plus_minorcorrect_idhandwriting",]
         
         prompts = OCRPromptCatalog().get_prompts_by_keys(keys)
 

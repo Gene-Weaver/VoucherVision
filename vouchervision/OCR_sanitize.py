@@ -21,7 +21,8 @@ _HEADER_RE = re.compile(
     r"|google[-\s]?(?:cloud|vision|ocr)?"
     r"|pali[-\s]?(?:gemma|gemma2|gemini)?"
     r"|gpt[-\s]?(?:4|4v|4o|4o-mini)?"
-    r")\s+OCR[:]?\s*\n?",                # <-- colon optional
+    r"|ocr\s+version\s+\d+[:]?"           # OCR Version {i}:
+    r")\s*\n?",                           # swallow trailing whitespace/newline
     re.IGNORECASE | re.MULTILINE,
 )
 
