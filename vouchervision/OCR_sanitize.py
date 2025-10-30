@@ -189,3 +189,126 @@ def sanitize_excel_record(obj: Any) -> Any:
     if isinstance(obj, tuple):
         return tuple(sanitize_excel_record(v) for v in obj)
     return _clean_scalar_for_excel(obj)
+
+
+
+
+# -----------------------------
+# Markdown → Plain Text (flat)
+# -----------------------------
+_MD_FENCE_RE = re.compile(r"(?s)```.*?```")  # fenced code blocks
+_MD_INLINE_CODE_RE = re.compile(r"`([^`]+)`")  # `inline`
+_MD_HEADING_RE = re.compile(r"(?m)^\s{0,3}#{1,6}\s*")  # #, ##, ...
+_MD_SETEXT_RE = re.compile(r"(?m)^\s{0,3}(?:=+|-+)\s*$")  # underlines after headings
+_MD_BLOCKQUOTE_RE = re.compile(r"(?m)^\s{0,3}>\s?")  # >
+_MD_TASKLIST_RE = re.compile(r"(?m)^\s{0,3}[-*+]\s+\[(?: |x|X)\]\s+")  # - [ ] / - [x]
+_MD_BULLET_RE = re.compile(r"(?m)^\s{0,3}[-*+]\s+")  # - foo / * foo / + foo
+_MD_NUM_LIST_RE = re.compile(r"(?m)^\s{0,3}\d{1,3}[.)]\s+")  # 1. foo / 1) foo
+_MD_IMG_RE = re.compile(r"!\[([^\]]*)\]\((?:[^)]+)\)")  # ![alt](url) -> alt
+_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\((?:[^)]+)\)")  # [text](url) -> text
+_MD_REF_LINK_RE = re.compile(r"\[([^\]]+)\]\[[^\]]*\]")  # [text][id] -> text
+_MD_REF_DEF_RE = re.compile(r"(?m)^\s*\[[^\]]+\]:\s+\S+.*$")  # [id]: url -> remove line
+_MD_AUTOLINK_RE = re.compile(r"<(https?://[^>\s]+)>")  # <http://...> -> url
+_MD_EMPH_RE = re.compile(r"(\*\*\*|___|\*\*|__|\*|_)(.+?)\1")  # emphasis -> inner
+_MD_TABLE_SEP_RE = re.compile(r"(?m)^\s*\|?(?:\s*:?-+:?\s*\|)+\s*:?-+:?\s*\|?\s*$")  # |---|---|
+_MD_TABLE_PIPE_RE = re.compile(r"(?m)\s*\|\s*")  # collapse pipes to spaces
+_MD_FOOTNOTE_MARK_RE = re.compile(r"\[\^[^\]]+\]")  # [^1]
+_MD_HTML_TAG_RE = re.compile(r"</?[^>]+>")  # strip simple HTML tags
+_MD_ESCAPE_RE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!|>])")  # remove MD backslash escapes
+
+def markdown_to_plaintext(text: str) -> str:
+    """
+    Convert Markdown to a single plain-text string:
+      - remove all markdown fences, headings, lists, blockquotes
+      - resolve links/images to their visible text
+      - drop footnote markers and reference definitions
+      - strip tables' pipes and separators
+      - remove inline code backticks and emphasis markers
+      - remove simple HTML tags
+      - normalize whitespace to a single space
+    """
+    if not isinstance(text, str):
+        return text
+
+    s = text
+
+    # Remove reference-style link definitions early (entire lines)
+    s = _MD_REF_DEF_RE.sub(" ", s)
+
+    # Remove fenced code blocks completely
+    s = _MD_FENCE_RE.sub(" ", s)
+
+    # Replace images/links with their visible text
+    s = _MD_IMG_RE.sub(r"\1", s)
+    s = _MD_LINK_RE.sub(r"\1", s)
+    s = _MD_REF_LINK_RE.sub(r"\1", s)
+    s = _MD_AUTOLINK_RE.sub(r"\1", s)
+
+    # Strip inline code markers, keep inner text
+    s = _MD_INLINE_CODE_RE.sub(r"\1", s)
+
+    # Remove headings markers (#...) and setext underlines
+    s = _MD_HEADING_RE.sub("", s)
+    s = _MD_SETEXT_RE.sub(" ", s)
+
+    # Remove blockquote and list markers (bullets, task, numbered)
+    s = _MD_BLOCKQUOTE_RE.sub("", s)
+    s = _MD_TASKLIST_RE.sub("", s)
+    s = _MD_BULLET_RE.sub("", s)
+    s = _MD_NUM_LIST_RE.sub("", s)
+
+    # Tables: drop separator lines, replace pipes with spaces
+    s = _MD_TABLE_SEP_RE.sub(" ", s)
+    s = _MD_TABLE_PIPE_RE.sub(" ", s)
+
+    # Emphasis: remove markers but keep inner text (run twice to catch nesting)
+    for _ in range(2):
+        s = _MD_EMPH_RE.sub(r"\2", s)
+
+    # Footnote markers
+    s = _MD_FOOTNOTE_MARK_RE.sub("", s)
+
+    # Simple HTML tags
+    s = _MD_HTML_TAG_RE.sub(" ", s)
+
+    # Remove MD escape backslashes
+    s = _MD_ESCAPE_RE.sub(r"\1", s)
+
+    # Normalize whitespace (also collapse newlines/tabs)
+    s = s.replace("\r", " ").replace("\n", " ").replace("\t", " ")
+    s = re.sub(r"\s{2,}", " ", s).strip()
+    return s
+
+
+def markdown_to_simple_text(
+    text: str,
+    *,
+    remove_headers: bool = True,
+    guard_excel: bool = False,
+) -> str:
+    """
+    High-level helper tailored for your OCR pipeline:
+      1) (Optional) remove leading engine headers like 'Gemini-2.5-Flash OCR:'
+      2) strip all Markdown syntax to visible text only
+      3) hard-normalize to a single flat string with spaces
+      4) (Optional) Excel guard for '=' '+' '-' '@'
+
+    Returns a single-line plain string.
+    """
+    if not isinstance(text, str):
+        return text
+
+    s = text
+    if remove_headers:
+        s = strip_headers(s)
+
+    s = markdown_to_plaintext(s)
+
+    # Final pass: remove your special wrapper tokens & illegal XML, collapse spaces
+    s = _sanitize_xml_illegal(s)
+    s = re.sub(r"\s{2,}", " ", s).strip()
+
+    if guard_excel:
+        s = _excel_guard_scalar(s)
+
+    return s

@@ -28,12 +28,16 @@ Follow these steps:
    - Use indentation, bullet points, and numbered lists to reflect the relative position of text on the page.
    - Maintain blank lines and paragraph breaks to reflect spacing between sections.
    - If text appears in a header-like position (top, centered, larger, or underlined), render it as a Markdown heading (`#`, `##`, etc.).
-   - If text is aligned side-by-side (columns, annotations), use indentation or tables to convey approximate layout.
    - Do not expand abbreviations or add inferred content.
 2. **Formatting Rules**
-   - Output must be valid Markdown syntax.
-   - Do **not** include any commentary, explanations, or additional prose — only the final formatted Markdown text.
+   - Format the output exactly as you would inside a fenced ```markdown code block — but do not output any backticks, code fences, language tags, or wrapper text.
+   - Do not include ``` at the beginning or end.
+   - Do not output words like markdown, code, fence, or similar.
+   - If you produce backticks or code fences, you fail.
+   - Produce raw Markdown only.
+   - Do not include any commentary, explanations, or additional prose — only the final formatted Markdown text.
    - The Markdown should maintain visual correspondence with the original handwritten notes as closely as possible.
+   - Do not add bullet points, tables, or formatting unless they are implied by spatial layout in the source.
 Return only the final Markdown-formatted text.""",
 
             "default_plus_minorcorrect_excludestricken_gpt4": """Please perform OCR on this scientific image and extract all of the words and text verbatim, excluding text that has been stricken, crossed out, or redacted. Use your knowledge and the context of the surrounding text to also correct any minor typos caused by poor OCR for scientific species names. Your corrections should be minimal and should focus character recognition errors. The correction cannot have more or fewer characters than the original word. Do not explain your answer, only return the verbatim text:""",
