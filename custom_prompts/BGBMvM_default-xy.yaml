@@ -1,31 +1,33 @@
 prompt_author: Megi         
 prompt_author_institution: BGBM  
 prompt_name: BGBMvM_default-xy
-prompt_version: v-1-0     
+prompt_version: v-1-1     
 prompt_description: Prompt base on SLTPvM_default for BGBM Xylothek.
-LLM: General Purpose
-instructions:   1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pro. Will still work with other models though.
+instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
-  3. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
-  4. Duplicate dictionary fields are not allowed.
-  5. Ensure all JSON keys are in camel case.
-  6. Ensure new JSON field values follow sentence case capitalization.
-  7. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
-  8. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
-  9. Only return a JSON dictionary represented as a string. You should not explain your answer.
+  3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
+  4. Redacted or stricken text might have section signs on either side (§stricken text§). Handwritten text might have guillemet quotes on either side («handwritten text»). 
+  5. If you see Text in the OCR that reports on the OCR engine itself, do not include that in the JSON. 
+  6. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
+  7. Duplicate dictionary fields are not allowed.
+  8. Ensure all JSON keys are in camel case.
+  9. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  10. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  11. Only return a JSON dictionary represented as a string. You should not explain your answer.
 json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
 rules:
   catalogNumber: 'Numeric identifier located in the top-left corner of the label. It typically stands above the printed text "No. nach Dalle Torre et Harms."'
   collection: 'The name of the collection, located at the top of the label. It may be printed or stamped. Common examples include "Holzsammlung", "Hölzer.", or "Hölzer. Holzsammlung".'
-  family: 'The family name of the taxon, found in the top-right section of the label, directly above the printed word "Familie." This is usually abbreviated and handwritten.'
+  family: 'The family name of the taxon, found in the top-right section of the label, directly above the printed word "Familie." This is usually abbreviated and handwritten. If its a shorten name and cant be found, try to derive it from scientificName.'
   scientificName: 'The full scientific name of the taxon, including genus, species, and lower ranks if present (e.g., variety, subspecies). Typically handwritten in the center of the label.'
   collectionDate: 'The date the specimen was collected. This is located near or above the printed text "Fundort und Datum."  Date the specimen was collected formatted as year-month-day, YYYY-MM-DD. If specific components of the date are unknown, they should be replaced with zeros. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not. Only extract date elements, not surrounding text.'
   location: 'A description of the collection site, typically handwritten above or near the printed text "Fundort und Datum." It may contain place names, landmarks, or other geographic hints. Extract only the location-related text, excluding any date.'
   collector: 'The name of the person who collected the specimen. Located above or beside the printed text "Sammler und Sammelnummer." Extract only the name, excluding numbers or collection codes.'
   collectorNumber: 'The collection number assigned by the collector, usually handwritten beside or below the collector name, in the same line as "Sammler und Sammelnummer." Extract only the numeric or alphanumeric identifier.'
   notes: 'All text found after or near the printed "Bemerkungen:" section. This field is handwritten and may contain citations, specimen descriptions, references, or remarks. It can be multi-line or empty.'
-  list: 'A reference identifier typically located after the printed text "Hölzer-Liste:". It may contain numbers, letters, Roman numerals, or combinations. This is often found in the lower-right part of the label.'
-  revision: 'A stamped text indicating revision status, usually including the word "Revision", a year, and "vorhanden". If crossed out, extract "nicht vorhanden" instead. Include the full visible revision text as it appears.'
+  list: 'A reference identifier typically located after the printed text "Hölzer-Liste:". It may contain numbers, letters, Roman numerals, or combinations. This is often found in the lower-right part of the label. This is not a date.'
+  revision: 'A stamped text indicating revision status, usually including the word "Revision", a year, and "vorhanden". If crossed out, or stamp not found write "nicht vorhanden" instead. By crossed out meaning a line over the words, if not crossed out include the full visible revision text as it appears.'
   additionalText: 'All remaining OCR text and text that is not part of the main label, secondary text, background and supporting information. '
 mapping:
   GEOGRAPHY:

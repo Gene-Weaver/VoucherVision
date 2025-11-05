@@ -16,7 +16,7 @@ LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pr
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
   3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
-  4. Redacted or stricken text will have section signs on either side (§crossed text§). Handwritten text will have guillemet quotes on either side («handwritten text»). 
+  4. Redacted or stricken text will have section signs on either side (§stricken text§). Handwritten text will have guillemet quotes on either side («handwritten text»). 
   5. If you see Text in the OCR that reports on the OCR engine itself, do not include that in the JSON. 
   6. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
   7. Duplicate dictionary fields are not allowed.

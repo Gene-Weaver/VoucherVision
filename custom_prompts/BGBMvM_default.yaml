@@ -1,13 +1,13 @@
 prompt_author: Megi         
 prompt_author_institution: BGBM  
 prompt_name: BGBMvM_default
-prompt_version: v-1-3     
+prompt_version: v-1-4     
 prompt_description: Prompt based on SLTPvM_defaultv2 and OSC_Symbiota (associatedCollectors).
 LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pro. Will still work with other models though.
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
   3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
-  4. Redacted or stricken text might be between three tildes. Handwritten text might be between three asterisks. 
+  4. Redacted or stricken text might have section signs on either side (§stricken text§). Handwritten text might have guillemet quotes on either side («handwritten text»). 
   5. If you see Text in the OCR that reports on the OCR engine itself, do not include that in the JSON. 
   6. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
   7. Duplicate dictionary fields are not allowed.
@@ -23,8 +23,10 @@ rules:
   specificEpithet: The name of the species epithet of the scientificName. Only include the species epithet.
   scientificNameAuthorship: The authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclatural code.
   scientificNameNoAuthor: The scientific name of the taxon including genus, specific epithet, and any lower classifications. Excluding scientificNameAuthorship.
-  collector: The name of the primary collector of the specimen.
-  associatedCollectors:  A comma separated list of full names for additional collectors, if any.
+  collector: 'The name of the primary collector of the specimen. Use Jacq formatting to give the right output for the primary collector. The standard way to write a collectors name for a herbarium is Last Name, First Name/Initials, as this allows for easy sorting and identification. Its possible that two names have the same Last Name, seperate them.'
+  verbatimCollector: The verbatim name of only the primary collector. 
+  verbatimAssociatedCollectors: The verbatim comma separated list of full names for additional collectors, if any.
+  associatedCollectors:  A comma separated list of full names for additional collectors, if any. Use the same rule as for the collector field to format the associatedCollectors.
   collectorNumber: An identifier given to the occurrence at the time it was recorded, the specimen collector's number.
   identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon to the subject organism, the determiner. This is not the specimen collector. 
   identifiedDate: Date that the most recent determination was given, in the following format. YYYY-MM-DD (zeros may be used if only partial date). 
@@ -74,7 +76,9 @@ mapping:
   - identifiedDate
   COLLECTING:
   - collector
+  - verbatimCollector
   - associatedCollectors
+  - verbatimAssociatedCollectors
   - collectorNumber
   - verbatimCollectionDate
   - collectionDate
