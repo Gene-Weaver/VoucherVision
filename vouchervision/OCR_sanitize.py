@@ -3,7 +3,9 @@ import re, json
 from typing import Any
 from openpyxl.cell.cell import TYPE_STRING
 
-DANGER_PREFIXES = ("=", "+", "-", "@")
+# DANGER_PREFIXES = ("=", "+", "-", "@") # The "-" appears in GPS coordinates and has not cause a problem, so it will be removed from the DANGER list
+DANGER_PREFIXES = ("=", "+", "@")
+
 
 _XML_ILLEGAL = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]")
 # ---------------------------------------------------------------------
