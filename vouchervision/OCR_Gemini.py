@@ -7,6 +7,8 @@ from OCR_resize_for_VLMs import resize_image_to_min_max_pixels
 from OCR_Prompt_Catalog import OCRPromptCatalog
 from general_utils import calculate_cost
 import logging
+from packaging import version
+import importlib.metadata
 
 '''
 Does not need to be downsampled like the other APIs or local 
@@ -14,19 +16,50 @@ Updated to use new Google GenAI SDK with dynamic thinking enabled
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=8192, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False, logger=None):
+    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=8192, temperature=1, top_p=0.95, top_k=None, seed=123456, 
+                user_thinking_level="high",
+                user_media_resolution="MEDIA_RESOLUTION_HIGH",
+                do_resize_img=False, logger=None):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
         self.logger = logger if logger is not None else logging.getLogger(__name__)
+        self.user_thinking_level = user_thinking_level
+        self.user_media_resolution = user_media_resolution
+
+        # ------------------------------------------------------------------
+        # Enforce google-genai >= 1.53.0 when using any Gemini-3 model
+        # ------------------------------------------------------------------
+        if "gemini-3" in model_name:
+            try:
+                # Prefer the package version from importlib.metadata
+                pkg_version = importlib.metadata.version("google-genai")
+            except importlib.metadata.PackageNotFoundError:
+                # Fallback: try module attribute if present
+                pkg_version = getattr(genai, "__version__", "0.0.0")
+
+            installed_ver = version.parse(pkg_version)
+            required_ver = version.parse("1.53.0")
+
+            if installed_ver < required_ver:
+                raise ImportError(
+                    f"\n\n[ERROR] Gemini-3 requires google-genai>=1.53.0\n"
+                    f"Installed version: {pkg_version}\n"
+                    f"To fix, run:\n"
+                    f"    pip install -U google-genai\n"
+                )
 
         self.supports_thinking = [
             'gemini-2.5-flash',
             'gemini-2.5-pro',
+            'gemini-3-pro-preview',
+            'gemini-3-pro',
             ]
         self.MODELS_REQUIRING_INLINE_IMAGE = [
             'gemini-2.5-pro',
             'gemini-2.5-flash',
+            'gemini-3-pro-preview',
+            'gemini-3-pro',
         ]
 
         safety_settings_dict = {
@@ -43,23 +76,38 @@ class OCRGeminiProVision:
         self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
         self.api_key = api_key
         self.do_resize_img = do_resize_img
-        self.client = genai.Client(api_key=self.api_key)
+        client_kwargs = {"api_key": self.api_key}
+        if "gemini-3" in model_name:
+            client_kwargs["http_options"] = {'api_version': 'v1alpha'}
+        self.client = genai.Client(**client_kwargs)
         self.model_name = model_name
-        if model_name not in self.supports_thinking:
+    
+        # special handling for Gemini 3 (no temperature override, MEDIA_RESOLUTION_HIGH)
+        if "gemini-3" in model_name:
+            # IMPORTANT: do NOT set temperature for Gemini 3 – let it default to 1.0
+            self.generation_config = types.GenerateContentConfig(
+                top_p=top_p,
+                max_output_tokens=max_output_tokens,
+                thinking_config=types.ThinkingConfig(thinking_level=self.user_thinking_level),
+                media_resolution=self.user_media_resolution,
+            )
+        elif model_name not in self.supports_thinking:
+            # Legacy / non-thinking models
             self.generation_config = types.GenerateContentConfig(
                 temperature=temperature,
                 top_p=top_p,
                 # top_k=top_k,
                 max_output_tokens=max_output_tokens,
-                # seed=seed,  
+                # seed=seed,
             )
         else:
+            # Gemini 2.5 with thinking_budget
             self.generation_config = types.GenerateContentConfig(
                 temperature=temperature,
                 top_p=top_p,
-                # top_k=top_k,  
+                # top_k=top_k,
                 max_output_tokens=max_output_tokens,
-                # seed=seed,  
+                # seed=seed,
                 thinking_config=types.ThinkingConfig(thinking_budget=128)  # Enable dynamic thinking
             )
 
@@ -325,7 +373,10 @@ class OCRGeminiProVision:
 
         return self.exponential_backoff(generate)
 
-    def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456):
+    def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456,
+                   user_thinking_level="high",
+                   user_media_resolution="MEDIA_RESOLUTION_HIGH",
+                   ):
         """temperature=1, top_p=0.95
         Transcribes the text in the image using the Gemini model.
 
@@ -334,12 +385,17 @@ class OCRGeminiProVision:
         :return: Transcription result as plain text.
         """
         # Update generation config with provided parameters
-        if temperature:
-            self.generation_config.temperature = temperature
+        # IMPORTANT: For Gemini 3 we do NOT override temperature (per docs)
+        if "gemini-3" not in self.model_name:
+            if temperature:
+                self.generation_config.temperature = temperature
+
         if top_p:
             self.generation_config.top_p = top_p
+
         # if top_k:
         #     self.generation_config.top_k = top_k  # Still commented as in original
+
         if max_output_tokens:
             self.generation_config.max_output_tokens = max_output_tokens
         # self.generation_config.seed = seed  # Still commented as in original
@@ -355,15 +411,32 @@ class OCRGeminiProVision:
         total_cost = 0
         overall_response = ""
 
-        request_generation_config = types.GenerateContentConfig(
-            temperature=temperature,
-            top_p=top_p,
-            max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
-            safety_settings=self.safety_settings,
-        )
-
-        if self.model_name in self.supports_thinking:
-            request_generation_config.thinking_config = types.ThinkingConfig(thinking_budget=128)
+        # Build per-request generation config
+        if "gemini-3" in self.model_name:
+            request_generation_config = types.GenerateContentConfig(
+                top_p=top_p,
+                max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
+                safety_settings=self.safety_settings,
+                media_resolution=user_media_resolution,
+                thinking_config=types.ThinkingConfig(thinking_level=user_thinking_level),
+            )
+        elif self.model_name in self.supports_thinking:
+            # Gemini 2.5: use thinking_budget
+            request_generation_config = types.GenerateContentConfig(
+                temperature=temperature,
+                top_p=top_p,
+                max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
+                safety_settings=self.safety_settings,
+                thinking_config=types.ThinkingConfig(thinking_budget=128),
+            )
+        else:
+            # Non-thinking models
+            request_generation_config = types.GenerateContentConfig(
+                temperature=temperature,
+                top_p=top_p,
+                max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
+                safety_settings=self.safety_settings,
+            )
 
         # try: 
         if prompt is None:
@@ -466,6 +539,10 @@ class OCRGeminiProVision:
                 total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)   
             elif 'gemini-2.5-pro' in self.model_name:
                 total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)   
+            elif 'gemini-3-pro-preview' in self.model_name:
+                total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
+            elif 'gemini-3-pro' in self.model_name:
+                total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
             
             cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
 

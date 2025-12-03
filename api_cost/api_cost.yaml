@@ -77,6 +77,9 @@ AZURE_GPT_3_5:
 # Google Gemini
 # https://ai.google.dev/pricing
 # UPDATED: 2024-12-02 14:38:32
+GEMINI_3_PRO:
+  in: 2.00
+  out: 12.00
 GEMINI_2_5_PRO:
   in: 1.25
   out: 10.00

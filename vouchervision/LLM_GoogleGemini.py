@@ -127,50 +127,127 @@ class GoogleGeminiHandler:
         return True
         
     def _adjust_config(self):
+        # For Gemini 3 we do NOT change temperature per official guidance
+        if "gemini-3" in self.model_name:
+            self.logger.info("Gemini 3: skipping temperature adjustment per model guidelines.")
+            return
+
         new_temp = self.adjust_temp + self.temp_increment
-        if self.json_report:            
-            self.json_report.set_text(text_main=f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
+        if self.json_report:
+            self.json_report.set_text(
+                text_main=f'Incrementing temperature from {self.adjust_temp} to {new_temp}'
+            )
         self.logger.info(f'Incrementing temperature from {self.adjust_temp} to {new_temp}')
         self.adjust_temp += self.temp_increment
-        self.config['temperature'] = self.adjust_temp   
+        self.config['temperature'] = self.adjust_temp
+
 
     def _reset_config(self):
-        if self.json_report:            
-            self.json_report.set_text(text_main=f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
+        # For Gemini 3 we do NOT change temperature per official guidance
+        if "gemini-3" in self.model_name:
+            self.logger.info("Gemini 3: skipping temperature reset per model guidelines.")
+            return
+
+        if self.json_report:
+            self.json_report.set_text(
+                text_main=f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}'
+            )
         self.logger.info(f'Resetting temperature from {self.adjust_temp} to {self.starting_temp}')
         self.adjust_temp = self.starting_temp
-        self.config['temperature'] = self.starting_temp  
+        self.config['temperature'] = self.starting_temp
+
 
     def _build_model_chain_parser(self):
         # Instantiate the LLM class for Google Gemini
+        llm_kwargs = {
+            "model": self.model_name,
+            "max_output_tokens": self.config.get('max_output_tokens'),
+            "top_p": self.config.get('top_p'),
+        }
+
+        # For Gemini 3, do NOT pass an explicit temperature (use default = 1.0)
+        if "gemini-3" not in self.model_name:
+            llm_kwargs["temperature"] = self.config.get('temperature')
+
         if not self.exit_early_for_JSON:
-            self.llm_model = ChatGoogleGenerativeAI(model=self.model_name, 
-                                    max_output_tokens=self.config.get('max_output_tokens'),
-                                    top_p=self.config.get('top_p'),
-                                    temperature=self.config.get('temperature'),
-                                    )    
-        else: # For vvgo
-            self.llm_model = ChatGoogleGenerativeAI(model=self.model_name, 
-                                        max_output_tokens=self.config.get('max_output_tokens'),
-                                        top_p=self.config.get('top_p'),
-                                        temperature=self.config.get('temperature'),
-                                        api_key=os.environ.get("API_KEY")
-                                        )
-        # self.llm_model = VertexAI(model='gemini-1.0-pro', 
-        #                           max_output_tokens=self.config.get('max_output_tokens'),
-        #                           top_p=self.config.get('top_p'))   
+            self.llm_model = ChatGoogleGenerativeAI(
+                **llm_kwargs
+            )
+        else:  # For vvgo
+            self.llm_model = ChatGoogleGenerativeAI(
+                api_key=os.environ.get("API_KEY"),
+                **llm_kwargs
+            )
 
         # Set up the retry parser with the runnable
         self.retry_parser = RetryWithErrorOutputParser.from_llm(
-            parser=self.parser, 
-            llm=self.llm_model, 
-            max_retries=self.MAX_RETRIES)
-        # Prepare the chain
-        self.chain = self.prompt | self.call_google_gemini     
+            parser=self.parser,
+            llm=self.llm_model,
+            max_retries=self.MAX_RETRIES
+        )
+
+        # Prepare the chain. The extra argument has a default, so this still works.
+        self.chain = self.prompt | self.call_google_gemini
+    
 
     # Define a function to format the input for Google Gemini call
-    def call_google_gemini(self, prompt_text):
-        if ("2.5" in self.model_name):# or ("2.0" in self.model_name):
+    def call_google_gemini(self, prompt_text, thinking_level="high"):
+        """
+        Dispatch between:
+          - Gemini 3 (thinking_level + media_resolution_high, NO temperature changes)
+          - Gemini 2.5 (legacy thinking_budget-based path)
+          - Older / Vertex GenerativeModel fallback
+        """
+        # Normalize thinking_level for Gemini 3
+        thinking_level = (thinking_level or "high").lower()
+        if thinking_level not in ("low", "high"):
+            thinking_level = "high"
+
+        # -------------------------------
+        # New: Gemini 3 path
+        # -------------------------------
+        if "gemini-3" in self.model_name:
+            try:
+                # v1alpha is required for media_resolution
+                try:
+                    client = genai.Client(
+                        api_key=os.environ['GOOGLE_API_KEY'],
+                        http_options={'api_version': 'v1alpha'}
+                    )
+                except Exception:
+                    client = genai.Client(
+                        api_key=os.environ.get("API_KEY"),
+                        http_options={'api_version': 'v1alpha'}
+                    )
+
+                gen_config_kwargs = {
+                    "thinking_config": types.ThinkingConfig(thinking_level=thinking_level),
+                    "response_modalities": ["TEXT"],
+                    "media_resolution": "MEDIA_RESOLUTION_HIGH",
+                }
+
+                if self.tool_google:
+                    self.logger.info(
+                        f'[GEMINI] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
+                        f'--- MEDIA[HIGH] --- TOOLS[GOOGLE SEARCH]'
+                    )
+                    gen_config_kwargs["tools"] = [self.google_search_tool]
+                else:
+                    self.logger.info(
+                        f'[GEMINI] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
+                        f'--- MEDIA[HIGH] --- TOOLS[NONE]'
+                    )
+
+                response = client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt_text.text,
+                    config=types.GenerateContentConfig(**gen_config_kwargs),
+                )
+
+            except Exception as e:
+                print(f"Failed to init genai.Client for {self.model_name}: {e}")
+                return "Failed to parse text"
+        elif ("2.5" in self.model_name):# or ("2.0" in self.model_name):
             try:
                 try:
                     client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])
