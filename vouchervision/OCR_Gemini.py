@@ -30,7 +30,8 @@ class OCRGeminiProVision:
         # ------------------------------------------------------------------
         # Enforce google-genai >= 1.53.0 when using any Gemini-3 model
         # ------------------------------------------------------------------
-        if "gemini-3" in model_name:
+        if "gemini-3" in model_name.lower():
+            self.logger.info(f"Used gemini-3 genai package test")
             try:
                 # Prefer the package version from importlib.metadata
                 pkg_version = importlib.metadata.version("google-genai")
@@ -77,14 +78,16 @@ class OCRGeminiProVision:
         self.api_key = api_key
         self.do_resize_img = do_resize_img
         client_kwargs = {"api_key": self.api_key}
-        if "gemini-3" in model_name:
+        if "gemini-3" in model_name.lower():
+            self.logger.info(f"Used gemini-3 v1alpha")
             client_kwargs["http_options"] = {'api_version': 'v1alpha'}
         self.client = genai.Client(**client_kwargs)
         self.model_name = model_name
     
         # special handling for Gemini 3 (no temperature override, MEDIA_RESOLUTION_HIGH)
-        if "gemini-3" in model_name:
+        if "gemini-3" in model_name.lower():
             # IMPORTANT: do NOT set temperature for Gemini 3 – let it default to 1.0
+            self.logger.info(f"Used gemini-3 config init")
             self.generation_config = types.GenerateContentConfig(
                 top_p=top_p,
                 max_output_tokens=max_output_tokens,
@@ -412,7 +415,8 @@ class OCRGeminiProVision:
         overall_response = ""
 
         # Build per-request generation config
-        if "gemini-3" in self.model_name:
+        if "gemini-3" in self.model_name.lower():
+            self.logger.info(f"Used gemini-3 config")
             request_generation_config = types.GenerateContentConfig(
                 top_p=top_p,
                 max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
@@ -539,7 +543,8 @@ class OCRGeminiProVision:
                 total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)   
             elif 'gemini-2.5-pro' in self.model_name:
                 total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)   
-            elif 'gemini-3-pro-preview' in self.model_name:
+            elif 'gemini-3-pro-preview' in self.model_name.lower():
+                self.logger.info(f"Used gemini-3 cost")
                 total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
             # elif 'gemini-3-pro' in self.model_name:
             #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
