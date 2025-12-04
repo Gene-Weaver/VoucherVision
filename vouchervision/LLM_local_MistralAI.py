@@ -3,7 +3,7 @@ import torch
 import transformers
 import gc
 from transformers import BitsAndBytesConfig
-from langchain.output_parsers.retry import RetryOutputParser
+from langchain_classic.output_parsers.retry import RetryOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from huggingface_hub import hf_hub_download

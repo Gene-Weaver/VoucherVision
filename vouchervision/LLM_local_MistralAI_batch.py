@@ -1,6 +1,6 @@
 import json, torch, transformers, gc
 from transformers import BitsAndBytesConfig
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryWithErrorOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from huggingface_hub import hf_hub_download

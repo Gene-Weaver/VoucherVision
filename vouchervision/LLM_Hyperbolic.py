@@ -1,5 +1,5 @@
 import os, time, random, torch, requests, json
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryWithErrorOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, save_individual_prompt, sanitize_prompt

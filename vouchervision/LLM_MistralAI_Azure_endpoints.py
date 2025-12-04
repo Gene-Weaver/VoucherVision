@@ -1,6 +1,6 @@
 import os, time, random, torch, json, ssl
 from typing import Any, Dict, List, Optional, cast
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryWithErrorOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.chat_models.azureml_endpoint import AzureMLChatOnlineEndpoint, AzureMLEndpointApiType, LlamaChatContentFormatter

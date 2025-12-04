@@ -2,7 +2,8 @@ import os, time, json
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
 from vertexai.generative_models._generative_models import HarmCategory, HarmBlockThreshold
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryWithErrorOutputParser
+# from langchain.output_parsers import RetryWithErrorOutputParser
 # from langchain.schema import HumanMessage
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser

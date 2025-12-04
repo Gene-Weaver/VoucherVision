@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI, OpenAI
 from langchain.schema import HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryWithErrorOutputParser
 
 class VoucherVisionWorkflow:
     MODEL = 'gpt-4o'

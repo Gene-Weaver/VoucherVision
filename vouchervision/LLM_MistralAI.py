@@ -1,6 +1,6 @@
 import os, time, random, torch, json
 from langchain_mistralai.chat_models import ChatMistralAI
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryWithErrorOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 

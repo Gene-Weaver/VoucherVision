@@ -1,7 +1,7 @@
 import os, re, json, yaml, torch, transformers
 from peft import AutoPeftModelForCausalLM
 from transformers import AutoTokenizer
-from langchain.output_parsers.retry import RetryOutputParser
+from langchain_classic.output_parsers.retry import RetryOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline

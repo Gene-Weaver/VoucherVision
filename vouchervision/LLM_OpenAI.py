@@ -3,7 +3,7 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI, OpenAI
 from langchain.schema import HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
-from langchain.output_parsers import RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryWithErrorOutputParser
 
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
