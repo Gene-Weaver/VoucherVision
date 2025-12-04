@@ -27,6 +27,12 @@ class OCRGeminiProVision:
         self.user_thinking_level = user_thinking_level
         self.user_media_resolution = user_media_resolution
 
+
+        self.logger.info(f"[OCRGemini] Using genai version: {getattr(genai, '__version__', 'unknown')}")
+        self.logger.info(f"[OCRGemini] Client http_options: {getattr(self.client, '_client_options', None)}")
+        self.logger.info(f"[OCRGemini] Model: {self.model_name}")
+
+
         # ------------------------------------------------------------------
         # Enforce google-genai >= 1.53.0 when using any Gemini-3 model
         # ------------------------------------------------------------------
@@ -378,43 +384,60 @@ class OCRGeminiProVision:
     
     def extract_text(self, raw_response):
         """
-        Best-effort text extraction that works for:
-          - New google-genai responses (Gemini 3, v1alpha, multimodal)
-          - Older Gemini 1.5 / 2.x responses where .text is populated
+        Robustly extract text from a GenerateContentResponse, handling:
+        - raw_response.text (new SDK convenience)
+        - candidates[n].content.parts[*].text
+        - dict-like to_dict() fallback (for future / odd cases)
+        Returns "" if no textual parts are found.
         """
         if raw_response is None:
             return ""
 
-        # 1) Fast path: use .text if present and non-empty
-        text_attr = getattr(raw_response, "text", None)
-        if isinstance(text_attr, str) and text_attr.strip():
-            return text_attr
+        # 1) Preferred: the SDK's convenience .text property
+        txt = getattr(raw_response, "text", None)
+        if isinstance(txt, str) and txt.strip():
+            return txt
 
-        collected = []
+        pieces = []
 
-        # 2) Newer response shape: response.candidates[*].content.parts[*].text
-        candidates = getattr(raw_response, "candidates", None)
-        if candidates:
-            for cand in candidates:
-                # a) content.parts[*].text
+        # 2) Walk candidates -> content.parts and pull .text
+        try:
+            for cand in getattr(raw_response, "candidates", []) or []:
                 content = getattr(cand, "content", None)
-                if content:
-                    parts = getattr(content, "parts", None) or []
-                    for part in parts:
-                        part_text = getattr(part, "text", None)
-                        if isinstance(part_text, str) and part_text.strip():
-                            collected.append(part_text)
+                if not content:
+                    continue
 
-                # b) fallback: cand.text (some older shapes)
-                cand_text = getattr(cand, "text", None)
-                if isinstance(cand_text, str) and cand_text.strip():
-                    collected.append(cand_text)
+                # New SDK: content.parts is a list of Part objects
+                parts = getattr(content, "parts", []) or []
+                for part in parts:
+                    part_text = getattr(part, "text", None)
+                    if isinstance(part_text, str) and part_text.strip():
+                        pieces.append(part_text)
+        except Exception as e:
+            self.logger.warning(f"Failed to walk candidates/parts for text: {e}", exc_info=True)
 
-        if collected:
-            return "\n".join(collected)
+        if pieces:
+            return "\n".join(pieces)
 
-        # Nothing textual we recognize
+        # 3) Fallback: to_dict based traversal (defensive)
+        if hasattr(raw_response, "to_dict"):
+            try:
+                d = raw_response.to_dict()
+                for cand in d.get("candidates", []) or []:
+                    content = cand.get("content") or {}
+                    for part in content.get("parts", []) or []:
+                        t = part.get("text")
+                        if isinstance(t, str) and t.strip():
+                            pieces.append(t)
+            except Exception as e:
+                self.logger.warning(f"Failed to traverse response.to_dict() for text: {e}", exc_info=True)
+
+        if pieces:
+            return "\n".join(pieces)
+
+        # Nothing textual we can see
         return ""
+
 
 
     def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456,
@@ -564,17 +587,16 @@ class OCRGeminiProVision:
             if not raw_response:
                 self.logger.warning("Empty raw_response from API")
                 return "", 0, 0, 0, 0, 0, 0, 0
-            
+
             overall_response = self.extract_text(raw_response)
 
             if not overall_response:
                 self.logger.warning("Empty (or non-textual) response from API")
                 self.logger.warning(f"Raw response: {raw_response!r}")
+                # Early out; you can decide to fall back to 2.5 here if you want
                 return "", 0, 0, 0, 0, 0, 0, 0
 
-            # -----------------------------
-            # Extract usage metadata safely
-            # -----------------------------
+            # ---------- usage / metadata (works for v1 & v1alpha) ----------
             usage = getattr(raw_response, "usage_metadata", None)
 
             if usage is not None:
@@ -584,27 +606,27 @@ class OCRGeminiProVision:
                 tokens_in = 0
                 tokens_out = 0
 
-            # Calculate costs
+            # ---------- cost calculation ----------
             if self.model_name == 'gemini-1.5-pro':
                 total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
             elif self.model_name == 'gemini-1.5-flash':
                 total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
             elif self.model_name == 'gemini-1.5-flash-8b':
-                total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)                        
+                total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)
             elif self.model_name == 'gemini-2.0-flash-exp':
-                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)
             elif self.model_name == 'gemini-2.0-flash':
-                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out) 
+                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)
             elif 'gemini-2.5-flash' in self.model_name:
-                total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)   
+                total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
             elif 'gemini-2.5-pro' in self.model_name:
-                total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)   
+                total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)
             elif 'gemini-3-pro-preview' in self.model_name.lower():
-                self.logger.info(f"Used gemini-3 cost")
-                total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
-            # elif 'gemini-3-pro' in self.model_name:
-            #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
-            
+                self.logger.info("Used gemini-3 cost")
+                total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
+            # elif 'gemini-3-pro' in self.model_name.lower():
+            #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
+
             cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
 
             overall_cost_in += cost_in
@@ -614,6 +636,17 @@ class OCRGeminiProVision:
             overall_tokens_out += tokens_out
 
             self.logger.info(f"OCR completed successfully. Response length: {len(overall_response)}")
+
+            return (
+                overall_response,
+                overall_cost_in,
+                overall_cost_out,
+                overall_total_cost,
+                rates_in,
+                rates_out,
+                overall_tokens_in,
+                overall_tokens_out,
+            )
                 
         except Exception as e:
             self.logger.error(f"OCR processing failed: {e}", exc_info=True)
