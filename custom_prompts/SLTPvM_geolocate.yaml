@@ -1,0 +1,102 @@
+prompt_author: Will Weaver          
+prompt_author_institution: University of Michigan    
+prompt_name: SLTPvM_geolocate
+prompt_version: v-1-0    
+prompt_description: |
+  Prompt developed by the University of Michigan Herbarium (MICH).
+
+  For Gemini-3-Pro.
+
+  Draws from SLTPvM_geolocate_flag_multispecimen.yaml
+
+  Looks for [MULTIPLE BARCODES] tag in the OCR to fill in the multipleBarcodes field. 
+
+  Enables the LLM to perform Google Searches to geolocate the specimen. You can tell if 
+  this has occurred because the verbatimCoordinates field will be empty even though the
+  decimalLatitude and decimalLongitude fields are populated. This relies completely on the LLM.
+  It will try to be conservative and only report coordinates if specific landmarks or localities
+  are present, avoiding returning coordinates when only broad-scale geography is present like states/provinces.
+LLM: This is intended to be used with Gemini-3-Pro. 
+instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+  2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
+  3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
+  4. Redacted or stricken text will have section signs on either side (§stricken text§). Handwritten text will have guillemet quotes on either side («handwritten text»). 
+  5. If you see Text in the OCR that reports on the OCR engine itself, do not include that in the JSON. 
+  6. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
+  7. Duplicate dictionary fields are not allowed.
+  8. Ensure all JSON keys are in camel case.
+  9. Ensure new JSON field values follow sentence case capitalization, but if the text represents abbreviations, acronyms, or initialisms then leave the capitalization as found in the OCR.
+  10. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  11. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  12. Only return a JSON dictionary represented as a string. You should not explain your answer.
+  13. After you create the JSON, if there are not already coordinates in the decimalLatitude and decimalLongitude fields, then use all of the information to geolocate the specimen. Remember that you are an expert biogeographer specializing in georeferencing biological specimen data. Your task is to infer the most accurate decimal latitude and longitude coordinates possible from museum specimen locality information. CONTEXT. You are working with historical biological specimen records that may have varying levels of geographic specificity, from broad regions down to specific collection sites. YOUR APPROACH. Analyze all available geographic fields hierarchically (country → state/province → county → municipality → locality). Use the most specific location information available to determine coordinates. For specific landmarks, parks, or named locations, provide precise coordinates. For municipalities/cities, use city center coordinates. For counties, use geographic centroid of the county. For countries (including when only a country code abbreviation is provided), use geographic centroid of the country. For larger administrative units, use conservative central coordinates. IMPORTANT PRINCIPLES. Prioritize accuracy over decimal precision, it's better to be approximately right than precisely wrong. Be conservative with confidence levels,  only mark as "high" confidence for very specific locations. Consider that historical locality names may have changed. Account for the fact that biological specimens are usually collected from terrestrial, accessible areas. When in doubt, use centroid coordinates of the smallest known administrative unit. CONSTRAINTS. Use WGS84 decimal degrees format. For confidence, if the GPS is provided in the text already, use 'verbatim' in the inferredGPSConfidence field. 'high' confidence only for specific locations (cities, landmarks, parks, intersections, addresses, buildings). 'medium' confidence for general areas (counties). 'low' confidence for vague regions (states/provinces). Return empty strings for decimalLatitude and decimalLongitude if too vague to determine reasonable location and use 'na' for inferredGPSConfidence. Latitude range from -90 to 90, Longitude range from -180 to 180. Your response must place the inferred latitude in the decimalLatitude field, place the inferred longitude in the decimalLongitude field, and the confidence in the inferredGPSConfidence field.
+json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
+rules:
+  catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.
+  scientificName: The scientific name of the taxon including genus, specific epithet, and any lower classifications.
+  genus: Taxonomic determination to genus. Genus must be capitalized. If genus is not present use the taxonomic family name followed by the word 'indet'.
+  specificEpithet: The name of the species epithet of the scientificName. Only include the species epithet.
+  scientificNameAuthorship: The authorship information for the scientificName formatted according to the conventions of the applicable Darwin Core nomenclatural code.
+  collectedBy: A comma separated list of names of people, groups, or organizations responsible for observing, recording, collecting, or presenting the original specimen. The primary collector or observer should be listed first. 
+  collectorNumber: An identifier given to the occurrence at the time it was recorded, the specimen collector's number.
+  identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon to the subject organism, the determiner. This is not the specimen collector. 
+  identifiedDate: Date that the most recent determination was given, in the following format. YYYY-MM-DD (zeros may be used if only partial date). 
+  identifiedConfidence: The determiner may wish to indicate additional information related to their determination. Record this information if it is present. Some examples are '?', 'cf.', 'aff.', 'sensu lato', 's.l.', 'sensu stricto', 's.s.', 'probably', '? hybrid'. The Confidence field is for short comments about the determination (16 characters maximum). Periods are used in abbreviations in this field. 
+  identifiedRemarks: If a determiner has longer comments or measurements to support the determination, enter them here. 
+  identificationHistory: If there are multiple species or genus names, provide the date and determiner for each name and determination.
+  verbatimCollectionDate: The verbatim original representation of the date and time information for when the specimen was collected. Date of collection exactly as it appears on the label. Do not change the format or correct typos.
+  collectionDate: Date the specimen was collected formatted as year-month-day, YYYY-MM-DD. If specific components of the date are unknown, they should be replaced with zeros. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
+  collectionDateEnd: If a range of collection dates is provided, this is the latter end date while collectionDate is the beginning date. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
+  habitat: Verbatim category or description of the habitat where the specimen collection event occurred.
+  specimenDescription: Verbatim text describing the specimen itself, including color, measurements not specifically tied to a determination remark, observations of reproductive characters, growth form, taste, smell, etc.  
+  cultivated: If the text includes the word 'cult' or 'cultivated' then this value is 'yes'.
+  continent: Use your knowledge to infer the continent where the natural history museum specimen was originally collected.
+  country: Use your knowledge and the OCR text to infer the country where the natural history museum specimen was originally collected. 
+  stateProvince: The name of the sub-national administrative region than country (state, province, canton, department, region, etc.) where the specimen was originally collected.
+  county: The full, unabbreviated name of the next smaller administrative region than stateProvince (county, shire, department, parish etc.) where the specimen was originally collected.
+  locality: Description of geographic location, landmarks, regional features, nearby places, municipality, city, or any contextual information aiding in pinpointing the exact origin or location of the specimen.
+  verbatimCoordinates: Verbatim location coordinates as they appear on the label. Do not convert formats. Possible coordinate types include [Latitude, Longitude, UTM, TRS].
+  decimalLatitude: Latitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
+  decimalLongitude: Longitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
+  inferredGPSConfidence: 
+  minimumElevationInMeters: Minimum elevation or altitude in meters. Only if units are explicit then convert from feet ('ft' or 'ft.'' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
+  maximumElevationInMeters: Maximum elevation or altitude in meters. If only one elevation is present, then max_elevation should remain an empty string. Only if units are explicit, then convert from feet ('ft' or 'ft.' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
+  elevationUnits: If a minimumElevationInMeters is reported, then use 'm'.
+  multipleBarcodes: If [MULTIPLE BARCODES] is in the text, 'yes'. Otherwise 'no'. 
+  additionalText: All remaining OCR text and text that is not part of the main label, secondary text, background and supporting information. 
+mapping:
+  GEOGRAPHY:
+  - catalogNumber
+  - continent
+  - country
+  - stateProvince
+  - county
+  - locality
+  - verbatimCoordinates
+  - decimalLatitude
+  - decimalLongitude
+  - minimumElevationInMeters
+  - maximumElevationInMeters
+  - elevationUnits
+  - inferredGPSConfidence
+  TAXONOMY:
+  - scientificName
+  - genus
+  - specificEpithet
+  - speciesNameAuthorship
+  - identifiedBy
+  - identifiedDate
+  - identifiedConfidence
+  - identifiedRemarks
+  - identificationHistory
+  - multipleBarcodes
+  COLLECTING:
+  - collectedBy
+  - collectorNumber
+  - verbatimCollectionDate
+  - collectionDate
+  - collectionDateEnd
+  - cultivated
+  - habitat
+  - specimenDescription
+  - additionalText
