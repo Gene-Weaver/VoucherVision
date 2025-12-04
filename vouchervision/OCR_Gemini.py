@@ -375,6 +375,47 @@ class OCRGeminiProVision:
             return response
 
         return self.exponential_backoff(generate)
+    
+    def extract_text(self, raw_response):
+        """
+        Best-effort text extraction that works for:
+          - New google-genai responses (Gemini 3, v1alpha, multimodal)
+          - Older Gemini 1.5 / 2.x responses where .text is populated
+        """
+        if raw_response is None:
+            return ""
+
+        # 1) Fast path: use .text if present and non-empty
+        text_attr = getattr(raw_response, "text", None)
+        if isinstance(text_attr, str) and text_attr.strip():
+            return text_attr
+
+        collected = []
+
+        # 2) Newer response shape: response.candidates[*].content.parts[*].text
+        candidates = getattr(raw_response, "candidates", None)
+        if candidates:
+            for cand in candidates:
+                # a) content.parts[*].text
+                content = getattr(cand, "content", None)
+                if content:
+                    parts = getattr(content, "parts", None) or []
+                    for part in parts:
+                        part_text = getattr(part, "text", None)
+                        if isinstance(part_text, str) and part_text.strip():
+                            collected.append(part_text)
+
+                # b) fallback: cand.text (some older shapes)
+                cand_text = getattr(cand, "text", None)
+                if isinstance(cand_text, str) and cand_text.strip():
+                    collected.append(cand_text)
+
+        if collected:
+            return "\n".join(collected)
+
+        # Nothing textual we recognize
+        return ""
+
 
     def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456,
                    user_thinking_level="high",
@@ -514,19 +555,34 @@ class OCRGeminiProVision:
             self.logger.info(f"Using prompt: {prompts[0][:100]}...")
             
             # Make API call
-            response = self.generate_content_with_backoff(model_contents, request_generation_config)
+            raw_response = self.generate_content_with_backoff(
+                model_contents,
+                request_generation_config
+            )
 
             # Process response
-            if not response or not response.text:
-                self.logger.warning("Empty response from API")
+            if not raw_response:
+                self.logger.warning("Empty raw_response from API")
+                return "", 0, 0, 0, 0, 0, 0, 0
+            
+            overall_response = self.extract_text(raw_response)
+
+            if not overall_response:
+                self.logger.warning("Empty (or non-textual) response from API")
+                self.logger.warning(f"Raw response: {raw_response!r}")
                 return "", 0, 0, 0, 0, 0, 0, 0
 
-            # Extract usage metadata
-            tokens_in = getattr(response.usage_metadata, 'prompt_token_count', 0) if hasattr(response, 'usage_metadata') else 0
-            tokens_out = getattr(response.usage_metadata, 'candidates_token_count', 0) if hasattr(response, 'usage_metadata') else 0
-            
-            tokens_in = tokens_in if tokens_in is not None else 0
-            tokens_out = tokens_out if tokens_out is not None else 0
+            # -----------------------------
+            # Extract usage metadata safely
+            # -----------------------------
+            usage = getattr(raw_response, "usage_metadata", None)
+
+            if usage is not None:
+                tokens_in = getattr(usage, "prompt_token_count", 0) or 0
+                tokens_out = getattr(usage, "candidates_token_count", 0) or 0
+            else:
+                tokens_in = 0
+                tokens_out = 0
 
             # Calculate costs
             if self.model_name == 'gemini-1.5-pro':
@@ -557,8 +613,6 @@ class OCRGeminiProVision:
             overall_tokens_in += tokens_in
             overall_tokens_out += tokens_out
 
-            overall_response = response.text
-            
             self.logger.info(f"OCR completed successfully. Response length: {len(overall_response)}")
                 
         except Exception as e:
