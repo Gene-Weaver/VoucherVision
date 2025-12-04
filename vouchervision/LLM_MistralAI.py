@@ -1,7 +1,7 @@
 import os, time, random, torch, json
 from langchain_mistralai.chat_models import ChatMistralAI
 from langchain_classic.output_parsers import RetryWithErrorOutputParser
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt

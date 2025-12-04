@@ -5,7 +5,7 @@ from io import BytesIO
 import torch
 # from transformers import AutoTokenizer, BitsAndBytesConfig, TextStreamer
 
-# from langchain.prompts import PromptTemplate
+# from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
 

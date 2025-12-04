@@ -4,7 +4,7 @@ import transformers
 import gc
 from transformers import BitsAndBytesConfig
 from langchain_classic.output_parsers.retry import RetryOutputParser
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from huggingface_hub import hf_hub_download
 from langchain_huggingface import HuggingFacePipeline

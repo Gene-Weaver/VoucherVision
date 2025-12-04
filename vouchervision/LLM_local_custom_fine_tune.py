@@ -2,7 +2,7 @@ import os, re, json, yaml, torch, transformers
 from peft import AutoPeftModelForCausalLM
 from transformers import AutoTokenizer
 from langchain_classic.output_parsers.retry import RetryOutputParser
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt

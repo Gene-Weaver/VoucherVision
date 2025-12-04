@@ -5,7 +5,7 @@ import transformers
 import random
 from transformers import BitsAndBytesConfig#, AutoModelForCausalLM, AutoTokenizer
 from langchain_classic.output_parsers import RetryWithErrorOutputParser
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_experimental.llms import JsonFormer
 from langchain.tools import tool
