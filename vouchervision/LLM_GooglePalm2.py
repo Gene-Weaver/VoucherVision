@@ -6,7 +6,7 @@ from vertexai.generative_models._generative_models import HarmCategory, HarmBloc
 from vertexai.language_models import TextGenerationModel
 # from vertexai.preview.generative_models import GenerativeModel
 from langchain_classic.output_parsers.retry import RetryWithErrorOutputParser
-# from langchain.schema import HumanMessage
+# from langchain_classic.schema import HumanMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 # from langchain_google_genai import ChatGoogleGenerativeAI

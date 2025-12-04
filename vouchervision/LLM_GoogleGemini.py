@@ -4,7 +4,7 @@ from vertexai.preview.generative_models import GenerativeModel
 from vertexai.generative_models._generative_models import HarmCategory, HarmBlockThreshold
 from langchain_classic.output_parsers import RetryWithErrorOutputParser
 # from langchain.output_parsers import RetryWithErrorOutputParser
-# from langchain.schema import HumanMessage
+# from langchain_classic.schema import HumanMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -97,34 +97,87 @@ class GoogleGeminiHandler:
         self._build_model_chain_parser()
 
     def log_response_metrics(self, response):
+        """
+        Handle both:
+          - google.genai GenerateContentResponse (has .usage_metadata object)
+          - LangChain AIMessage from ChatGoogleGenerativeAI (usage_metadata is a dict)
+        """
         metrics = {
             'Search Query': None,
             'Search Pages': None,
             'Prompt Tokens': None,
             'Thoughts Tokens': [None, self.THINK_BUDGET],
             'Output Tokens': None,
-            'Total Tokens': None
+            'Total Tokens': None,
         }
-        
-        try: metrics['Search Query'] = response.candidates[0].grounding_metadata.web_search_queries
-        except: pass
-        try: metrics['Search Pages'] = ", ".join([site.web.title for site in response.candidates[0].grounding_metadata.grounding_chunks])
-        except: pass
-        try: metrics['Prompt Tokens'] = response.usage_metadata.prompt_token_count
-        except: pass
-        try: metrics['Thoughts Tokens'][0] = response.usage_metadata.thoughts_token_count
-        except: pass
-        try: metrics['Output Tokens'] = response.usage_metadata.candidates_token_count
-        except: pass
-        try: metrics['Total Tokens'] = response.usage_metadata.total_token_count
-        except: pass
-        
+
+        # --- google.genai responses (v1/v1alpha) ---
+        if hasattr(response, "usage_metadata") and not isinstance(getattr(response, "usage_metadata"), dict):
+            # New google-genai object with fields like prompt_token_count, etc.
+            um = response.usage_metadata
+            try:
+                metrics['Prompt Tokens'] = getattr(um, "prompt_token_count", None)
+            except Exception:
+                pass
+            try:
+                metrics['Thoughts Tokens'][0] = getattr(um, "thoughts_token_count", None)
+            except Exception:
+                pass
+            try:
+                metrics['Output Tokens'] = getattr(um, "candidates_token_count", None)
+            except Exception:
+                pass
+            try:
+                metrics['Total Tokens'] = getattr(um, "total_token_count", None)
+            except Exception:
+                pass
+
+            # Search metadata (only present when using Google Search tools via genai)
+            try:
+                metrics['Search Query'] = (
+                    response.candidates[0]
+                    .grounding_metadata
+                    .web_search_queries
+                )
+            except Exception:
+                pass
+            try:
+                metrics['Search Pages'] = ", ".join(
+                    site.web.title
+                    for site in response.candidates[0].grounding_metadata.grounding_chunks
+                )
+            except Exception:
+                pass
+
+        # --- LangChain AIMessage (ChatGoogleGenerativeAI) ---
+        elif hasattr(response, "usage_metadata") and isinstance(response.usage_metadata, dict):
+            um = response.usage_metadata
+            try:
+                metrics['Prompt Tokens'] = um.get("input_tokens")
+            except Exception:
+                pass
+            try:
+                metrics['Output Tokens'] = um.get("output_tokens")
+            except Exception:
+                pass
+            try:
+                metrics['Total Tokens'] = um.get("total_tokens")
+            except Exception:
+                pass
+            # Reasoning tokens (Gemini 3 thinking) live under output_token_details["reasoning"]
+            try:
+                details = um.get("output_token_details") or {}
+                metrics['Thoughts Tokens'][0] = details.get("reasoning")
+            except Exception:
+                pass
+
+        # Log everything we were able to collect
         for key, value in metrics.items():
             if key == 'Thoughts Tokens':
                 self.logger.info(f'[GEMINI] {key}: {value[0]} / {value[1]}')
             else:
                 self.logger.info(f'[GEMINI] {key}: {value}')
-                
+
         return True
         
     def _adjust_config(self):
@@ -159,35 +212,33 @@ class GoogleGeminiHandler:
 
 
     def _build_model_chain_parser(self):
-        # Instantiate the LLM class for Google Gemini
+        # Instantiate the LLM class for Google Gemini, used ONLY by the retry parser.
         llm_kwargs = {
             "model": self.model_name,
             "max_output_tokens": self.config.get('max_output_tokens'),
             "top_p": self.config.get('top_p'),
         }
 
-        # For Gemini 3, do NOT pass an explicit temperature (use default = 1.0)
+        # For Gemini 3, do NOT pass an explicit temperature (use model default)
         if "gemini-3" not in self.model_name:
             llm_kwargs["temperature"] = self.config.get('temperature')
 
         if not self.exit_early_for_JSON:
+            self.llm_model = ChatGoogleGenerativeAI(**llm_kwargs)
+        else:  # For vvgo with explicit key
             self.llm_model = ChatGoogleGenerativeAI(
-                **llm_kwargs
-            )
-        else:  # For vvgo
-            self.llm_model = ChatGoogleGenerativeAI(
-                api_key=os.environ.get("API_KEY"),
-                **llm_kwargs
+                google_api_key=os.environ.get("API_KEY"),
+                **llm_kwargs,
             )
 
-        # Set up the retry parser with the runnable
+        # Retry parser still uses this llm_model for "fix JSON" passes
         self.retry_parser = RetryWithErrorOutputParser.from_llm(
             parser=self.parser,
             llm=self.llm_model,
-            max_retries=self.MAX_RETRIES
+            max_retries=self.MAX_RETRIES,
         )
 
-        # Prepare the chain. The extra argument has a default, so this still works.
+        # Chain: PromptTemplate → call_google_gemini (our dispatcher)
         self.chain = self.prompt | self.call_google_gemini
     
 

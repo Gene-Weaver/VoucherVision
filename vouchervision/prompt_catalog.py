@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-# from langchain_core.pydantic_v1 import Field, create_model
+# from langchain_classic.pydantic_v1 import Field, create_model
 from pydantic import BaseModel
 import yaml, json, os, shutil
 

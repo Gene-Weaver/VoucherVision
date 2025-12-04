@@ -383,41 +383,52 @@ class OCRGeminiProVision:
     def extract_text(self, raw_response):
         """
         Robustly extract text from a GenerateContentResponse, handling:
-        - raw_response.text (new SDK convenience)
+        - raw_response.text (may not be a plain str for some SDK/model combos)
         - candidates[n].content.parts[*].text
-        - dict-like to_dict() fallback (for future / odd cases)
+        - dict-like to_dict() fallback
+
         Returns "" if no textual parts are found.
         """
         if raw_response is None:
             return ""
 
-        # 1) Preferred: the SDK's convenience .text property
+        # 1) Try the SDK's convenience .text property
         txt = getattr(raw_response, "text", None)
-        if isinstance(txt, str) and txt.strip():
-            return txt
+        if txt is not None:
+            # Accept any truthy value and cast to str
+            txt_str = str(txt).strip()
+            if txt_str:
+                return txt_str
 
         pieces = []
 
         # 2) Walk candidates -> content.parts and pull .text
         try:
-            for cand in getattr(raw_response, "candidates", []) or []:
+            candidates = getattr(raw_response, "candidates", []) or []
+            for cand in candidates:
                 content = getattr(cand, "content", None)
                 if not content:
                     continue
 
-                # New SDK: content.parts is a list of Part objects
                 parts = getattr(content, "parts", []) or []
                 for part in parts:
+                    # Some SDK versions may give non-str here; treat anything non-empty as text
                     part_text = getattr(part, "text", None)
-                    if isinstance(part_text, str) and part_text.strip():
-                        pieces.append(part_text)
+                    if part_text is None:
+                        continue
+                    part_str = str(part_text).strip()
+                    if part_str:
+                        pieces.append(part_str)
         except Exception as e:
-            self.logger.warning(f"Failed to walk candidates/parts for text: {e}", exc_info=True)
+            self.logger.warning(
+                f"Failed to walk candidates/parts for text: {e}",
+                exc_info=True
+            )
 
         if pieces:
             return "\n".join(pieces)
 
-        # 3) Fallback: to_dict based traversal (defensive)
+        # 3) Fallback: to_dict-based traversal
         if hasattr(raw_response, "to_dict"):
             try:
                 d = raw_response.to_dict()
@@ -425,16 +436,32 @@ class OCRGeminiProVision:
                     content = cand.get("content") or {}
                     for part in content.get("parts", []) or []:
                         t = part.get("text")
-                        if isinstance(t, str) and t.strip():
-                            pieces.append(t)
+                        if t is None:
+                            continue
+                        t_str = str(t).strip()
+                        if t_str:
+                            pieces.append(t_str)
             except Exception as e:
-                self.logger.warning(f"Failed to traverse response.to_dict() for text: {e}", exc_info=True)
+                self.logger.warning(
+                    f"Failed to traverse response.to_dict() for text: {e}",
+                    exc_info=True
+                )
 
         if pieces:
             return "\n".join(pieces)
 
-        # Nothing textual we can see
+        # Optional: log some extra debug info for Gemini 3 to see what's going on
+        try:
+            self.logger.warning(
+                f"No textual parts found in response. "
+                f"Raw type: {type(raw_response)}, "
+                f"dict keys: {list(getattr(raw_response, 'to_dict', lambda: {})().keys())}"
+            )
+        except Exception:
+            pass
+
         return ""
+
 
 
 

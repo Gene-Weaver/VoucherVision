@@ -2,7 +2,7 @@ import os, io, openai, vertexai, json, tempfile, requests
 import webbrowser
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage
-from langchain.schema import HumanMessage
+from langchain_classic.schema import HumanMessage
 from langchain_openai import AzureChatOpenAI
 from vertexai.language_models import TextGenerationModel
 from vertexai.preview.generative_models import GenerativeModel

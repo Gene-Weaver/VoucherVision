@@ -1,7 +1,7 @@
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_classic.pydantic_v1 import BaseModel, Field
 import requests, logging, os, vertexai, json
 from PIL import Image as PILImage
 from io import BytesIO

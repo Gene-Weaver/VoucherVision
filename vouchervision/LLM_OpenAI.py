@@ -1,7 +1,7 @@
 import time, torch, json
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI, OpenAI
-from langchain.schema import HumanMessage
+from langchain_classic.schema import HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_classic.output_parsers import RetryWithErrorOutputParser
 
