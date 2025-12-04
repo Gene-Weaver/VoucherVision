@@ -27,12 +27,6 @@ class OCRGeminiProVision:
         self.user_thinking_level = user_thinking_level
         self.user_media_resolution = user_media_resolution
 
-
-        self.logger.info(f"[OCRGemini] Using genai version: {getattr(genai, '__version__', 'unknown')}")
-        self.logger.info(f"[OCRGemini] Client http_options: {getattr(self.client, '_client_options', None)}")
-        self.logger.info(f"[OCRGemini] Model: {self.model_name}")
-
-
         # ------------------------------------------------------------------
         # Enforce google-genai >= 1.53.0 when using any Gemini-3 model
         # ------------------------------------------------------------------
@@ -119,6 +113,10 @@ class OCRGeminiProVision:
                 # seed=seed,
                 thinking_config=types.ThinkingConfig(thinking_budget=128)  # Enable dynamic thinking
             )
+
+        self.logger.info(f"[OCRGemini] Using genai version: {getattr(genai, '__version__', 'unknown')}")
+        self.logger.info(f"[OCRGemini] Client http_options: {getattr(self.client, '_client_options', None)}")
+        self.logger.info(f"[OCRGemini] Model: {self.model_name}")
 
     def _prepare_image_for_api(self, image):
         """
