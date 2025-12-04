@@ -53,13 +53,13 @@ class OCRGeminiProVision:
             'gemini-2.5-flash',
             'gemini-2.5-pro',
             'gemini-3-pro-preview',
-            'gemini-3-pro',
+            # 'gemini-3-pro',
             ]
         self.MODELS_REQUIRING_INLINE_IMAGE = [
             'gemini-2.5-pro',
             'gemini-2.5-flash',
             'gemini-3-pro-preview',
-            'gemini-3-pro',
+            # 'gemini-3-pro',
         ]
 
         safety_settings_dict = {
@@ -541,8 +541,8 @@ class OCRGeminiProVision:
                 total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)   
             elif 'gemini-3-pro-preview' in self.model_name:
                 total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
-            elif 'gemini-3-pro' in self.model_name:
-                total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
+            # elif 'gemini-3-pro' in self.model_name:
+            #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
             
             cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
 
