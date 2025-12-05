@@ -189,16 +189,15 @@ class OCRGeminiProVision:
             
         finally:
             # Clean up temporary files
-            for temp_path in temp_files:
-                try:
-                    if os.path.exists(temp_path):
-                        # Close any open file handles
-                        image.close() # <--- Image object cleanup
-                        # Add a small delay to ensure file is not in use
-                        time.sleep(0.1)
-                        os.remove(temp_path) # <--- File system call
-                except OSError as e:
-                    self.logger.warning(f"Failed to remove temporary file {temp_path}: {e}")
+            try:
+                if os.path.exists(temp_path):
+                    # Close any open file handles
+                    image.close() # <--- Image object cleanup
+                    # Add a small delay to ensure file is not in use
+                    time.sleep(0.1)
+                    os.remove(temp_path) # <--- File system call
+            except OSError as e:
+                self.logger.warning(f"Failed to remove temporary file {temp_path}: {e}")
 
 
     def _upload_file_for_older_models(self, image_source):
