@@ -26,7 +26,20 @@ class GoogleGeminiHandler:
 
     THINK_BUDGET = 128
 
-    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False, exit_early_with_WFO=False):
+    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False, exit_early_with_WFO=False, 
+                 api_key=None):
+        
+        # Resolve API key once, at construction time.
+        # Priority: explicit argument → GOOGLE_API_KEY env → API_KEY env
+        self.api_key = (
+            api_key
+            or os.environ.get('GOOGLE_API_KEY')
+            or os.environ.get('API_KEY')
+        )
+        if not self.api_key:
+            raise ValueError("No Gemini API key provided and none found in environment.")
+
+
         self.exit_early_for_JSON = exit_early_for_JSON
         self.exit_early_with_WFO = exit_early_with_WFO
 
@@ -217,19 +230,21 @@ class GoogleGeminiHandler:
             "model": self.model_name,
             "max_output_tokens": self.config.get('max_output_tokens'),
             "top_p": self.config.get('top_p'),
+            "google_api_key": self.api_key,
         }
 
         # For Gemini 3, do NOT pass an explicit temperature (use model default)
         if "gemini-3" not in self.model_name:
             llm_kwargs["temperature"] = self.config.get('temperature')
 
-        if not self.exit_early_for_JSON:
-            self.llm_model = ChatGoogleGenerativeAI(**llm_kwargs)
-        else:  # For vvgo with explicit key
-            self.llm_model = ChatGoogleGenerativeAI(
-                google_api_key=os.environ.get("API_KEY"),
-                **llm_kwargs,
-            )
+        self.llm_model = ChatGoogleGenerativeAI(**llm_kwargs)
+        # if not self.exit_early_for_JSON:
+        #     self.llm_model = ChatGoogleGenerativeAI(**llm_kwargs)
+        # else:  # For vvgo with explicit key
+        #     self.llm_model = ChatGoogleGenerativeAI(
+        #         google_api_key=self.api_key,
+        #         **llm_kwargs,
+        #     )
 
         # Retry parser still uses this llm_model for "fix JSON" passes
         self.retry_parser = RetryWithErrorOutputParser.from_llm(
@@ -263,12 +278,12 @@ class GoogleGeminiHandler:
                 # v1alpha is required for media_resolution
                 try:
                     client = genai.Client(
-                        api_key=os.environ['GOOGLE_API_KEY'],
+                        api_key=self.api_key,
                         http_options={'api_version': 'v1alpha'}
                     )
                 except Exception:
                     client = genai.Client(
-                        api_key=os.environ.get("API_KEY"),
+                        api_key=self.api_key,
                         http_options={'api_version': 'v1alpha'}
                     )
 
@@ -301,10 +316,11 @@ class GoogleGeminiHandler:
                 return "Failed to parse text"
         elif ("2.5" in self.model_name):# or ("2.0" in self.model_name):
             try:
-                try:
-                    client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])
-                except:
-                    client = genai.Client(api_key=os.environ.get("API_KEY"))
+                client = genai.Client(api_key=self.api_key)
+                # try:
+                #     client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])
+                # except:
+                #     client = genai.Client(api_key=os.environ.get("API_KEY"))
 
                 if self.tool_google:
                     self.logger.info(f'[GEMINI] {self.model_name} --- THINK[{self.THINK_BUDGET}] --- TOOLS[GOOGLE SEARCH]')
