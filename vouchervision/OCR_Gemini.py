@@ -13,10 +13,14 @@ import importlib.metadata
 '''
 Does not need to be downsampled like the other APIs or local 
 Updated to use new Google GenAI SDK with dynamic thinking enabled
+
+thinking_budget = 24576  # max allowed for gemini-2.5-flash
+thinking_budget = 32768  # pro
+
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=32768, temperature=1, top_p=0.95, top_k=None, seed=123456, 
+    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456, 
                 user_thinking_level="high",
                 user_media_resolution="MEDIA_RESOLUTION_HIGH",
                 do_resize_img=False, logger=None):
@@ -111,7 +115,7 @@ class OCRGeminiProVision:
                 # top_k=top_k,
                 max_output_tokens=max_output_tokens,
                 # seed=seed,
-                thinking_config=types.ThinkingConfig(thinking_budget=32768)  # Enable dynamic thinking
+                thinking_config=types.ThinkingConfig(thinking_budget=24576)  # Enable dynamic thinking
             )
 
         self.logger.info(f"[OCRGemini] Using genai version: {getattr(genai, '__version__', 'unknown')}")
@@ -524,7 +528,7 @@ class OCRGeminiProVision:
                 top_p=top_p,
                 max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
                 safety_settings=self.safety_settings,
-                thinking_config=types.ThinkingConfig(thinking_budget=32768),
+                thinking_config=types.ThinkingConfig(thinking_budget=24576),
             )
         else:
             # Non-thinking models
