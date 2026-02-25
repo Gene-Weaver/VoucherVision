@@ -24,7 +24,7 @@ class GoogleGeminiHandler:
     VENDOR = 'google'
     STARTING_TEMP = 1
 
-    THINK_BUDGET = 128
+    THINK_BUDGET = -1 # dynamic thinking for the 2.5 models
 
     def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False, exit_early_with_WFO=False, 
                  api_key=None):
