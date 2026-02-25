@@ -13,7 +13,7 @@ https://ai.google.dev/gemini-api/docs/vision?lang=python
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.0-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False):
+    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=4096, temperature=1, top_p=0.95, top_k=None, seed=123456, do_resize_img=False):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
@@ -265,7 +265,9 @@ class OCRGeminiProVision:
                 elif 'gemini-2.5-pro' in self.model_name:
                     total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)  
                 elif 'gemini-3-pro-preview' in self.model_name:
-                    total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
+                    total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)  
+                elif 'gemini-3-flash-preview' in self.model_name:
+                    total_cost = calculate_cost('GEMINI_3_FLASH', self.path_api_cost, tokens_in, tokens_out)   
                 # elif 'gemini-3-pro' in self.model_name:
                 #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)   
 
@@ -312,7 +314,7 @@ if __name__ == "__main__":
     # image_path = "D:/Dropbox/VoucherVision/demo/demo_images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg"  # Replace with your image file path
     # image_path = 'C:/Users/willwe/Downloads/test_2024_12_04__13-49-56/Original_Images/MICH_16205594_Poaceae_Jouvea_pilosa.jpg'
     
-    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.0-flash")
+    ocr_tool = OCRGeminiProVision(api_key=API_KEY, model_name="gemini-2.5-flash")
 
     for image_path in image_paths:
         response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)

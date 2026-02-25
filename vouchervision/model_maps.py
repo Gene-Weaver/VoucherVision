@@ -22,6 +22,7 @@ class ModelMaps:
         'GEMINI_2_5_FLASH': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_2_5_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_PRO': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_3_FLASH': '#1E00FF',  # gemini-1.5-pro
 
         'AZURE_GPT_4': '#800080',  # Purple
         'AZURE_GPT_4o': '#800080',  # Purple
@@ -104,6 +105,7 @@ class ModelMaps:
     MODELS_GOOGLE = [
                     # 'PaLM 2 text-bison@001',
                      'Gemini 3 Pro',
+                     'Gemini 3 Flash',
                      'Gemini 2.5 Pro',
                      'Gemini 2.5 Flash',
                      'Gemini 2.0 Flash',
@@ -150,7 +152,7 @@ class ModelMaps:
                     'LOCAL CPU Mistral 7B Instruct v0.2 GGUF',
                     'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05']
 
-    MODELS_GUI_DEFAULT = 'Gemini 2.0 Flash' #'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
+    MODELS_GUI_DEFAULT = 'Gemini 2.5 Flash' #'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
 
     MODEL_FAMILY = {
                     'OpenAI': MODELS_OPENAI,
@@ -183,6 +185,7 @@ class ModelMaps:
         # 'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
         'Gemini 3 Pro': 'GEMINI_3_PRO',  # gemini-1.5-pro
+        'Gemini 3 Flash': 'GEMINI_3_FLASH',  # gemini-1.5-pro
         'Gemini 2.5 Pro': 'GEMINI_2_5_PRO',  # gemini-1.5-pro
         'Gemini 2.5 Flash': 'GEMINI_2_5_FLASH',  # gemini-1.5-pro
         'Gemini 2.0 Flash': 'GEMINI_2_0_FLASH',  # gemini-1.5-pro
@@ -258,6 +261,7 @@ class ModelMaps:
             # 'PaLM 2 text-bison@001':  has_key_google_application_credentials,
 
             'Gemini 3 Pro':  has_key_google_application_credentials,
+            'Gemini 3 Flash':  has_key_google_application_credentials,
             'Gemini 2.5 Pro':  has_key_google_application_credentials,
             'Gemini 2.5 Flash':  has_key_google_application_credentials,
             'Gemini 2.0 Flash':  has_key_google_application_credentials,
@@ -330,6 +334,7 @@ class ModelMaps:
 
             # 'PaLM 2 text-bison@001':  False,
             'Gemini 3 Pro':  False,
+            'Gemini 3 Flash':  False,
             'Gemini 2.5 Pro':  False,
             'Gemini 2.5 Flash':  False,
             'Gemini 2.0 Flash':  False,
@@ -458,15 +463,15 @@ class ModelMaps:
         
         elif key == 'GEMINI_2_5_FLASH':
             return 'gemini-2.5-flash' # TODO UPDATE AS NEEDED
-        
         elif key == 'GEMINI_2_5_PRO':
             return 'gemini-2.5-pro' # TODO UPDATE AS NEEDED
         
         elif key == 'GEMINI_3_PRO':
             return 'gemini-3-pro-preview' # TODO UPDATE AS NEEDED
+        elif key == 'GEMINI_3_FLASH':
+            return 'gemini-3-flash-preview' # TODO UPDATE AS NEEDED
 
-        # elif key == 'GEMINI_2_0_PRO':
-        #     return 'gemini-2.0-pro' 
+
         
         ### Mistral 
         elif key == 'OPEN_MISTRAL_7B':

@@ -58,12 +58,14 @@ class OCRGeminiProVision:
             'gemini-2.5-flash',
             'gemini-2.5-pro',
             'gemini-3-pro-preview',
+            'gemini-3-flash-preview',
             # 'gemini-3-pro',
             ]
         self.MODELS_REQUIRING_INLINE_IMAGE = [
             'gemini-2.5-pro',
             'gemini-2.5-flash',
             'gemini-3-pro-preview',
+            'gemini-3-flash-preview',
             # 'gemini-3-pro',
         ]
 
@@ -657,6 +659,8 @@ class OCRGeminiProVision:
             elif 'gemini-3-pro-preview' in self.model_name.lower():
                 self.logger.info("Used gemini-3 cost")
                 total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
+            elif 'gemini-3-flash-preview' in self.model_name.lower():
+                total_cost = calculate_cost('GEMINI_3_FLASH', self.path_api_cost, tokens_in, tokens_out)
             # elif 'gemini-3-pro' in self.model_name.lower():
             #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
 
