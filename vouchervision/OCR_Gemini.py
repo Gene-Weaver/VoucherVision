@@ -642,31 +642,28 @@ class OCRGeminiProVision:
                 tokens_out = 0
 
             # ---------- cost calculation ----------
-            if self.model_name == 'gemini-1.5-pro':
+            if 'gemini-1.5-pro' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
-            elif self.model_name == 'gemini-1.5-flash':
-                total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif self.model_name == 'gemini-1.5-flash-8b':
+            elif 'gemini-1.5-flash-8b' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)
-            elif self.model_name == 'gemini-2.0-flash-exp':
+            elif 'gemini-1.5-flash' in self.model_name.lower():
+                total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
+            elif 'gemini-2.0-flash' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif self.model_name == 'gemini-2.0-flash':
-                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-2.5-flash' in self.model_name:
+            elif 'gemini-2.5-flash' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-2.5-pro' in self.model_name:
+            elif 'gemini-2.5-pro' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-3-pro-preview' in self.model_name.lower():
-                self.logger.info("Used gemini-3 cost")
+
+            elif 'gemini-3-pro' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-3-flash-preview' in self.model_name.lower():
+            elif 'gemini-3-flash' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_3_FLASH', self.path_api_cost, tokens_in, tokens_out)
+                
             elif 'gemini-3.1-flash-lite' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_3_FLASH_LITE', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-3.1-flash-lite-preview' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_3_FLASH_LITE', self.path_api_cost, tokens_in, tokens_out)
-            # elif 'gemini-3-pro' in self.model_name.lower():
-            #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
+            elif 'gemini-3.1-pro' in self.model_name.lower():
+                total_cost = calculate_cost('GEMINI_3_1_PRO', self.path_api_cost, tokens_in, tokens_out)
 
             cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
 
