@@ -661,6 +661,10 @@ class OCRGeminiProVision:
                 total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
             elif 'gemini-3-flash-preview' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_3_FLASH', self.path_api_cost, tokens_in, tokens_out)
+            elif 'gemini-3.1-flash-lite' in self.model_name.lower():
+                total_cost = calculate_cost('GEMINI_3_FLASH_LITE', self.path_api_cost, tokens_in, tokens_out)
+            elif 'gemini-3.1-flash-lite-preview' in self.model_name.lower():
+                total_cost = calculate_cost('GEMINI_3_FLASH_LITE', self.path_api_cost, tokens_in, tokens_out)
             # elif 'gemini-3-pro' in self.model_name.lower():
             #     total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
 
