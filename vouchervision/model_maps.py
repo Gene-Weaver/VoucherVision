@@ -22,7 +22,9 @@ class ModelMaps:
         'GEMINI_2_5_FLASH': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_2_5_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_PRO': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_3_1_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_FLASH': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_3_FLASH_LITE': '#1E00FF',  # gemini-1.5-pro
 
         'AZURE_GPT_4': '#800080',  # Purple
         'AZURE_GPT_4o': '#800080',  # Purple
@@ -105,7 +107,9 @@ class ModelMaps:
     MODELS_GOOGLE = [
                     # 'PaLM 2 text-bison@001',
                      'Gemini 3 Pro',
+                     'Gemini 3.1 Pro',
                      'Gemini 3 Flash',
+                     'Gemini 3 Flash Lite',
                      'Gemini 2.5 Pro',
                      'Gemini 2.5 Flash',
                      'Gemini 2.0 Flash',
@@ -184,8 +188,10 @@ class ModelMaps:
         # 'Azure GPT 3.5 Instruct': 'AZURE_GPT_3_5_INSTRUCT',
         # 'Azure GPT 3.5 Turbo': 'AZURE_GPT_3_5',
 
+        'Gemini 3.1 Pro': 'GEMINI_3_1_PRO',  # gemini-1.5-pro
         'Gemini 3 Pro': 'GEMINI_3_PRO',  # gemini-1.5-pro
         'Gemini 3 Flash': 'GEMINI_3_FLASH',  # gemini-1.5-pro
+        'Gemini 3 Flash Lite': 'GEMINI_3_FLASH_LITE',
         'Gemini 2.5 Pro': 'GEMINI_2_5_PRO',  # gemini-1.5-pro
         'Gemini 2.5 Flash': 'GEMINI_2_5_FLASH',  # gemini-1.5-pro
         'Gemini 2.0 Flash': 'GEMINI_2_0_FLASH',  # gemini-1.5-pro
@@ -260,8 +266,10 @@ class ModelMaps:
 
             # 'PaLM 2 text-bison@001':  has_key_google_application_credentials,
 
+            'Gemini 3.1 Pro':  has_key_google_application_credentials,
             'Gemini 3 Pro':  has_key_google_application_credentials,
             'Gemini 3 Flash':  has_key_google_application_credentials,
+            'Gemini 3 Flash Lite':  has_key_google_application_credentials,
             'Gemini 2.5 Pro':  has_key_google_application_credentials,
             'Gemini 2.5 Flash':  has_key_google_application_credentials,
             'Gemini 2.0 Flash':  has_key_google_application_credentials,
@@ -333,8 +341,10 @@ class ModelMaps:
             # 'Azure GPT 4 32k': True,
 
             # 'PaLM 2 text-bison@001':  False,
+            'Gemini 3.1 Pro':  False,
             'Gemini 3 Pro':  False,
             'Gemini 3 Flash':  False,
+            'Gemini 3 Flash Lite':  False,
             'Gemini 2.5 Pro':  False,
             'Gemini 2.5 Flash':  False,
             'Gemini 2.0 Flash':  False,
@@ -468,8 +478,13 @@ class ModelMaps:
         
         elif key == 'GEMINI_3_PRO':
             return 'gemini-3-pro-preview' # TODO UPDATE AS NEEDED
+        elif key == 'GEMINI_3_1_PRO':
+            return 'gemini-3.1-pro-preview' # TODO UPDATE AS NEEDED
+        
         elif key == 'GEMINI_3_FLASH':
             return 'gemini-3-flash-preview' # TODO UPDATE AS NEEDED
+        elif key == 'GEMINI_3_FLASH_LITE':
+            return 'gemini-3.1-flash-lite-preview' # TODO UPDATE AS NEEDED
 
 
         
