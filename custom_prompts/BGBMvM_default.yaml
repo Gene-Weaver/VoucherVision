@@ -1,9 +1,9 @@
 prompt_author: Megi         
 prompt_author_institution: BGBM  
 prompt_name: BGBMvM_default
-prompt_version: v-1-5     
+prompt_version: v-1-6     
 prompt_description: Prompt based on SLTPvM_defaultv2 and OSC_Symbiota (associatedCollectors).
-LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pro. Will still work with other models though.
+LLM: General Purpose
 instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
   2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
   3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
@@ -30,6 +30,9 @@ rules:
   collectorNumber: An identifier given to the occurrence at the time it was recorded, the specimen collector's number.
   identifiedBy: A comma separated list of names of people, groups, or organizations who assigned the taxon to the subject organism, the determiner. This is not the specimen collector. 
   identifiedDate: Date that the most recent determination was given, in the following format. YYYY-MM-DD (zeros may be used if only partial date). 
+  identifiedConfidence: The determiner may wish to indicate additional information related to their determination. Record this information if it is present. Some examples are '?', 'cf.', 'aff.', 'sensu lato', 's.l.', 'sensu stricto', 's.s.', 'probably', '? hybrid'. The Confidence field is for short comments about the determination (16 characters maximum). Periods are used in abbreviations in this field. 
+  identifiedRemarks: If a determiner has longer comments or measurements to support the determination, enter them here. 
+  identificationHistory: If there are multiple species or genus names, provide the date and determiner for each name and determination.
   verbatimCollectionDate: The verbatim original representation of the date and time information for when the specimen was collected. Date of collection exactly as it appears on the label. Do not change the format or correct typos.
   collectionDate: Date the specimen was collected formatted as year-month-day, YYYY-MM-DD. If specific components of the date are unknown, they should be replaced with zeros. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
   collectionDateEnd: If a range of collection dates is provided, this is the latter end date while collectionDate is the beginning date. Use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not.
@@ -74,6 +77,9 @@ mapping:
   - scientificNameNoAuthor
   - identifiedBy
   - identifiedDate
+  - identifiedConfidence
+  - identifiedRemarks
+  - identificationHistory
   COLLECTING:
   - collector
   - verbatimCollector
