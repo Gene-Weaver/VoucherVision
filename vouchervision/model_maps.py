@@ -24,7 +24,7 @@ class ModelMaps:
         'GEMINI_3_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_1_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_FLASH': '#1E00FF',  # gemini-1.5-pro
-        'GEMINI_3_FLASH_LITE': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_3_1_FLASH_LITE': '#1E00FF',  # gemini-1.5-pro
 
         'AZURE_GPT_4': '#800080',  # Purple
         'AZURE_GPT_4o': '#800080',  # Purple
@@ -191,7 +191,7 @@ class ModelMaps:
         'Gemini 3.1 Pro': 'GEMINI_3_1_PRO',  # gemini-1.5-pro
         'Gemini 3 Pro': 'GEMINI_3_PRO',  # gemini-1.5-pro
         'Gemini 3 Flash': 'GEMINI_3_FLASH',  # gemini-1.5-pro
-        'Gemini 3 Flash Lite': 'GEMINI_3_FLASH_LITE',
+        'Gemini 3.1 Flash Lite': 'GEMINI_3_1_FLASH_LITE',
         'Gemini 2.5 Pro': 'GEMINI_2_5_PRO',  # gemini-1.5-pro
         'Gemini 2.5 Flash': 'GEMINI_2_5_FLASH',  # gemini-1.5-pro
         'Gemini 2.0 Flash': 'GEMINI_2_0_FLASH',  # gemini-1.5-pro
@@ -483,7 +483,7 @@ class ModelMaps:
         
         elif key == 'GEMINI_3_FLASH':
             return 'gemini-3-flash-preview' # TODO UPDATE AS NEEDED
-        elif key == 'GEMINI_3_FLASH_LITE':
+        elif key == 'GEMINI_3_1_FLASH_LITE':
             return 'gemini-3.1-flash-lite-preview' # TODO UPDATE AS NEEDED
 
 
