@@ -77,7 +77,7 @@ AZURE_GPT_3_5:
 # Google Gemini
 # https://ai.google.dev/pricing
 # UPDATED: 2024-12-02 14:38:32
-GEMINI_3_FLASH_LITE:
+GEMINI_3_1_FLASH_LITE:
   in: 0.25
   out: 1.50
 GEMINI_3_FLASH:
