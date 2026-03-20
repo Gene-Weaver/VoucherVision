@@ -32,6 +32,10 @@ vouchervision/LLM_MistralAI_Azure_endpoints.py
 !/custom_prompts/SLTPvM_geolocate_flag_multispecimen.yaml
 !/custom_prompts/SLTPvM_geolocate.yaml
 !/custom_prompts/SLTPvM_full.yaml
+!/custom_prompts/NBC_Lepidoptera_exp1.yaml
+!/custom_prompts/NBC_Lepidoptera_exp2.yaml
+!/custom_prompts/NBC_Lepidoptera_exp3.yaml
+!/custom_prompts/NBC_Lepidoptera_exp4.yaml
 # Dirs
 custom_prompts_deprecated/
 demo/demo_output/*
