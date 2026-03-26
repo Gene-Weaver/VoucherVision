@@ -26,9 +26,9 @@ class GoogleGeminiHandler:
 
     THINK_BUDGET = -1 # dynamic thinking for the 2.5 models
 
-    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False, exit_early_with_WFO=False, 
-                 api_key=None):
-        
+    def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False,
+                 api_key=None, **kwargs):
+
         # Resolve API key once, at construction time.
         # Priority: explicit argument → GOOGLE_API_KEY env → API_KEY env
         self.api_key = (
@@ -41,11 +41,10 @@ class GoogleGeminiHandler:
 
 
         self.exit_early_for_JSON = exit_early_for_JSON
-        self.exit_early_with_WFO = exit_early_with_WFO
 
         self.cfg = cfg
-        if self.exit_early_for_JSON and self.exit_early_with_WFO: # Add WFO to the output
-            self.tool_WFO = True
+        if self.exit_early_for_JSON:
+            self.tool_WFO = False
             self.tool_GEO = False
             self.tool_wikipedia = False
         else:
@@ -394,15 +393,8 @@ class GoogleGeminiHandler:
                     # self.logger.info(f"output after\n{output}") #####################################################################################
 
                     ### This allows VVGO to just get the JSON and exit
-                    if self.exit_early_for_JSON and not self.exit_early_with_WFO:
+                    if self.exit_early_for_JSON:
                         return output, nt_in, nt_out, "", None, None
-                    
-                    elif self.exit_early_for_JSON and self.exit_early_with_WFO:
-                        _, WFO_record, __, ___ = run_tools(output, self.tool_WFO, self.tool_GEO, self.tool_wikipedia, json_file_path_wiki)
-                        self.logger.info(f"WFO Record:\n{WFO_record}")
-                        return output, nt_in, nt_out, WFO_record, None, None
-                    
-                    
 
                     if output is None:
                         self.logger.error(f'[Attempt {ind}] Failed to extract JSON from:\n{response}')
