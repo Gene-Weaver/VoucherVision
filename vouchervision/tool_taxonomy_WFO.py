@@ -45,7 +45,7 @@ class WFONameMatcher:
 
         full_url = self.base_url + urlencode(params)
 
-        response = requests.get(full_url)
+        response = requests.get(full_url, verify=False)
         if response.status_code == 200:
             return response.json()
         else:
