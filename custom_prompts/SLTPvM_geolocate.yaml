@@ -83,7 +83,7 @@ mapping:
   - scientificName
   - genus
   - specificEpithet
-  - speciesNameAuthorship
+  - scientificNameAuthorship
   - identifiedBy
   - identifiedDate
   - identifiedConfidence
@@ -100,3 +100,38 @@ mapping:
   - habitat
   - specimenDescription
   - additionalText
+editor_tools:
+  DATES:
+  - verbatimCollectionDate
+  - identifiedDate
+  - collectionDate
+  - collectionDateEnd
+  TAXONOMY:
+  - scientificName
+  - genus
+  - specificEpithet
+  - scientificNameAuthorship
+  CLUSTERING:
+  - scientificName
+  - genus
+  - specificEpithet
+  - scientificNameAuthorship
+  GEOGRAPHY:
+  - continent
+  - country
+  - stateProvince
+  - county
+  COLLECTORS:
+  - collectedBy
+  - identifiedBy
+  COORDINATES:
+  - verbatimCoordinates
+  - decimalLatitude
+  - decimalLongitude
+  PATTERNS:
+  - verbatimCollectionDate
+  - catalogNumber
+  - collectorNumber
+  ELEVATION:
+  - minimumElevationInMeters
+  - maximumElevationInMeters
