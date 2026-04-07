@@ -1,7 +1,7 @@
 prompt_author: Will Weaver          
 prompt_author_institution: University of Michigan    
 prompt_name: SLTPvM_full
-prompt_version: v-1-0     
+prompt_version: v-1-1     
 prompt_description: Prompt developed by the University of Michigan Herbarium (MICH).
     All field descriptions are modified from Darwin Core fields to increase LLM performance.     
 LLM: This is intended to be used with thinking-capable models like Gemini-2.5-Pro or Gemini-3-Pro. Will still work with other models though. 
@@ -15,6 +15,7 @@ instructions: 1. Refactor the unstructured OCR text into a dictionary based on t
   8. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
   9. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
   10. Only return a JSON dictionary represented as a string. You should not explain your answer.
+  11. After you create the JSON, if there are not already coordinates in the decimalLatitude and decimalLongitude fields, then use all of the information to geolocate the specimen. Remember that you are an expert biogeographer specializing in georeferencing biological specimen data. Your task is to infer the most accurate decimal latitude and longitude coordinates possible from museum specimen locality information. These are all land plants, so coordinates must be land-based and not coorespond to points in bodies of water. CONTEXT. You are working with historical biological specimen records that may have varying levels of geographic specificity, from broad regions down to specific collection sites. YOUR APPROACH. Analyze all available geographic fields hierarchically (country → state/province → county → municipality → locality). Use the most specific location information available to determine coordinates. For specific landmarks, parks, or named locations, provide precise coordinates. For municipalities/cities, use city center coordinates. For counties, use geographic centroid of the county. For countries (including when only a country code abbreviation is provided), use geographic centroid of the country. For larger administrative units, use conservative central coordinates. IMPORTANT PRINCIPLES. Prioritize accuracy, be extremely precise if you are confident. Be conservative with confidence levels,  only mark as "high" confidence for very specific locations. Consider that historical locality names may have changed. Account for the fact that biological specimens are usually collected from terrestrial, accessible areas. When in doubt, use centroid coordinates of the smallest known administrative unit. CONSTRAINTS. Use WGS84 decimal degrees format. For confidence, if the GPS is provided in the text already, use 'verbatim' in the inferredGPSConfidence field. 'high' confidence only for specific locations (cities, landmarks, parks, intersections, addresses, buildings). 'medium' confidence for general areas (counties). 'low' confidence for vague regions (states/provinces). Return empty strings for decimalLatitude and decimalLongitude if too vague to determine reasonable location and use 'na' for inferredGPSConfidence. Latitude range from -90 to 90, Longitude range from -180 to 180. Your response must place the inferred latitude in the decimalLatitude field, place the inferred longitude in the decimalLongitude field, and the confidence in the inferredGPSConfidence field.
 json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
 rules:
   catalogNumber: Barcode identifier, typically a number with at least 6 digits, but fewer than 30 digits.
@@ -48,6 +49,7 @@ rules:
   geodeticDatumVerbatimCoordinates: If present, the geodetic datum of the verbatim coordinates.
   decimalLatitude: Latitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
   decimalLongitude: Longitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
+  inferredGPSConfidence:
   verbatimElevation: Verbatim elevation as it appears on the label. Include units if present.
   minimumElevationInMeters: Minimum elevation or altitude in meters. Only if units are explicit then convert from feet ('ft' or 'ft.'' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
   maximumElevationInMeters: Maximum elevation or altitude in meters. If only one elevation is present, then max_elevation should remain an empty string. Only if units are explicit, then convert from feet ('ft' or 'ft.' or 'feet') to meters ('m' or 'm.' or 'meters'). Round to integer. Values greater than 6000 are in feet and need to be converted.
@@ -66,6 +68,7 @@ mapping:
   - geodeticDatumVerbatimCoordinates
   - decimalLatitude
   - decimalLongitude
+  - inferredGPSConfidence
   - verbatimElevation
   - minimumElevationInMeters
   - maximumElevationInMeters
@@ -91,3 +94,10 @@ mapping:
   - habitat
   - specimenNotes
   - additionalText
+checklist:
+  - 1. Verify catalogNumber are correct
+  - 2. Verify continent
+  - 3. Verify country
+  - 4. Use [Geography] tools to normalize country names like USA vs. United States
+  - 5. Use [Geography] tools to normalize stateProvince
+  - 6. Use [Geography] tools to normalize county
