@@ -77,7 +77,10 @@ mapping:
   - scientificName
   - genus
   - specificEpithet
-  - speciesNameAuthorship
+  - scientificNameAuthorship
+  - subspecies
+  - variety
+  - forma
   - identifiedBy
   - identifiedDate
   - identifiedConfidence
@@ -96,8 +99,13 @@ mapping:
   - additionalText
 checklist:
   - 1. Verify catalogNumber are correct
+  - 2. Accept VoucherVision content for fields that do not require review [Batch-Accept VoucherVision Content]
   - 2. Verify continent
   - 3. Verify country
   - 4. Use [Geography] tools to normalize country names like USA vs. United States
   - 5. Use [Geography] tools to normalize stateProvince
   - 6. Use [Geography] tools to normalize county
+review_not_required:
+  - scientificNameAuthorship
+  - additionalText
+  - inferredGPSConfidence
