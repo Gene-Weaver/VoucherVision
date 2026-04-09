@@ -100,38 +100,22 @@ mapping:
   - habitat
   - specimenDescription
   - additionalText
-editor_tools:
-  DATES:
-  - verbatimCollectionDate
-  - identifiedDate
-  - collectionDate
-  - collectionDateEnd
-  TAXONOMY:
-  - scientificName
-  - genus
-  - specificEpithet
+checklist:
+  - 1. [VoucherVision] - Accept VoucherVision content for fields that do not require review 
+  - 2. [OCR] - Review OCR disagreements and flag questionable text, look for fields with ⚠ 
+  - 3. [Patterns] - Use N-Gram Clustering to merge near-duplicate values for collector names, geographies
+  - 4. [Patterns] - Use Catalog Pattern Review to inspect patterns, gaps, and duplicates
+  - 5. [Dates] - Use Date Violations to review suspicious or invalid dates
+  - 6. [Dates] - Use Date Formats to standardize date representations and review outliers
+  - 7. [Collectors] - Use Name Parser to standardize collector names *after n-gram merging*
+  - 8. [Taxonomy] - Use Authorship Detection to split authorship from scientificName
+  - 9. [Taxonomy] - Use WFO Backbone Assistant to review taxonomy suggestions and fill gaps
+  - 10. [Elevation] - Use Elevation Discrepancy to review values against COP90, check for outliers
+  - 11. [Geography] - Use standardization tools to normalize geography and coordinate-related fields
+  - 12. [Taxonomy] - Use standardization tools to normalize taxonomy fields
+  - 13. Go to Form Mode, bounce around to confirm all remaining reviewed fields before export
+  - 14. Export project from in the Settings window
+review_not_required:
   - scientificNameAuthorship
-  CLUSTERING:
-  - scientificName
-  - genus
-  - specificEpithet
-  - scientificNameAuthorship
-  GEOGRAPHY:
-  - continent
-  - country
-  - stateProvince
-  - county
-  COLLECTORS:
-  - collectedBy
-  - identifiedBy
-  COORDINATES:
-  - verbatimCoordinates
-  - decimalLatitude
-  - decimalLongitude
-  PATTERNS:
-  - verbatimCollectionDate
-  - catalogNumber
-  - collectorNumber
-  ELEVATION:
-  - minimumElevationInMeters
-  - maximumElevationInMeters
+  - additionalText
+  - inferredGPSConfidence
