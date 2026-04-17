@@ -1,0 +1,379 @@
+prompt_author: Chanou van den Broek, Kees te Velde
+prompt_author_institution: Naturalis Biodiversity Center
+prompt_name: NBC_Lepidoptera
+prompt_version: v-1-0
+prompt_description: Prompt developed by Naturalis Biodiversity Center for use with Lepidoptera collections.
+LLM: This is intended to be used with thinking-capable models like Gemini-3.1.
+instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+  2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
+  3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
+  4. Redacted or stricken text will have section signs on either side (§stricken text§). Handwritten text will have guillemet quotes on either side («handwritten text»).
+  5. Some text will not be in English. Do not translate unless specifically instructed to do so, but do include all text regardless of language in the formatted response in its correct context.
+  6. If you see Text in the OCR that reports on the OCR engine itself, do not include that in the JSON.
+  7. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
+  8. Duplicate dictionary fields are not allowed.
+  9. Ensure all JSON keys are in camel case.
+  10. Ensure new JSON field values follow sentence case capitalization, but if the text represents abbreviations, acronyms, or initialisms then leave the capitalization as found in the OCR.
+  11. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  12. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  13. Only return a JSON dictionary represented as a string. You should not explain your answer.
+  14. After you create the JSON, if there are not already coordinates in the decimalLatitude and decimalLongitude fields, then use all of the information to geolocate the specimen. Remember that you are an expert biogeographer specializing in georeferencing biological specimen data. Your task is to infer the most accurate decimal latitude and longitude coordinates possible from museum specimen locality information. These are all butterflies, so coordinates must be land-based and not coorespond to points in bodies of water.
+  CONTEXT. You are working with historical biological specimen records that may have varying levels of geographic specificity, from broad regions down to specific collection sites.
+  YOUR APPROACH. Analyze all available geographic fields hierarchically (country → island → state/province → locality). Use the most specific location information available to determine coordinates. For specific landmarks, parks, or named locations, provide precise coordinates. For municipalities/cities, use city center coordinates. For counties, use geographic centroid of the county. For countries (including when only a country code abbreviation is provided), use geographic centroid of the country. For larger administrative units, use conservative central coordinates.
+  IMPORTANT PRINCIPLES. Prioritize accuracy, be extremely precise if you are confident. Be conservative with confidence levels,  only mark as 'high' confidence for very specific locations. Consider that historical locality names may have changed. Account for the fact that biological specimens are usually collected from terrestrial, accessible areas. When in doubt, use centroid coordinates of the smallest known administrative unit.
+  CONSTRAINTS. Use WGS84 decimal degrees format. For confidence, if the GPS is provided in the text already, use 'verbatim' in the inferredGPSConfidence field. 'high' confidence only for specific locations (cities, landmarks, parks, intersections, addresses, buildings). 'medium' confidence for general areas (counties). 'low' confidence for vague regions (states/provinces). Return empty strings for decimalLatitude and decimalLongitude if too vague to determine reasonable location and use 'na' for inferredGPSConfidence. Latitude range from -90 to 90, Longitude range from -180 to 180. Your response must place the inferred latitude in the decimalLatitude field, place the inferred longitude in the decimalLongitude field, and the confidence in the inferredGPSConfidence field.
+json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
+rules:
+  remarks: >-
+    Identify and extract all text excluded from the primary and
+    secondary label fields, including specific expedition markers such as
+    '1 & 2 Nw Guinea.Exp. 1907&1909-1910'. Gather all background text,
+    supporting details, and leftover OCR strings to ensure a complete
+    record of the specimen's surrounding information. This field serves as
+    a catch-all for any ancillary data not captured elsewhere.
+  registrationnumber: >-
+    Prefix ZMA.INS. or RMNH.INS. followed by 6-14 digits.
+  verbatimName: >-
+    The verbatim original representation of the scientific
+    name as it appears on the specimen label. This includes the full string
+    of taxonomic information provided, potentially encompassing the Family,
+    Genus, specific epithet, infraspecific epithet (subspecies/variety),
+    author citation, and year of publication. Do not change the format or
+    correct typos.
+  rowlabel: >-
+    Detect and capture any text string containing the term
+    'label' including 'rowlabel', 'boxlabel', and 'small label' variations.
+    Explicitly check for an accompanying directional symbol (up/down arrow)
+    and report it as a related attribute of that specific label.
+  family: >-
+    The specific taxonomic family classification associated with
+    the specimen. The value must be a single, capitalized word ending in
+    the zoological family suffix '-idae' (e.g., 'Pieridae', 'Lycaenidae',
+    'Hesperiidae'). First, attempt to extract the family name directly from
+    the label. If missing, you are authorized to infer the family based on
+    the provided Genus or Species name, but only if the taxonomic placement
+    is globally accepted and certain. Do not guess. If the genus is
+    ambiguous or if the specimen is completely unidentified, do not provide
+    a family name. The value must be a single, capitalized word. If no
+    taxonomic data exists to support a high-confidence identification, the
+    field must remain empty or null.
+  subfamily: >-
+    The scientific name of the subfamily (e.g., 'Danainae'). If
+    not on the label, determine it using the genus or species. If the genus
+    belongs to multiple potential subfamilies or if no taxonomic data
+    exists, leave this field empty. Must be capitalized.
+  tribe: >-
+    The taxonomic tribe classification. Many butterfly genera belong
+    to specific tribes (e.g., Vanessa belongs to Nymphalini). Use your
+    internal database to provide this if the genus is present. The name
+    must end in the standard suffix '-ini' and be capitalized. Do not
+    'hallucinate' a tribe if the genus is typically placed directly in a
+    subfamily without a tribal level. If no specimen data is provided, or
+    if the tribal placement is a matter of intense taxonomic debate, leave
+    the field blank.
+  genus: >-
+    The scientific genus name of the Lepidoptera specimen,
+    formatted as a single capitalized word. The genus is the first part of
+    a full scientific name (e.g., 'Pachliopta' in 'Pachliopta (Pachliopta)
+    polyphontes rosea'). Note that labels may show various combinations:
+    genus/species, genus/subgenus/species/subspecies, or even just
+    species/subspecies. You may infer the genus from a provided species
+    name if the identification is globally certain. If unknown, leave
+    empty.
+  subgenus: >-
+    Extract the scientific subgenus from the label. The subgenus
+    is a capitalized word typically found in parentheses between the genus
+    and species (e.g., 'Pachliopta' in 'Pachliopta (Pachliopta) polyphontes
+    rosea'). Record the name only, without brackets. If no subgenus is
+    mentioned, leave blank.
+  species: >-
+    The taxonomic specific epithet for this butterfly or moth
+    specimen, ensuring the output consists only of the species name in all
+    lowercase letters. In the name sequence, this follows the genus or
+    subgenus (e.g., 'polyphontes' in 'Pachliopta polyphontes' or
+    'Pachliopta (Pachliopta) polyphontes rosea'). You are authorized to use
+    your internal taxonomic knowledge to determine the species if the label
+    is incomplete but provides enough diagnostic information, such as a
+    subspecies name. However, if the species is not explicitly stated and
+    cannot be inferred with absolute professional certainty, you must not
+    provide a guess or placeholder; the field must be left entirely blank
+    to maintain the integrity of the scientific record.
+  subspecies: >-
+    The taxonomic subspecific epithet for this Lepidoptera
+    specimen, which must be provided as a single word in all lowercase
+    letters. This is the final name in a sequence of three or four names
+    (e.g., 'rosea' in 'Pachliopta polyphontes rosea'). This field is
+    reserved strictly for infraspecific identifications; if the specimen is
+    only identified to the species level, this field must remain empty. Do
+    not include rank indicators like 'ssp.' or 'subsp.' provide only the
+    name itself.
+  authorAndYear: >-
+    Specific author and year of the species or subspecies
+    only. Include parentheses if present. You may expand certain
+    abbreviations (e.g., 'L.' to 'Linnaeus', 'Hbn.' to 'Hübner'). Ignore
+    authors of higher taxa like the genus. Leave blank if missing.
+  decimalLatitude: >-
+    Latitude decimal coordinate. Correct and convert the
+    verbatim location coordinates to conform with the decimal degrees GPS
+    coordinate format.
+  decimalLongitude: >-
+    Longitude decimal coordinate. Correct and convert the
+    verbatim location coordinates to conform with the decimal degrees GPS
+    coordinate format.
+  fullScientificName: >-
+    The complete scientific name (Genus, species, and
+    subspecies if present) followed by the author and year. If the species-
+    level identification is missing or unknown, leave this field blank,
+    even if the genus is known.
+  identifiedConfidence: >-
+    The determiner may wish to indicate additional
+    information related to their determination. Record this information if
+    it is present. Some examples are '?', 'cf.', 'aff.', 'sensu lato',
+    's.l.', 'sensu stricto', 's.s.', 'probably', '? hybrid'. The Confidence
+    field is for short comments about the determination (16 characters
+    maximum). Periods are used in abbreviations in this field.
+  identificationHistory: >-
+    If there are multiple species or genus names,
+    provide the date and determiner for each name and determination.
+  identifier: >-
+    A comma-separated list of names of the people or
+    organizations who assigned the scientific name. Identify these by
+    prefixes like 'det.', 'ident.', or Dutch 'gedet.'. Carefully exclude
+    the specimen collector (marked by 'leg.', 'legit', or 'vgr.') and the
+    acquisition source ('acq.', 'don.', 'gift'). If the role of a name is
+    ambiguous or the label is unclear, leave this field empty to prevent
+    hallucination.
+  identifierDate: >-
+    The date on which the most recent taxonomic
+    determination was assigned to the specimen. Record only the year (YYYY)
+    if that is all that is provided. This date must be specifically
+    associated with the identifier or the 'det.' string. Do not use the
+    collection date (found near locations or 'leg.'/'coll.') or the
+    acquisition date (near 'acq.'/'don.'). Many labels only have a
+    collection date; if no separate identification date is present, this
+    field must remain entirely empty. If the date's purpose is ambiguous,
+    leave it blank.
+  inferredGPSConfidence: 'null'
+  sex: >-
+    The biological sex of the specimen. Convert the symbols ♂ (male)
+    and ♀ (female), or the full words into the standardized output: 'male'
+    or 'female'. If a sex symbol is present, record the corresponding word
+    here and add a remark in the remarks field stating: 'Sex indicated by
+    symbol'. If no sex is explicitly indicated by word, or symbol, leave
+    this field empty.
+  fullLocalityText: >-
+    The complete, verbatim locality information as
+    written on the label, including coordinates. Exclude any altitude or
+    elevation information from this field. If uncertain, leave blank.
+  country: >-
+    The standardized modern country name. If the country is
+    already explicitly on the label, use that name. If only a historical
+    region or town is listed, use your internal knowledge to infer the
+    modern country. For example, if 'Nederlands-indië' is mentioned, assign
+    the modern country accordingly. If the location is ambiguous, leave
+    this field empty.
+  island: >-
+    The current, standardized name of the island where the
+    specimen was collected. If the modern island name appears on the label,
+    extract it exactly. If the label uses a historical, colonial, or
+    archaic island name, you must update it to the modern recognized name
+    (e.g., change 'Celebes' to 'Sulawesi'). If the island is not named but
+    a locality or province is provided, use your internal geographic
+    knowledge to assign the correct island (e.g., 'Mount Sibayak' or
+    'Medan' should result in 'Sumatra'). Do not hallucinate. If the
+    specimen was collected on a continent/mainland, or if the locality name
+    is ambiguous and could belong to multiple islands, leave this field
+    entirely blank. Do not provide a guess.
+  stateProvince: >-
+    The modern state or province. If a modern name is on
+    the label, use it. If a historical name is present (e.g., 'Preanger'),
+    convert it to the modern equivalent ('West Java'). If missing, infer
+    the province from the locality. If uncertain or no data is present,
+    leave blank.
+  locality: >-
+    The modern standardized name of the specific locality. While
+    you should prioritize the specific site mentioned (mountain, village,
+    or forest), you should update historical or colonial names to their
+    current accepted equivalents to facilitate CRS mapping. If the site no
+    longer exists or the name is too obscure to standardize, provide the
+    verbatim text from the label.
+  verbatimCoordinates: >-
+    Locate and transcribe any geographic coordinates
+    present on the specimen labels. Ensure the raw character string is
+    preserved, including symbols like °, ', and '', and note if the
+    coordinates are part of a larger locality string.
+  verbatimAltitude: >-
+    Record the verbatim altitude information exactly as
+    written on the label. Include any ranges, units (m, ft, '), or terms
+    like 'sea level,' 'zeepeil,' or 'zeeniveau.' Do not standardize or
+    interpret the values. If no altitude data is present, leave this field
+    blank.
+  minAltitude: >-
+    Extract the minimum numerical elevation. If the label
+    mentions 'sea level', 'zeepeil' or 'zeeniveau', record '0'. For a range
+    (e.g., '300 to 500m'), record '300'. If only a single altitude is
+    listed, treat it as the minimum. Do not convert units. If no altitude
+    data is explicitly written on the label, leave this field blank.
+  maxAltitude: >-
+    Extract the maximum numerical value from an altitude
+    range. For example, '0-500m' should result in '500'. If the label
+    provides only a single elevation point, use that value as the maximum.
+    If the label mentions 'sea level', 'zeepeil' or 'zeeniveau', record
+    '0'. Strict Rule: If no altitude data exists at all, this field must
+    remain an empty string.
+  naturalis: >-
+    Detect and capture any text string containing the term
+    'Naturalis' or 'N. Naturalis'. Record the full string as it appears on
+    the label. If no mention of 'Naturalis' or 'N. Naturalis' exists, leave
+    this field empty.
+  altitudeUnit: >-
+    The standardized unit of altitude. Convert 'meters' or
+    'metres' to m. Convert 'feet', 'ft', 'zeeniveau', or ' to ft. If no
+    altitude info is given, leave blank.
+  biotope: >-
+    The verbatim biotope, habitat, or host plant description.
+    Extract ecological terms in both languages (e.g., 'regenwoud' /
+    'rainforest', 'tuin' / 'garden'). Include host plant details
+    (waardplant) if mentioned (e.g., 'rups op Salix' or 'larva on
+    Aristolochia'). Record the text exactly as it appears on the label. If
+    the label does not contain this information, leave this field empty.
+  collectingMethod: >-
+    The collecting method used for the specimen. Look
+    for specific abbreviations and provide the Dutch text followed by the
+    English interpretation in brackets:
+    e.l. → e.l. [ex larva]
+    e.o. → e.o. [ex ovum]
+    e.p. → e.p. [ex pupa]
+    a.o. → a.o. [ab ovo]
+    a.l. → a.l. [ab larva]
+    o.l. or op licht → o.l. [light trap] or op licht [light trap]. If no
+    method is mentioned, leave this field empty.
+  collector: >-
+    Extract the name of the collector. If 'c.' or 'coll.' is
+    written on the locality label (the label with the place and/or date),
+    record that name as the collector. Also include names following 'Leg.'
+    or standalone names. If the text specifically reads 'coll. J.M.A. van
+    Groenendael', exclude it as it is a collection name. List names as a
+    comma-separated string. If no collector name is found on the primary
+    label, leave blank.
+  verbatimCollectingDate: >-
+    The exact transcription of the collecting date
+    from the labels. If multiple different dates are present, record them
+    both verbatim, separated by a semicolon (e.g., '[date 1]; [date 2]').
+    Maintain the original notation exactly, including Roman numerals. If no
+    date is found, leave blank.
+  collectingDate: >-
+    The earliest standardized collecting date in
+    DD/MM/YYYY format. If only a year is given, use 01/01/YYYY; if only a
+    month/year, use 01/MM/YYYY. Convert Roman numerals and interpret two-
+    digit years (e.g., '18 to 1918). Use the earliest day in any range.
+    Leave blank if missing.
+  collectingDateEnd: >-
+    The interpreted latest end date for the collecting
+    event formatted as DD/MM/YYYY. This field must reflect the latest
+    possible date mentioned to broaden the temporal range. If only a year
+    is provided, use the last day of that year (31/12/YYYY). If only a
+    month is provided, use the last day of that month (e.g., 28/02 for
+    February). In cases of multiple dates or a range, record the most
+    recent date mentioned. For uncertain digits, record the maximum
+    possible date. If the collecting date is a single certain day with no
+    range, use that date as the end date. If no date is found at all, leave
+    this field empty.
+  verbatimDateOfAcquisition: >-
+    The acquisition date as it appears on the
+    label, recording only the date itself. Use a date only if it is
+    explicitly preceded by terms like 'don.', 'acq.', or 'purchased', which
+    confirm it is an acquisition date. Do not include these terms in the
+    output (e.g., for 'don. 1978', record '1978'). If multiple such
+    acquisition dates appear, separate them with a semicolon. Leave blank
+    if no acquisition date is present.
+  dateOfAcquisition: >-
+    The standardized beginning date of the acquisition
+    event (DD/MM/YYYY). Only process dates explicitly preceded by terms
+    like 'don.', 'acq.', or 'purchased'. Convert Roman numerals to months
+    and interpret shorthand years (e.g., '18' to '1918'). If the confirmed
+    acquisition date is just a year, record the start as 01/01/YYYY. If it
+    is a month and year, record 01/MM/YYYY. If the acquisition date is a
+    single certain day, use that as the start date. If no acquisition date
+    preceded by the required terms exists, leave empty.
+  dateOfAcquisitionEnd: >-
+    The standardized ending date for the acquisition
+    period (DD/MM/YYYY). Only process dates explicitly preceded by terms
+    like 'don.', 'acq.', or 'purchased'. If the confirmed acquisition date
+    is a single year, broaden the range to the end of that year
+    (31/12/YYYY). If it is a month and year, use the last day of that month
+    (e.g., 28/02 for February). If the acquisition date is a single
+    specific day, use that same date as the end date. If no acquisition
+    date preceded by the required terms exists, leave empty.
+  acquiredFrom: >-
+    The verbatim name of the person or organization the
+    specimen was acquired from. Extract names introduced by terms like
+    acq., acquired, don., or donated. Record the name exactly as it appears
+    and leave blank if no acquisition info is present.
+  collectionName: >-
+    The name of the (ex-)collection(s) found on a separate
+    label. Only use names from distinct labels specifically dedicated to a
+    collection (often marked 'c.' or 'coll.'). If the 'c.' or 'coll.'
+    designation appears on the locality/find-spot label, it refers to the
+    collector and must be excluded from this field. Record names exactly as
+    they appear (e.g., 'J. Moonen'). If the name 'Van Groenendael', 'J.M.A.
+    V. Groenendael' or 'Groenendael' is present, always output the specific
+    string 'Collection Van Groenendael'. If two or more collection names
+    are present, separate them with a semicolon and a space. If no distinct
+    collection label is present, leave blank.
+mapping:
+  GEOGRAPHY:
+    - decimalLatitude
+    - decimalLongitude
+    - inferredGPSConfidence
+    - fullLocalityText
+    - country
+    - island
+    - stateProvince
+    - locality
+    - verbatimCoordinates
+    - verbatimAltitude
+    - minAltitude
+    - maxAltitude
+    - altitudeUnit
+  TAXONOMY:
+    - verbatimName
+    - rowlabel
+    - family
+    - subfamily
+    - tribe
+    - genus
+    - subgenus
+    - species
+    - subspecies
+    - authorAndYear
+    - fullScientificName
+    - identifiedConfidence
+    - identificationHistory
+    - identifier
+    - identifierDate
+  COLLECTING:
+    - remarks
+    - registrationnumber
+    - sex
+    - naturalis
+    - biotope
+    - collectingMethod
+    - collector
+    - verbatimCollectingDate
+    - collectingDate
+    - collectingDateEnd
+    - verbatimDateOfAcquisition
+    - dateOfAcquisition
+    - dateOfAcquisitionEnd
+    - acquiredFrom
+    - collectionName
+
+
+
+
+
+
+
+
+
