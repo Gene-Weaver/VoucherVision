@@ -107,11 +107,30 @@ checklist:
   - 7. [Collectors] - Use Name Parser to standardize collector names *after n-gram merging*
   - 8. [Taxonomy] - Use Authorship Detection to split authorship from scientificName
   - 9. [Taxonomy] - Use WFO Backbone Assistant to review taxonomy suggestions and fill gaps
-  - 10. [Elevation] - Use Elevation Discrepancy to review values against COP90, check for outliers
+  - 10. [Geography] - Use Elevation Discrepancy to review values against COP90, check for outliers
   - 11. [Geography] - Use standardization tools to normalize geography and coordinate-related fields
   - 12. [Taxonomy] - Use standardization tools to normalize taxonomy fields
   - 13. Go to Form Mode, bounce around to confirm all remaining reviewed fields before export
   - 14. Export project from in the Settings window
+field_default_values:
+  specificEpithet:
+    - indet
+  country:
+    - no data
+  stateProvince:
+    - no data
+  county:
+    - no data
+  geodeticDatumVerbatimCoordinates:
+    - not present
+  collectedBy:
+    - not present
+    - illegible
+    - not translated
+  collectorNumber:
+    - s.n.
+  verbatimCollectionDate:
+    - s.d.
 review_not_required:
   - scientificNameAuthorship
   - additionalText
