@@ -135,3 +135,5 @@ review_not_required:
   - scientificNameAuthorship
   - additionalText
   - inferredGPSConfidence
+custom_flags:
+  -  (Kyle) Flag for Kyle
