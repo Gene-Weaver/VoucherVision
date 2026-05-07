@@ -193,9 +193,9 @@ class GoogleGeminiHandler:
         return True
         
     def _adjust_config(self):
-        # For Gemini 3 we do NOT change temperature per official guidance
-        if "gemini-3" in self.model_name:
-            self.logger.info("Gemini 3: skipping temperature adjustment per model guidelines.")
+        # For Gemini 3 / Gemma 4 we do NOT change temperature per official guidance
+        if "gemini-3" in self.model_name or "gemma-4" in self.model_name:
+            self.logger.info(f"{self.model_name}: skipping temperature adjustment per model guidelines.")
             return
 
         new_temp = self.adjust_temp + self.temp_increment
@@ -209,9 +209,9 @@ class GoogleGeminiHandler:
 
 
     def _reset_config(self):
-        # For Gemini 3 we do NOT change temperature per official guidance
-        if "gemini-3" in self.model_name:
-            self.logger.info("Gemini 3: skipping temperature reset per model guidelines.")
+        # For Gemini 3 / Gemma 4 we do NOT change temperature per official guidance
+        if "gemini-3" in self.model_name or "gemma-4" in self.model_name:
+            self.logger.info(f"{self.model_name}: skipping temperature reset per model guidelines.")
             return
 
         if self.json_report:
@@ -232,8 +232,8 @@ class GoogleGeminiHandler:
             "google_api_key": self.api_key,
         }
 
-        # For Gemini 3, do NOT pass an explicit temperature (use model default)
-        if "gemini-3" not in self.model_name:
+        # For Gemini 3 / Gemma 4, do NOT pass an explicit temperature (use model default)
+        if "gemini-3" not in self.model_name and "gemma-4" not in self.model_name:
             llm_kwargs["temperature"] = self.config.get('temperature')
 
         self.llm_model = ChatGoogleGenerativeAI(**llm_kwargs)
@@ -302,6 +302,38 @@ class GoogleGeminiHandler:
                     self.logger.info(
                         f'[GEMINI] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
                         f'--- MEDIA[HIGH] --- TOOLS[NONE]'
+                    )
+
+                response = client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt_text.text,
+                    config=types.GenerateContentConfig(**gen_config_kwargs),
+                )
+
+            except Exception as e:
+                print(f"Failed to init genai.Client for {self.model_name}: {e}")
+                return "Failed to parse text"
+        # -------------------------------
+        # Gemma 4 path
+        # -------------------------------
+        elif "gemma-4" in self.model_name:
+            try:
+                client = genai.Client(api_key=self.api_key)
+
+                gen_config_kwargs = {
+                    "thinking_config": types.ThinkingConfig(thinking_level="high"),
+                }
+
+                if self.tool_google:
+                    self.logger.info(
+                        f'[GEMMA] {self.model_name} --- THINK_LEVEL[high] '
+                        f'--- TOOLS[GOOGLE SEARCH]'
+                    )
+                    gen_config_kwargs["tools"] = [self.google_search_tool]
+                else:
+                    self.logger.info(
+                        f'[GEMMA] {self.model_name} --- THINK_LEVEL[high] '
+                        f'--- TOOLS[NONE]'
                     )
 
                 response = client.models.generate_content(

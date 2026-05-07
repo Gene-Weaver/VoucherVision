@@ -59,6 +59,8 @@ class OCRGeminiProVision:
             'gemini-2.5-pro',
             'gemini-3-pro-preview',
             'gemini-3-flash-preview',
+            'gemma-4-31b-it',
+            'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
             ]
         self.MODELS_REQUIRING_INLINE_IMAGE = [
@@ -66,6 +68,8 @@ class OCRGeminiProVision:
             'gemini-2.5-flash',
             'gemini-3-pro-preview',
             'gemini-3-flash-preview',
+            'gemma-4-31b-it',
+            'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
         ]
 
@@ -99,6 +103,14 @@ class OCRGeminiProVision:
                 max_output_tokens=max_output_tokens,
                 thinking_config=types.ThinkingConfig(thinking_level=self.user_thinking_level),
                 media_resolution=self.user_media_resolution,
+            )
+        elif "gemma-4" in model_name.lower():
+            # Gemma 4: thinking_level only (no v1alpha, no media_resolution, no temperature)
+            self.logger.info(f"Used gemma-4 config init")
+            self.generation_config = types.GenerateContentConfig(
+                top_p=top_p,
+                max_output_tokens=max_output_tokens,
+                thinking_config=types.ThinkingConfig(thinking_level="high"),
             )
         elif model_name not in self.supports_thinking:
             # Legacy / non-thinking models
@@ -523,6 +535,14 @@ class OCRGeminiProVision:
                 media_resolution=user_media_resolution,
                 thinking_config=types.ThinkingConfig(thinking_level=user_thinking_level),
             )
+        elif "gemma-4" in self.model_name.lower():
+            self.logger.info(f"Used gemma-4 config")
+            request_generation_config = types.GenerateContentConfig(
+                top_p=top_p,
+                max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
+                safety_settings=self.safety_settings,
+                thinking_config=types.ThinkingConfig(thinking_level="high"),
+            )
         elif self.model_name in self.supports_thinking:
             # Gemini 2.5: use thinking_budget
             request_generation_config = types.GenerateContentConfig(
@@ -664,6 +684,11 @@ class OCRGeminiProVision:
                 total_cost = calculate_cost('GEMINI_3_1_FLASH_LITE', self.path_api_cost, tokens_in, tokens_out)
             elif 'gemini-3.1-pro' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_3_1_PRO', self.path_api_cost, tokens_in, tokens_out)
+
+            elif 'gemma-4-26b-a4b-it' in self.model_name.lower():
+                total_cost = calculate_cost('GEMMA_4_26B_A4B_IT', self.path_api_cost, tokens_in, tokens_out)
+            elif 'gemma-4-31b-it' in self.model_name.lower():
+                total_cost = calculate_cost('GEMMA_4_31B_IT', self.path_api_cost, tokens_in, tokens_out)
 
             cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
 

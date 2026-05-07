@@ -89,6 +89,12 @@ GEMINI_3_PRO:
 GEMINI_3_1_PRO:
   in: 2.00
   out: 12.00
+GEMMA_4_31B_IT:
+  in: 0.00      # TODO confirm pricing from Google
+  out: 0.00     # TODO confirm pricing from Google
+GEMMA_4_26B_A4B_IT:
+  in: 0.00      # TODO confirm pricing from Google
+  out: 0.00     # TODO confirm pricing from Google
 GEMINI_2_5_PRO:
   in: 1.25
   out: 10.00
