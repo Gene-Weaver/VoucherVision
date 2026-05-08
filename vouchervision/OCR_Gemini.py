@@ -89,7 +89,18 @@ class OCRGeminiProVision:
         self.api_key = api_key
         self.do_resize_img = do_resize_img
         if vertex_project:
-            client_kwargs = {"vertexai": True, "project": vertex_project, "location": vertex_region}
+            # Pull credentials straight from the Cloud Run metadata server so we
+            # use the runtime SA identity (e.g. vouchervision-vertex) and bypass
+            # GOOGLE_APPLICATION_CREDENTIALS, which in this deployment holds raw
+            # JSON for GDAL and would (a) authenticate as the wrong SA and
+            # (b) leak its contents into google-auth error messages.
+            from google.auth import compute_engine as _gce_auth
+            client_kwargs = {
+                "vertexai": True,
+                "project": vertex_project,
+                "location": vertex_region,
+                "credentials": _gce_auth.Credentials(),
+            }
         else:
             client_kwargs = {"api_key": self.api_key}
         if "gemini-3" in model_name.lower():
