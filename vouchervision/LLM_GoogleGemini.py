@@ -293,17 +293,17 @@ class GoogleGeminiHandler:
         # -------------------------------
         if "gemini-3" in self.model_name:
             try:
-                # v1alpha is required for media_resolution
+                # v1alpha is required for gemini-3 on AI Studio (media_resolution),
+                # but Vertex AI does not expose v1alpha for project-scoped URLs —
+                # forcing it there yields a 404. On Vertex, let the SDK use its
+                # default API version.
+                gemini3_kwargs = self._build_client_kwargs()
+                if not self.vertex_project:
+                    gemini3_kwargs["http_options"] = {"api_version": "v1alpha"}
                 try:
-                    client = genai.Client(
-                        **self._build_client_kwargs(),
-                        http_options={'api_version': 'v1alpha'}
-                    )
+                    client = genai.Client(**gemini3_kwargs)
                 except Exception:
-                    client = genai.Client(
-                        **self._build_client_kwargs(),
-                        http_options={'api_version': 'v1alpha'}
-                    )
+                    client = genai.Client(**gemini3_kwargs)
 
                 gen_config_kwargs = {
                     "thinking_config": types.ThinkingConfig(thinking_level=thinking_level),

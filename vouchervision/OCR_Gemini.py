@@ -105,7 +105,11 @@ class OCRGeminiProVision:
             }
         else:
             client_kwargs = {"api_key": self.api_key}
-        if "gemini-3" in model_name.lower():
+        if "gemini-3" in model_name.lower() and not vertex_project:
+            # v1alpha is required for gemini-3 on AI Studio, but Vertex AI's
+            # project-scoped endpoints only expose v1 / v1beta1 — forcing
+            # v1alpha there yields a 404. On Vertex, let the SDK use its
+            # default API version.
             self.logger.info(f"Used gemini-3 v1alpha")
             client_kwargs["http_options"] = {'api_version': 'v1alpha'}
         self.client = genai.Client(**client_kwargs)
