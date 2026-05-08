@@ -27,7 +27,7 @@ class GoogleGeminiHandler:
     THINK_BUDGET = -1 # dynamic thinking for the 2.5 models
 
     def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False,
-                 api_key=None, **kwargs):
+                 api_key=None, vertex_project=None, vertex_region=None, **kwargs):
 
         # Resolve API key once, at construction time.
         # Priority: explicit argument → GOOGLE_API_KEY env → API_KEY env
@@ -36,8 +36,10 @@ class GoogleGeminiHandler:
             or os.environ.get('GOOGLE_API_KEY')
             or os.environ.get('API_KEY')
         )
-        if not self.api_key:
-            raise ValueError("No Gemini API key provided and none found in environment.")
+        self.vertex_project = vertex_project
+        self.vertex_region = vertex_region
+        if not self.api_key and not self.vertex_project:
+            raise ValueError("No Gemini API key provided and none found in environment, and no vertex_project given.")
 
 
         self.exit_early_for_JSON = exit_early_for_JSON
@@ -77,6 +79,12 @@ class GoogleGeminiHandler:
             partial_variables={"format_instructions": self.parser.get_format_instructions()},
         )
         self._set_config()
+
+
+    def _build_client_kwargs(self):
+        if self.vertex_project:
+            return {"vertexai": True, "project": self.vertex_project, "location": self.vertex_region}
+        return {"api_key": self.api_key}
 
 
     def _set_config(self):
@@ -277,12 +285,12 @@ class GoogleGeminiHandler:
                 # v1alpha is required for media_resolution
                 try:
                     client = genai.Client(
-                        api_key=self.api_key,
+                        **self._build_client_kwargs(),
                         http_options={'api_version': 'v1alpha'}
                     )
                 except Exception:
                     client = genai.Client(
-                        api_key=self.api_key,
+                        **self._build_client_kwargs(),
                         http_options={'api_version': 'v1alpha'}
                     )
 
@@ -318,7 +326,7 @@ class GoogleGeminiHandler:
         # -------------------------------
         elif "gemma-4" in self.model_name:
             try:
-                client = genai.Client(api_key=self.api_key)
+                client = genai.Client(**self._build_client_kwargs())
 
                 gen_config_kwargs = {
                     "thinking_config": types.ThinkingConfig(thinking_level="high"),
@@ -347,7 +355,7 @@ class GoogleGeminiHandler:
                 return "Failed to parse text"
         elif ("2.5" in self.model_name):# or ("2.0" in self.model_name):
             try:
-                client = genai.Client(api_key=self.api_key)
+                client = genai.Client(**self._build_client_kwargs())
                 # try:
                 #     client = genai.Client(api_key=os.environ['GOOGLE_API_KEY'])
                 # except:

@@ -20,10 +20,11 @@ thinking_budget = 32768  # pro
 '''
 
 class OCRGeminiProVision:
-    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456, 
+    def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456,
                 user_thinking_level="high",
                 user_media_resolution="MEDIA_RESOLUTION_HIGH",
-                do_resize_img=False, logger=None):
+                do_resize_img=False, logger=None,
+                vertex_project=None, vertex_region=None):
         """
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
@@ -87,7 +88,10 @@ class OCRGeminiProVision:
         self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
         self.api_key = api_key
         self.do_resize_img = do_resize_img
-        client_kwargs = {"api_key": self.api_key}
+        if vertex_project:
+            client_kwargs = {"vertexai": True, "project": vertex_project, "location": vertex_region}
+        else:
+            client_kwargs = {"api_key": self.api_key}
         if "gemini-3" in model_name.lower():
             self.logger.info(f"Used gemini-3 v1alpha")
             client_kwargs["http_options"] = {'api_version': 'v1alpha'}
