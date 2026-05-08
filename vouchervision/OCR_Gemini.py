@@ -88,6 +88,8 @@ class OCRGeminiProVision:
         self.path_api_cost = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'api_cost', 'api_cost.yaml')
         self.api_key = api_key
         self.do_resize_img = do_resize_img
+        self.vertex_project = vertex_project
+        self.vertex_region = vertex_region
         if vertex_project:
             # Pull credentials straight from the Cloud Run metadata server so we
             # use the runtime SA identity (e.g. vouchervision-vertex) and bypass
@@ -156,8 +158,12 @@ class OCRGeminiProVision:
         Prepare image for API call based on model requirements
         """
         try:
-            # For newer models that require types.Part.from_bytes
-            if self.model_name in self.MODELS_REQUIRING_INLINE_IMAGE:
+            # Vertex AI does not support the File API (client.files.upload is
+            # AI-Studio-only), so on the Vertex path we must always send images
+            # inline regardless of the model.
+            use_inline = (self.vertex_project is not None
+                          or self.model_name in self.MODELS_REQUIRING_INLINE_IMAGE)
+            if use_inline:
                 self.logger.info(f"Using new inline method for {self.model_name}")
                 
                 # Convert PIL image to bytes
