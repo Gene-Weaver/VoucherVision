@@ -398,8 +398,15 @@ class GoogleGeminiHandler:
                 print(f"Failed to init genai.Client for {self.model_name}: {e}")
                 return "Failed to parse text"
         else:
-            model = GenerativeModel(self.model_name)
-            response = model.generate_content(prompt_text.text)
+            # Fallback for older/other Gemini models (e.g. gemini-2.0-flash).
+            # Use the unified google-genai SDK so vertex_project/vertex_region
+            # are honored — otherwise the legacy vertexai SDK silently falls
+            # back to ambient credentials and bills the host project.
+            client = genai.Client(**self._build_client_kwargs())
+            response = client.models.generate_content(
+                model=self.model_name,
+                contents=prompt_text.text,
+            )
         self.log_response_metrics(response)
         return response.text
     
