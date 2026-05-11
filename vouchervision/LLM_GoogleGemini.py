@@ -16,7 +16,31 @@ from google import genai
 from google.genai import types
 from google.genai.types import Tool, GoogleSearch, GenerateContentConfig
 
-class GoogleGeminiHandler: 
+
+def _is_fatal_api_error(exc):
+    """True when exc indicates a configuration-level API failure (auth,
+    permission, not-found, bad-arg, quota). Retrying the same call cannot
+    succeed; callers should re-raise so the outer handler can surface a
+    friendly error. Returns False for transient 5xx / network errors so those
+    still benefit from the existing retry-with-temperature-adjust loop.
+    """
+    msg = str(exc).upper()
+    fatal_tokens = (
+        "PERMISSION_DENIED", "PERMISSION DENIED",
+        "UNAUTHENTICATED", "UNAUTHORIZED",
+        "NOT_FOUND", "NOT FOUND",
+        "API_KEY_INVALID", "INVALID_ARGUMENT",
+        "RESOURCE_EXHAUSTED", "QUOTA_EXCEEDED",
+        "FAILED_PRECONDITION",
+    )
+    fatal_codes = (" 401", " 403", " 404", " 429")
+    return (
+        any(t in msg for t in fatal_tokens)
+        or any(c in msg for c in fatal_codes)
+    )
+
+
+class GoogleGeminiHandler:
 
     RETRY_DELAY = 10  # Wait 10 seconds before retrying
     MAX_RETRIES = 3  # Maximum number of retries
@@ -330,8 +354,14 @@ class GoogleGeminiHandler:
                 )
 
             except Exception as e:
-                print(f"Failed to init genai.Client for {self.model_name}: {e}")
-                return "Failed to parse text"
+                # Surface the underlying API error so the outer
+                # call_llm_api_GoogleGemini retry loop and finally
+                # process_image_request's friendly-error handler can act on
+                # it. Previously this returned the literal string
+                # "Failed to parse text", which caused downstream parser
+                # crashes and silent 200-with-empty-data responses.
+                print(f"genai.Client call failed for {self.model_name}: {e}")
+                raise
         # -------------------------------
         # Gemma 4 path
         # -------------------------------
@@ -362,8 +392,14 @@ class GoogleGeminiHandler:
                 )
 
             except Exception as e:
-                print(f"Failed to init genai.Client for {self.model_name}: {e}")
-                return "Failed to parse text"
+                # Surface the underlying API error so the outer
+                # call_llm_api_GoogleGemini retry loop and finally
+                # process_image_request's friendly-error handler can act on
+                # it. Previously this returned the literal string
+                # "Failed to parse text", which caused downstream parser
+                # crashes and silent 200-with-empty-data responses.
+                print(f"genai.Client call failed for {self.model_name}: {e}")
+                raise
         elif ("2.5" in self.model_name):# or ("2.0" in self.model_name):
             try:
                 client = genai.Client(**self._build_client_kwargs())
@@ -395,8 +431,14 @@ class GoogleGeminiHandler:
                     )
 
             except Exception as e:
-                print(f"Failed to init genai.Client for {self.model_name}: {e}")
-                return "Failed to parse text"
+                # Surface the underlying API error so the outer
+                # call_llm_api_GoogleGemini retry loop and finally
+                # process_image_request's friendly-error handler can act on
+                # it. Previously this returned the literal string
+                # "Failed to parse text", which caused downstream parser
+                # crashes and silent 200-with-empty-data responses.
+                print(f"genai.Client call failed for {self.model_name}: {e}")
+                raise
         else:
             # Fallback for older/other Gemini models (e.g. gemini-2.0-flash).
             # Use the unified google-genai SDK so vertex_project/vertex_region
@@ -493,8 +535,15 @@ class GoogleGeminiHandler:
 
             except Exception as e:
                 self.logger.error(f'{e}')
-                
-                self._adjust_config()           
+
+                if _is_fatal_api_error(e):
+                    # Configuration error (auth, permission, not-found, quota).
+                    # Temperature-adjust + sleep + retry cannot recover; bubble
+                    # up so process_image_request can return a friendly 403/4xx.
+                    self._reset_config()
+                    raise
+
+                self._adjust_config()
                 time.sleep(self.RETRY_DELAY)
 
         self.logger.info(f"Failed to extract valid JSON after [{ind}] attempts")

@@ -11,13 +11,37 @@ from packaging import version
 import importlib.metadata
 
 '''
-Does not need to be downsampled like the other APIs or local 
+Does not need to be downsampled like the other APIs or local
 Updated to use new Google GenAI SDK with dynamic thinking enabled
 
 thinking_budget = 24576  # max allowed for gemini-2.5-flash
 thinking_budget = 32768  # pro
 
 '''
+
+
+def _is_fatal_api_error(exc):
+    """True when exc indicates a configuration-level API failure (auth,
+    permission, not-found, bad-arg, quota). Retrying the same call cannot
+    succeed; callers should re-raise so the outer handler can surface a
+    friendly error. Returns False for transient 5xx / network errors so those
+    still benefit from backoff retries.
+    """
+    msg = str(exc).upper()
+    fatal_tokens = (
+        "PERMISSION_DENIED", "PERMISSION DENIED",
+        "UNAUTHENTICATED", "UNAUTHORIZED",
+        "NOT_FOUND", "NOT FOUND",
+        "API_KEY_INVALID", "INVALID_ARGUMENT",
+        "RESOURCE_EXHAUSTED", "QUOTA_EXCEEDED",
+        "FAILED_PRECONDITION",
+    )
+    fatal_codes = (" 401", " 403", " 404", " 429")
+    return (
+        any(t in msg for t in fatal_tokens)
+        or any(c in msg for c in fatal_codes)
+    )
+
 
 class OCRGeminiProVision:
     def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456,
@@ -292,27 +316,26 @@ class OCRGeminiProVision:
     def exponential_backoff(self, func, *args, **kwargs):
         """
         Exponential backoff for a given function.
-        
-        Args:
-            func (function): The function to retry.
-            *args: Positional arguments for the function.
-            **kwargs: Keyword arguments for the function.
-        
-        Returns:
-            The result of the function if successful.
+
+        Configuration-level errors (403/404/401/quota/etc.) short-circuit
+        immediately — retrying with the same params cannot succeed and the
+        caller needs the exception to surface a friendly error. Transient
+        errors continue to retry up to max_retries.
         """
         max_retries = 3
+        last_exc = None
         for attempt in range(max_retries):
             try:
-                result = func(*args, **kwargs)
-                return result
+                return func(*args, **kwargs)
             except Exception as e:
+                last_exc = e
+                print(f"Attempt {attempt + 1} failed with error: {e}")
+                if _is_fatal_api_error(e):
+                    raise
                 wait_time = (2 ** attempt) + random.uniform(0, 1)
-                print(f"Attempt {attempt + 1} failed with error: {e}. Retrying in {wait_time:.2f} seconds...")
+                print(f"Retrying in {wait_time:.2f} seconds...")
                 time.sleep(wait_time)
-        
-        return ""
-        # raise Exception(f"Failed to complete {func.__name__} after {max_retries} attempts.")
+        raise last_exc
     
     
     # def exponential_backoff(self, func, *args, **kwargs):
