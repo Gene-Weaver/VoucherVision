@@ -60,15 +60,22 @@ class OCRGeminiProVision:
             'gemini-2.5-pro',
             'gemini-3-pro-preview',
             'gemini-3-flash-preview',
+            'gemini-3.1-pro-preview',
+            'gemini-3.1-flash-lite-preview',
             'gemma-4-31b-it',
             'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
             ]
+        # Must include any model whose client is pinned to v1alpha (see __init__
+        # below): v1alpha does not expose the File API, so leaving a model out
+        # here routes it through client.files.upload and breaks the request.
         self.MODELS_REQUIRING_INLINE_IMAGE = [
             'gemini-2.5-pro',
             'gemini-2.5-flash',
             'gemini-3-pro-preview',
             'gemini-3-flash-preview',
+            'gemini-3.1-pro-preview',
+            'gemini-3.1-flash-lite-preview',
             'gemma-4-31b-it',
             'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
