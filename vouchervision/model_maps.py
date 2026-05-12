@@ -494,7 +494,7 @@ class ModelMaps:
         elif key == 'GEMINI_3_FLASH':
             return 'gemini-3-flash-preview' # TODO UPDATE AS NEEDED
         elif key == 'GEMINI_3_1_FLASH_LITE':
-            return 'gemini-3.1-flash-lite-preview' # TODO UPDATE AS NEEDED
+            return 'gemini-3.1-flash-lite' # TODO UPDATE AS NEEDED
 
         elif key == 'GEMMA_4_31B_IT':
             return 'gemma-4-31b-it'

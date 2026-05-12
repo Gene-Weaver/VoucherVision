@@ -156,6 +156,7 @@ class OCREngine:
             "gemini-3-pro-preview", 
             "gemini-3-flash-preview", 
             "gemini-3.1-flash-lite-preview"
+            "gemini-3.1-flash-lite"
             "Gemini-2.5-Pro", 
             "Gemini-2.5-Flash", 
             "Gemini-2.0-Flash", 
@@ -176,7 +177,9 @@ class OCREngine:
             self.GeminiProVision_3_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.1-pro-preview") # TODO update to non-preview
 
         if "gemini-3.1-flash-lite-preview" in self.OCR_option:
-            self.GeminiProVision_3_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.1-flash-lite-preview") # TODO update to non-preview
+            self.GeminiProVision_3_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.1-flash-lite") # TODO update to non-preview
+        if "gemini-3.1-flash-lite" in self.OCR_option:
+            self.GeminiProVision_3_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.1-flash-lite") # TODO update to non-preview
         if "gemini-3-flash-preview" in self.OCR_option:
             self.GeminiProVision_3_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3-flash-preview") # TODO update to non-preview
         if "Gemini-2.5-Pro" in self.OCR_option:
@@ -984,10 +987,16 @@ class OCREngine:
             )
 
         if "gemini-3.1-flash-lite-preview" in self.OCR_option: # This option does not produce an OCR helper image
-            self.gemini_ocr(ocr_option="gemini-3.1-flash-lite-preview",
+            self.gemini_ocr(ocr_option="gemini-3.1-flash-lite",
                 ocr_helper=self.GeminiProVision_3_Flash,
-                json_key='OCR_gemini_3_1_flash_lite_preview',
-                logger_message="gemini-3.1-flash-lite-preview"
+                json_key='OCR_gemini_3_1_flash_lite',
+                logger_message="gemini-3.1-flash-lite"
+            )
+        if "gemini-3.1-flash-lite" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="gemini-3.1-flash-lite",
+                ocr_helper=self.GeminiProVision_3_Flash,
+                json_key='OCR_gemini_3_1_flash_lite',
+                logger_message="gemini-3.1-flash-lite"
             )
         
         if "gemini-3-flash-preview" in self.OCR_option: # This option does not produce an OCR helper image
