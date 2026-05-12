@@ -23,3 +23,9 @@ def calculate_cost(LLM_version, path_api_cost, total_tokens_in, total_tokens_out
         raise ValueError(f"LLM version {LLM_version} not found in the cost data")
 
     return cost_in, cost_out, total_cost, rates['in'], rates['out']
+
+
+def get_cfg_from_full_path(path_cfg):
+    with open(path_cfg, "r") as ymlfile:
+        cfg = yaml.full_load(ymlfile)
+    return cfg

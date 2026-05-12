@@ -15,7 +15,7 @@ import threading
 # from vouchervision.LLM_Hyperbolic import HyperbolicHandler
 from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
-from vouchervision.general_utils import get_cfg_from_full_path
+from vouchervision.general_utils_slim import get_cfg_from_full_path
 from vouchervision.OCR_google_cloud_vision import OCREngine 
 from OCR_sanitize import write_excel_safe, sanitize_excel_record
 

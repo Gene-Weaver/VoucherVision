@@ -1,14 +1,16 @@
 # Helper funcs for LLM_XXXXX.py
 import tiktoken, json, os, yaml
 from langchain_core.output_parsers.format_instructions import JSON_FORMAT_INSTRUCTIONS
-from transformers import AutoTokenizer
 import GPUtil
 import time
 import psutil
 import threading
-import torch
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+# Heavy deps (torch, transformers.AutoTokenizer) are imported lazily inside
+# the functions that use them — see count_tokens (mistral branch),
+# SystemLoadMonitor.has_GPU (property), and check_system_gpus. This keeps
+# `import vouchervision.utils_LLM` cheap on cold start.
 
 try:
     from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
@@ -97,6 +99,7 @@ def count_tokens(string, vendor, model_name):
         
     try:
         if vendor == 'mistral':
+            from transformers import AutoTokenizer
             tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
 
             tokens = tokenizer.tokenize(full_string)
@@ -118,8 +121,17 @@ class SystemLoadMonitor():
         self.gpu_usage = {'max_cpu_usage': 0, 'max_load': 0, 'max_vram_usage': 0, "max_ram_usage": 0, 'n_gpus': 0, 'monitoring': True}
         self.start_time = None
         self.tool_start_time = None
-        self.has_GPU = torch.cuda.is_available()
+        # Resolve GPU availability lazily on first read so importing torch is
+        # deferred to the first transcription request (see has_GPU below).
+        self._has_GPU = None
         self.monitor_interval = 2
+
+    @property
+    def has_GPU(self):
+        if self._has_GPU is None:
+            import torch
+            self._has_GPU = torch.cuda.is_available()
+        return self._has_GPU
         
     def start_monitoring_usage(self):
         self.start_time = time.time()
@@ -213,6 +225,7 @@ class SystemLoadMonitor():
 
 
 def check_system_gpus():
+    import torch
     print(f"Torch CUDA: {torch.cuda.is_available()}")
     # if not torch.cuda.is_available():
     #     return 0, {}, 0, "no_gpu"
