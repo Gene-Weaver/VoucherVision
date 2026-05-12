@@ -1,20 +1,29 @@
 import os, time, json
-import vertexai
-from vertexai.preview.generative_models import GenerativeModel
-from vertexai.generative_models._generative_models import HarmCategory, HarmBlockThreshold
-from langchain_classic.output_parsers import RetryWithErrorOutputParser
-# from langchain.output_parsers import RetryWithErrorOutputParser
-# from langchain_classic.schema import HumanMessage
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_google_vertexai import VertexAI
 
 from vouchervision.utils_LLM import SystemLoadMonitor, run_tools, count_tokens, save_individual_prompt, sanitize_prompt
 from vouchervision.utils_LLM_JSON_validation import validate_and_align_JSON_keys_with_template
-from google import genai
-from google.genai import types
-from google.genai.types import Tool, GoogleSearch, GenerateContentConfig
+
+
+def _get_langchain_runtime():
+    from langchain_classic.output_parsers import RetryWithErrorOutputParser
+    from langchain_core.output_parsers import JsonOutputParser
+    from langchain_core.prompts import PromptTemplate
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
+    return (
+        RetryWithErrorOutputParser,
+        JsonOutputParser,
+        PromptTemplate,
+        ChatGoogleGenerativeAI,
+    )
+
+
+def _get_genai_runtime():
+    from google import genai
+    from google.genai import types
+    from google.genai.types import GoogleSearch, Tool
+
+    return genai, types, GoogleSearch, Tool
 
 
 def _is_fatal_api_error(exc):
@@ -90,19 +99,39 @@ class GoogleGeminiHandler:
         self.config_vals_for_permutation = config_vals_for_permutation
         
         self.monitor = SystemLoadMonitor(logger)
+        self.parser = None
+        self.google_search_tool = None
+        self.prompt = None
+        self.llm_model = None
+        self.retry_parser = None
+        self.chain = None
+        self._runtime_ready = False
+        self._set_config()
+
+    def _ensure_runtime_ready(self):
+        if self._runtime_ready:
+            return
+
+        (
+            RetryWithErrorOutputParser,
+            JsonOutputParser,
+            PromptTemplate,
+            ChatGoogleGenerativeAI,
+        ) = _get_langchain_runtime()
+        _, _, GoogleSearch, Tool = _get_genai_runtime()
 
         self.parser = JsonOutputParser()
-
-        self.google_search_tool = Tool(google_search = GoogleSearch())
-        # self.google_search_tool = {'google_search': {}}
-
-        # Define the prompt template
+        self.google_search_tool = Tool(google_search=GoogleSearch())
         self.prompt = PromptTemplate(
             template="Answer the user query.\n{format_instructions}\n{query}\n",
             input_variables=["query"],
             partial_variables={"format_instructions": self.parser.get_format_instructions()},
         )
-        self._set_config()
+        self._build_model_chain_parser(
+            ChatGoogleGenerativeAI,
+            RetryWithErrorOutputParser,
+        )
+        self._runtime_ready = True
 
 
     def _build_client_kwargs(self):
@@ -142,14 +171,6 @@ class GoogleGeminiHandler:
 
         self.temp_increment = float(0.2)
         self.adjust_temp = self.starting_temp   
-
-        self.safety_settings = {
-            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-        }
-        self._build_model_chain_parser()
 
     def log_response_metrics(self, response):
         """
@@ -266,7 +287,7 @@ class GoogleGeminiHandler:
         self.config['temperature'] = self.starting_temp
 
 
-    def _build_model_chain_parser(self):
+    def _build_model_chain_parser(self, ChatGoogleGenerativeAI, RetryWithErrorOutputParser):
         # Instantiate the LLM class for Google Gemini, used ONLY by the retry parser.
         llm_kwargs = {
             "model": self.model_name,
@@ -307,6 +328,8 @@ class GoogleGeminiHandler:
           - Gemini 2.5 (legacy thinking_budget-based path)
           - Older / Vertex GenerativeModel fallback
         """
+        genai, types, _, _ = _get_genai_runtime()
+
         # Normalize thinking_level for Gemini 3
         thinking_level = (thinking_level or "high").lower()
         if thinking_level not in ("low", "high"):
@@ -453,6 +476,8 @@ class GoogleGeminiHandler:
         return response.text
     
     def call_llm_api_GoogleGemini(self, prompt_template, json_report, paths):
+        self._ensure_runtime_ready()
+
         if paths is not None:
             _____, ____, _, __, ___, json_file_path_wiki, txt_file_path_ind_prompt = paths
         else:

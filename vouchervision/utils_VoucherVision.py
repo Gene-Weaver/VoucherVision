@@ -16,7 +16,6 @@ import threading
 from vouchervision.prompt_catalog import PromptCatalog
 from vouchervision.model_maps import ModelMaps
 from vouchervision.general_utils_slim import get_cfg_from_full_path
-from vouchervision.OCR_google_cloud_vision import OCREngine 
 from OCR_sanitize import write_excel_safe, sanitize_excel_record
 
 '''
@@ -154,6 +153,9 @@ class VoucherVision():
         self.prompt_version = None
         self.is_hf = is_hf
         self.skip_API_keys = skip_API_keys
+        self.prompt_only_mode = bool(
+            self.skip_API_keys and self.Project is None and self.Dirs is None
+        )
 
         self.OCR_cost = 0.0
         self.OCR_tokens_in = 0
@@ -181,8 +183,23 @@ class VoucherVision():
         #     self.has_key_google_application_credentials = True
         #     self.has_key_mistral = False
         #     self.has_key_hyperbolic = False
+        if self.prompt_only_mode:
+            self._setup_prompt_only_mode()
+            return
+
         self.set_API_keys()
         self.setup()
+
+    def _setup_prompt_only_mode(self):
+        """Initialize only the state needed by VoucherVisionGO's prompt path."""
+        self.headers = None
+        self.prompt_version = None
+        self.path_cfg_private = None
+        self.cfg_private = None
+        self.img_paths = []
+        self.do_create_OCR_helper_image = self.cfg.get('leafmachine', {}).get(
+            'do_create_OCR_helper_image', False
+        )
 
 
     def setup(self):
@@ -718,7 +735,6 @@ class VoucherVision():
             k_here = None
             k_opencage = None
 
-
         self.has_key_openai = self.has_API_key(k_openai)
         self.has_key_azure_openai = self.has_API_key(k_openai_azure)
         self.llm = None
@@ -734,7 +750,8 @@ class VoucherVision():
         self.has_key_here = self.has_API_key(k_here)
         self.has_key_open_cage_geocode = self.has_API_key(k_opencage)
 
-        
+        if self.skip_API_keys:
+            return
 
         ### Google - OCR, Palm2, Gemini
         if self.has_key_google_application_credentials and self.has_key_google_project_id and self.has_key_google_location:
@@ -1836,6 +1853,8 @@ class VoucherVision():
                 self.log_skipping_specimen(path_to_crop)
 
         # --- Prepare Jobs for Parallel Processing ---
+        from vouchervision.OCR_google_cloud_vision import OCREngine
+
         jobs = []
         total_images = len(valid_img_paths)
         for i, path_to_crop in valid_img_paths:

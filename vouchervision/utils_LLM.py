@@ -12,16 +12,31 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # SystemLoadMonitor.has_GPU (property), and check_system_gpus. This keeps
 # `import vouchervision.utils_LLM` cheap on cold start.
 
-try:
-    from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
-    from vouchervision.tool_geolocate_HERE import validate_coordinates_here
-    from vouchervision.tool_wikipedia import validate_wikipedia
-except:
-    from tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
-    from tool_geolocate_HERE import validate_coordinates_here
-    from tool_wikipedia import validate_wikipedia
+def _get_tool_runtime():
+    try:
+        from vouchervision.tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
+        from vouchervision.tool_geolocate_HERE import validate_coordinates_here
+        from vouchervision.tool_wikipedia import validate_wikipedia
+    except ImportError:
+        from tool_taxonomy_WFO import validate_taxonomy_WFO, WFONameMatcher
+        from tool_geolocate_HERE import validate_coordinates_here
+        from tool_wikipedia import validate_wikipedia
+
+    return (
+        validate_taxonomy_WFO,
+        WFONameMatcher,
+        validate_coordinates_here,
+        validate_wikipedia,
+    )
 
 def run_tools(output, tool_WFO, tool_GEO, tool_wikipedia, json_file_path_wiki):
+    (
+        validate_taxonomy_WFO,
+        WFONameMatcher,
+        validate_coordinates_here,
+        validate_wikipedia,
+    ) = _get_tool_runtime()
+
     # Define a function that will catch and return the results of your functions
     def task(func, *args, **kwargs):
         return func(*args, **kwargs)
