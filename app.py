@@ -1136,8 +1136,11 @@ def blog_text_and_image(text=None, fullpath=None, width=700):
     if text:
         st.markdown(f"{text}")
     if fullpath:
-        st.session_state.logo = Image.open(fullpath)
-        st.image(st.session_state.logo, width=width)
+        if os.path.exists(fullpath):
+            st.session_state.logo = Image.open(fullpath)
+            st.image(st.session_state.logo, width=width)
+        else:
+            st.warning(f"Missing tutorial image: {fullpath}")
 
 def blog_text(text_bold, text):
     st.markdown(f"- **{text_bold}**{text}")
@@ -2546,19 +2549,29 @@ def show_collage():
     if "demo_collage" not in st.session_state:
         # ba = os.path.join(st.session_state.dir_home, 'demo', 'ba', 'ba2.png')
         ba = os.path.join(st.session_state.dir_home, 'demo', 'ba', 'ba2.png')
-        st.session_state["demo_collage"] = Image.open(ba)
+        if os.path.exists(ba):
+            st.session_state["demo_collage"] = Image.open(ba)
+        else:
+            st.session_state["demo_collage"] = None
+            st.warning(f"Missing demo asset: {ba}")
     with st.expander(":frame_with_picture: View an example of the LeafMachine2 collage image"):
-        st.image(st.session_state["demo_collage"], caption='LeafMachine2 Collage', output_format="PNG")
+        if st.session_state["demo_collage"] is not None:
+            st.image(st.session_state["demo_collage"], caption='LeafMachine2 Collage', output_format="PNG")
 
 @st.cache_data
 def show_ocr():
     if "demo_overlay" not in st.session_state:
         # ocr = os.path.join(st.session_state.dir_home,'demo', 'ba','ocr.png')
         ocr = os.path.join(st.session_state.dir_home,'demo', 'ba','ocr2.png')
-        st.session_state["demo_overlay"] = Image.open(ocr)
-    
+        if os.path.exists(ocr):
+            st.session_state["demo_overlay"] = Image.open(ocr)
+        else:
+            st.session_state["demo_overlay"] = None
+            st.warning(f"Missing demo asset: {ocr}")
+
     with st.expander(":frame_with_picture: View an example of the OCR overlay image"):
-        st.image(st.session_state["demo_overlay"], caption='OCR Overlay Images', output_format = "PNG")
+        if st.session_state["demo_overlay"] is not None:
+            st.image(st.session_state["demo_overlay"], caption='OCR Overlay Images', output_format = "PNG")
         # st.image(st.session_state["demo_overlay"], caption='OCR Overlay Images', output_format = "JPEG")
 
 def content_collage_overlay():

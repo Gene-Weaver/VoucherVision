@@ -1,15 +1,13 @@
 import concurrent
-import openai
 from tqdm import tqdm
-import os, json, glob, shutil, yaml, torch, logging, gc, traceback
+import os, json, glob, shutil, yaml, logging, gc, traceback
 import openpyxl
 from openpyxl import Workbook, load_workbook
-import vertexai
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-from langchain_openai import AzureChatOpenAI
 from google.oauth2 import service_account
-from transformers import AutoTokenizer, AutoModel
-import pandas as pd
+# Heavy deps (torch, transformers, openai, vertexai, langchain_openai) are
+# imported lazily inside the functions that use them so callers that don't
+# touch those code paths (e.g. cold-start of the VoucherVisionGO Flask app)
+# don't pay the import cost. See init_trOCR_model, set_API_keys, send_to_LLM.
 
 import queue
 import threading
@@ -253,12 +251,15 @@ class VoucherVision():
 
 
     def init_trOCR_model(self):
+        import torch
+        from transformers import TrOCRProcessor, VisionEncoderDecoderModel
+
         lgr = logging.getLogger('transformers')
         lgr.setLevel(logging.ERROR)
-        
+
         self.trOCR_processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten") # usually just the "microsoft/trocr-base-handwritten"
         self.trOCR_model = VisionEncoderDecoderModel.from_pretrained(self.trOCR_model_version) # This matches the model
-        
+
         # Check for GPU availability
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.trOCR_model.to(self.device)
@@ -737,6 +738,7 @@ class VoucherVision():
 
         ### Google - OCR, Palm2, Gemini
         if self.has_key_google_application_credentials and self.has_key_google_project_id and self.has_key_google_location:
+            import vertexai
             if self.is_hf or self.skip_API_keys:
                 vertexai.init(project=os.getenv('GOOGLE_PROJECT_ID'), location=os.getenv('GOOGLE_LOCATION'), credentials=self.get_google_credentials())
             else:
@@ -746,6 +748,7 @@ class VoucherVision():
 
         ### OpenAI
         if self.has_key_openai:
+            import openai
             if self.is_hf:
                 openai.api_key = os.getenv('OPENAI_API_KEY')
             else:
@@ -760,6 +763,7 @@ class VoucherVision():
 
         ### OpenAI - Azure
         if self.has_key_azure_openai:
+            from langchain_openai import AzureChatOpenAI
             if self.is_hf:
                 # Initialize the Azure OpenAI client
                 self.llm = AzureChatOpenAI(
@@ -769,7 +773,7 @@ class VoucherVision():
                     azure_endpoint = os.getenv('AZURE_API_BASE'),
                     openai_organization = os.getenv('AZURE_ORGANIZATION'),
                 )
-                
+
             else:
                 # Initialize the Azure OpenAI client
                 self.llm = AzureChatOpenAI(
@@ -1919,6 +1923,7 @@ class VoucherVision():
 
         # Clean up and finalize
         self.ocr_method = "|".join(sorted(list(collected_ocr_methods)))
+        import torch
         torch.cuda.empty_cache()
         gc.collect()
 

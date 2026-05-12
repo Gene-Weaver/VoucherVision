@@ -10,7 +10,7 @@ from google.cloud import vision
 from google.cloud import vision_v1p3beta1 as vision_beta
 # from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import VertexAI
-from huggingface_hub import HfApi, HfFolder
+from huggingface_hub import HfApi
 
 from datetime import datetime
 # import google.generativeai as genai

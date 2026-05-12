@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Install path selection.
+# CPU-only machines:
+#   pip install -r requirements_cpu.txt
+# GPU (CUDA 12.1) machines:
+#   pip install -r requirements_with_versions.txt
+# The per-package install loop below is a fallback for environments where the
+# requirements files are unavailable; for fresh installs prefer the lines above.
+
 # List of packages to be installed
 packages=(
     wheel

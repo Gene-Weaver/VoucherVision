@@ -158,10 +158,15 @@ Installation should basically be the same for Linux.
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 ### Installing Packages
-1. Install the required dependencies to use VoucherVision  
-`cd` into `VoucherVision`
-<pre><code class="language-python">pip install -r requirements.txt</code></pre>
-<button class="btn" data-clipboard-target="#code-snippet"></button>
+1. Install the required dependencies to use VoucherVision. `cd` into `VoucherVision` and pick the path that matches your machine:
+
+    **CPU-only machines (Mac, or Windows/Linux without an NVIDIA GPU):**
+    <pre><code class="language-python">pip install -r requirements_cpu.txt</code></pre>
+    This pins the verified-working CPU build of torch/torchvision/torchaudio (2.2.2 / 0.17.2 / 2.2.2) along with compatible `transformers==4.39.3`, `huggingface_hub==0.22.2`, and `tokenizers==0.15.2`. Newer Hugging Face/Transformers releases break this codebase, so do not upgrade these libraries individually.
+
+    **GPU machines (CUDA 12.1):**
+    <pre><code class="language-python">pip install -r requirements.txt</code></pre>
+    Then continue to step 4 below to install the CUDA-matched PyTorch build.
 
 2. Upgrade Streamlit:
     ```bash
@@ -172,12 +177,9 @@ Installation should basically be the same for Linux.
     ```bash
     pip install pywin32
     ```
-4. Install PyTorch. Currently does not support PyTorch 2.6+ so install using:
+4. **GPU users only** — install PyTorch with CUDA. (CPU users: skip this step; `requirements_cpu.txt` already installed the right torch build.) Currently does not support PyTorch 2.6+ so install using:
     WITH GPU
     <pre><code class="language-python">pip install "torch==2.3.1" "torchvision==0.18.1" "torchaudio==2.3.1" --index-url "https://download.pytorch.org/whl/cu121"</code></pre>
-    <button class="btn" data-clipboard-target="#code-snippet"></button>
-    WITHOUT GPU
-    <pre><code class="language-python">pip install "torch==2.3.1" "torchvision==0.18.1" "torchaudio==2.3.1" --index-url "https://download.pytorch.org/whl/cpu"</code></pre>
     <button class="btn" data-clipboard-target="#code-snippet"></button>
 
 > NOTE: some dependencies may try to install newer versions of PyTorch. Make sure that step 4 above is the LAST package to be installed in the virtual environment. Double check the PyTorch version before you try to run VoucherVision. 

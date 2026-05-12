@@ -1,0 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+torch==2.2.2
+torchvision==0.17.2
+torchaudio==2.2.2
+transformers==4.39.3
+huggingface_hub==0.22.2
+tokenizers==0.15.2
+
+-r requirements.txt
