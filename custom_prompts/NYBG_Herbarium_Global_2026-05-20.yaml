@@ -1,0 +1,169 @@
+prompt_author: Kimberly Watson        
+prompt_author_institution: New York Botanical Garden    
+prompt_name: NYBG_Herbarium_Global
+prompt_version: v-1-0      
+prompt_description: Custom prompt developed for NYBG Herbarium.
+    All field descriptions are modified from Darwin Core fields to increase LLM performance.     
+LLM: General Purpose
+instructions: 1. Refactor the unstructured OCR text into a dictionary based on the JSON structure outlined below.
+  2. Map the unstructured OCR text to the appropriate JSON key and populate the field given the user-defined rules.
+  3. The OCR may include helpful hints that identify handwritten text, stricken, and redacted text. Handwritten text is often a species name. Redacted or stricken text is often an old species name that should be included in the identificationHistory. The text or markdown that denotes this type of special text should not be included in the JSON, only include the actual content of the text.
+  4. Redacted or stricken text will have section signs on either side (§stricken text§). Handwritten text will have guillemet quotes on either side («handwritten text»). 
+  5. JSON key values are permitted to remain empty strings if the corresponding information is not found in the unstructured OCR text.
+  6. Duplicate dictionary fields are not allowed.
+  7. Ensure all JSON keys are in camel case.
+  8. Ensure all key-value pairs in the JSON dictionary strictly adhere to the format and data types specified in the template.
+  9. Ensure output JSON string is valid JSON format. It should not have trailing commas or unquoted keys.
+  10. Only return a JSON dictionary represented as a string. You should not explain your answer.
+  11. After you create the JSON, if there are not already coordinates in the decimalLatitude and decimalLongitude fields, then use all of the information to geolocate the specimen. Remember that you are an expert biogeographer specializing in georeferencing biological specimen data. Your task is to infer the most accurate decimal latitude and longitude coordinates possible from museum specimen locality information. These are all land plants, so coordinates must be land-based and not coorespond to points in bodies of water. CONTEXT. You are working with historical biological specimen records that may have varying levels of geographic specificity, from broad regions down to specific collection sites. YOUR APPROACH. Analyze all available geographic fields hierarchically (country → state/province → county → municipality → locality). Use the most specific location information available to determine coordinates. For specific landmarks, parks, or named locations, provide precise coordinates. For municipalities/cities, use city center coordinates. For counties, use geographic centroid of the county. For countries (including when only a country code abbreviation is provided), use geographic centroid of the country. For larger administrative units, use conservative central coordinates. IMPORTANT PRINCIPLES. Prioritize accuracy, be extremely precise if you are confident. Be conservative with confidence levels,  only mark as "high" confidence for very specific locations. Consider that historical locality names may have changed. Account for the fact that biological specimens are usually collected from terrestrial, accessible areas. When in doubt, use centroid coordinates of the smallest known administrative unit. CONSTRAINTS. Use WGS84 decimal degrees format. For confidence, if the GPS is provided in the text already, use 'verbatim' in the inferredGPSConfidence field. 'high' confidence only for specific locations (cities, landmarks, parks, intersections, addresses, buildings). 'medium' confidence for general areas (counties). 'low' confidence for vague regions (states/provinces). Return empty strings for decimalLatitude and decimalLongitude if too vague to determine reasonable location and use 'na' for inferredGPSConfidence. Latitude range from -90 to 90, Longitude range from -180 to 180. Your response must place the inferred latitude in the decimalLatitude field, place the inferred longitude in the decimalLongitude field, and the confidence in the inferredGPSConfidence field.
+json_formatting_instructions: This section provides rules for formatting each JSON value organized by the JSON key. Correct minor typos introduced by OCR errors.
+rules:
+  catalogNumber: Barcode identifier specific to New York Botanical Garden, consisting of 8 digits.
+  barcodes: A string containing all unique 8-digit New York Botanical Garden barcodes on the sheet, delimited by underscores (_). Crucial - the value mapped to catalogNumber must be the first substring.
+  collectedBy:  The name of the lead collector responsible for collecting the specimen. If multiple names are present (for example separated by commas, 'and', '&', or line breaks), return only the first person. Remove titles like 'Dr.' or 'Mr.' Crucial - Exclude determiners (such as 'Det. by', 'Determined by', or 'Identified by'). If none, return "".
+  collectedByStandardized: Standardized version of collectedBy. Format - [First/Given Name or Initials] [Full Surname(s) and/or Abbreviated Surnames]. Logic - If collectedBy contains an inverting comma (such as 'Prado, J.' or 'Leite G., J.'), move text following the comma to the front and remove the comma. Crucial - Preserve abbreviated second surnames that appear before the comma (for example, 'Leite G., J.' becomes 'J. Leite G.'). Maintain verbatim initials or names; do not expand abbreviations. Ensure proper capitalization.
+  collectedBySurname: Extract all surnames from collectedByStandardized, excluding preceding given names or initials. Crucial - Include compound and abbreviated trailing surnames or initials (for example, if collectedByStandardized is 'J. Leite G.', return 'Leite G.'; if 'J. Prado', return 'Prado'). If none, return "". 
+  collectorIrn: Always return "".
+  additionalCollectors: Names of other collectors, excluding the lead collector. Format - [First/Given Name or Initials] [Surname or Surnames or Surname Initials]. Delimit individuals with commas (,), remove titles like 'Dr.' or 'Mr.', and remove joiners ('and', '&', 'y'). Maintain verbatim initials. Crucial - Exclude determiners (such as 'Det. by'). If none, return "". 
+  collectorNumberVerbatim: Complete, verbatim collection number given by the collector to the occurrence, as it appears on the label (such as 'A.627bis', '46-426a', 'PF579b'). Exclude literal abbreviations that stand for 'Number' (such as 'No.', 'N°', 'Nr.', or 'Nro.'). If label says 's.n.' or 'sine numero', return 's.n.'.
+  collectorNumberPrefix: Letters, characters, and/or punctuation preceding the primary numeric sequence in collectorNumberVerbatim. Crucial - Exclude literal number labels ('No.', 'N°', 'Nr.', 'Nro.'). Only return true prefixes. When concatenated, collectorNumberPrefix + collectorNumberOnly + collectorNumberSuffix must recreate collectorNumberVerbatim. For example, if collectorNumberVerbatim is '42-426a', return '42-'. If none, return "".
+  collectorNumberOnly: The primary, most significant numeric-only component of the collectorNumberVerbatim. Crucial - Exclude all letters, hyphens, or punctuation, moving them to the prefix or suffix fields, so that when concatenated, collectorNumberPrefix + collectorNumberOnly + collectorNumberSuffix must recreate collectorNumberVerbatim (for example, if collectorNumberVerbatim is '42-426a', return '426'). If none, return "".
+  collectorNumberSuffix: Letters, characters, and/or punctuation following the primary numeric sequence in collectorNumberVerbatim. When concatenated, collectorNumberPrefix + collectorNumberOnly + collectorNumberSuffix must recreate collectorNumberVerbatim. For example, if collectorNumberVerbatim is '42-426a', return 'a'. If none, return "". 
+  verbatimCollectionDate: Verbatim date of collection as it appears on the label. Do not correct typos, expand abbreviations, change formatting, or translate to English. For example, '12 Nov. 1954', 'XI-12-54', 'Marzo 12-15, 1960'. Include punctuation like question marks if they are part of the date string (for example '1954?').
+  collectionDate: Start date (or single date) of collection, formatted as YYYY-MM-DD. Convert Roman numerals to months (for example, IX becomes 09). Use 00 for unknown components. For example, use 0000-00-00 if the entire date is unknown, YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not. For date ranges (such as '10-12 June 1954'), return the start date (such as '1954-06-10').
+  collectionDateEnd: End date of a collection date range, formatted as YYYY-MM-DD. Use 00 for unknown components. For example, use YYYY-00-00 if only the year is known, and YYYY-MM-00 if year and month are known but day is not. If only a single date is provided, return "". 
+  cultivated: If text explicitly contains 'cult', 'cultivated', 'cultivado', or 'culta', return 'Yes'. Otherwise, return "".
+  continent: Continent where the specimen was collected; infer from locality if not stated. Choose from Africa, Antarctica, Asia, Central America, Europe, North America, Oceania, South America, West Indies. If unknown, return "".
+  country: Verbatim country name where the specimen was collected as it appears in the OCR text. Correct minor typos but do not translate or update historical names. If not explicit, return "". 
+  countryISO: Modern country name standardized to ISO 3166-1 English short names. Update historical names to their modern equivalents (such as 'Burma' to 'Myanmar'). Infer from locality if not explicit. If unknown or ambiguous, return "".
+  stateProvince: Verbatim name of the sub-national administrative region (such as state, province, canton, department, region) where the specimen was collected as it appears in the OCR text. Correct minor typos. If not explicit, return "".
+  stateProvinceISO: Modern name of the sub-national administrative region (for example, State, Province, Department, Prefecture) standardized to ISO 3166-2 English names. Crucial - Return the FULL English name, NOT the postal abbreviation or ISO code (for example, return 'New Jersey' instead of 'NJ', and 'Virgin Islands' instead of 'VI'). Update historical names to their modern equivalents. Infer from locality if needed. If unknown or ambiguous, return "".
+  county: Verbatim, unabbreviated name of the second-level administrative region (for example, county, shire, parish) where the specimen was collected as it appears in the OCR text. Correct minor typos. Crucial, if not explicit, return "".
+  countyISO: Modern name of the second-level administrative division standardized to the English name according to Getty TGN or GeoNames. Remove descriptors like 'County' or 'Co.' (for example, 'Suffolk County' becomes 'Suffolk'.) Crucial, if county name is not verbatim in the OCR text, return "", even if the locality is known.
+  locality: Detailed verbatim collection location description as stated in the OCR text (do not translate). Include landmarks, regional features, nearby places, municipality, city, or any contextual information aiding in pinpointing the exact origin or location of the specimen. Crucial, exclude information already captured in continent, country, stateProvince, and county fields. Also exclude habitat, elevation (elev.), altitude (alt.), geographic coordinates, and geodetic datum.
+  verbatimCoordinates: Verbatim geographic coordinates exactly as they appear in the OCR text. Do not include elevation or altitude. Possible coordinate types include [Latitude, Longitude, Degrees Minutes Seconds, Decimal Degrees, Universal Transverse Mercator (UTM), Public Land Survey System (PLSS) using Township Range Section (TRS)].
+  decimalLatitude: Latitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
+  decimalLongitude: Longitude decimal coordinate. Correct and convert the verbatim location coordinates to conform with the decimal degrees GPS coordinate format.
+  inferredGPSConfidence:
+  coordinateType: The format of verbatimCoordinates. Return 'DD' ONLY if the coordinate consists of ONE numeric value per axis (such as '-0.1238°S' or '-78.6305'). Return 'DMS' if there are TWO or more numeric values per axis, separated by spaces and/or symbols (such as '0 7.43 S', '15°45'36N', '78 22.70 W', '15°35.50'S', or '115 45 36 W'). Return 'UTM' if Universal Transverse Mercator, or 'TRS' if Public Land Survey System using Township/Range/Section. If mixed or unknown, return 'Other'. If none, return "".
+  verbatimLatitude: Verbatim latitude component exactly as it appears in the OCR text. Do not convert format. If absent, or if using UTM/TRS, return "".
+  verbatimLongitude: Verbatim longitude component exactly as it appears in the OCR text. Do not convert format. If absent, or if using UTM/TRS, return "".
+  latitudeDMS: If coordinateType is 'DMS', format data from verbatimLatitude as [Degrees] [Minutes] [Seconds] [Direction]. Crucial - Only include components (Minutes or Seconds) if they are explicitly present in the verbatim text. If Seconds are missing, return only Degrees and Minutes (for example '02 53 S'). If both Minutes and Seconds are missing, return only Degrees (for example '45 N'). Clean OCR noise (for example change 'o' to degrees), remove all symbols and ensure 'S' or 'N' is present. If not 'DMS', return "". 
+  longitudeDMS: If coordinateType is 'DMS', format data from verbatimLongitude as [Degrees] [Minutes] [Seconds] [Direction]. Crucial - Only include components (Minutes or Seconds) if they are explicitly present in the verbatim text. If Seconds are missing, return only Degrees and Minutes (for example '02 53 W'). If both Minutes and Seconds are missing, return only Degrees (for example '78 E'). Clean OCR noise (for example change 'o' to degrees), remove all symbols and ensure 'E' or 'W' is present. If not 'DMS', return "".
+  latitudeDD: If coordinateType is 'DD', convert the single verbatimLatitude numeric value to a decimal number. Crucial - If source text contains multiple numeric groups (such as '0 7.43'), DO NOT convert; return "" here and use DMS fields. Crucial, use a negative sign (-) for Southern Hemisphere (S). Do not alter the verbatim precision (number of decimal places). Remove all degree symbols, units, or directions. If coordinateType is not 'DD', return "".
+  longitudeDD: If coordinateType is 'DD', convert the single verbatimLongitude numeric value to a decimal number. Crucial - If source text contains multiple numeric groups (such as '78 37.83'), DO NOT convert; return "" here and use DMS fields. Crucial, use a negative sign (-) for Western Hemisphere (W). Do not alter the verbatim precision (number of decimal places). Remove all degree symbols, units, or directions. If coordinateType is not 'DD', return "".
+  geodeticDatum: Geodetic datum as it appears in the OCR text with the geographic coordinates. If absent, return "".
+  coordinateUncertainty: Verbatim coordinate uncertainty provided with verbatimCoordinates. If absent, return "".
+  minimumElevationInMeters: Numeric minimum elevation value, extracted ONLY if the unit is explicitly meters ('m', 'meters'). Crucial - include values labeled as 'elevation', 'elev.', 'altitude', or 'alt.'. Remove all commas, symbols, and non-numeric characters (for example '1,200m' becomes '1200'). Do not convert from feet. For ranges, return the lower numeric value; if only a single value is present, treat it as the minimum. Otherwise, return "".
+  maximumElevationInMeters: Numeric maximum elevation value, extracted ONLY if the unit is explicitly meters ('m', 'meters'). Crucial - include values labeled as 'elevation', 'elev.', 'altitude', or 'alt.'. Remove all commas, symbols, and non-numeric characters. Do not convert from feet. For ranges, return the higher numeric value; if only a single value is present and there is no range, return "". Otherwise, return "".
+  minimumElevationInFeet: Numeric minimum elevation value, extracted ONLY if the unit is explicitly feet ('ft', 'feet', or the apostrophe symbol for feet). Crucial - include values labeled as 'elevation', 'elev.', 'altitude', or 'alt.'. Remove all commas, symbols (including the apostrophe symbol for feet), and non-numeric characters (for example '5,280 ft' becomes '5280'). Do not convert from meters. For ranges, return the lower numeric value; if only a single value is present, treat it as the minimum. Otherwise, return "".
+  maximumElevationInFeet: Numeric maximum elevation value, extracted ONLY if the unit is explicitly feet ('ft', 'feet', or the apostrophe symbol for feet). Crucial - include values labeled as 'elevation', 'elev.', 'altitude', or 'alt.'. Remove all commas, symbols, and non-numeric characters. For ranges, return the higher numeric value; if only a single value is present and there is no range, return "". Otherwise, return "".
+  elevationUnits: Unit of measurement for elevation used on the label. Return only 'm' or 'ft'. If no elevation is present, return "". 
+  habitat: Verbatim text describing the habitat or ecological environment (for example, moisture, light, vegetation type). If present, include associated species and ensure Genus is capitalized and specific epithet is lowercase. Correct obvious OCR typos while remaining verbatim. If no habitat is provided, return "".
+  substrate: Verbatim description of the substrate upon which the specimen was growing. If not present, return "".
+  specimenDescription: Verbatim text describing the specimen when it was collected (such as color, height, reproductive characters, growth form, taste, smell, frequency). Correct obvious OCR typos while remaining verbatim. If not present, return "".
+  locationNotes: Always return "".
+  collectionNotes: Always return "".
+  specimenNotes: Always return "".
+  otherSpecimenNumbers: Always return "".
+  township: If countryISO is 'United States of America' and PLSS data are present as Township Range Section (TRS), return Township formatted as 'T' followed by the number and direction (N or S). For example, for text 'Plants of Montana, Lincoln. Co., T26N R31W S35', return 'T26N'. Otherwise, return "".
+  range: If countryISO is 'United States of America' and PLSS data are pesent as Township Range Section (TRS), return Range formatted as 'R' followed by the number and direction (E or W). For example, for text 'Plants of Montana, Lincoln. Co., T26N R31W S35', return 'R31W'. Otherwise, return "".
+  section: If countryISO is 'United States of America' and PLSS data are present as Township Range Section (TRS), return Section data formatted as 'S' followed by the Section number, followed by fractional values of that Section number. For example, for text 'Plants of Arizona, USA. T23S R11W SW1/4 SW1/4 Section 23', return 'S23 SW1/4 SW1/4'. Otherwise, return "".
+  tasks: Always return "".
+  additionalText: All remaining OCR text and text that is not part of the main label, secondary text, background and supporting information. 
+mapping:
+  COLL:
+  - catalogNumber
+  - barcodes
+  - collectedBy
+  - collectedByStandardized
+  - collectedBySurname
+  - collectorIrn
+  - additionalCollectors
+  - collectorNumberVerbatim
+  - collectorNumberPrefix
+  - collectorNumberOnly
+  - collectorNumberSuffix
+  - verbatimCollectionDate
+  - collectionDate
+  - collectionDateEnd
+  - collectionNotes
+  LOC1:
+  - continent
+  - country
+  - countryISO
+  - stateProvince
+  - stateProvinceISO
+  - county
+  - countyISO
+  - locality
+  - locationNotes
+  - cultivated
+  LOC2:
+  - verbatimCoordinates
+  - decimalLatitude
+  - decimalLongitude
+  - coordinateType
+  - verbatimLatitude
+  - verbatimLongitude
+  - latitudeDMS
+  - longitudeDMS
+  - latitudeDD
+  - longitudeDD
+  - geodeticDatum
+  - coordinateUncertainty
+  LOC3:
+  - minimumElevationInMeters
+  - maximumElevationInMeters
+  - minimumElevationInFeet
+  - maximumElevationInFeet
+  - elevationUnits
+  - township
+  - range
+  - section
+  MISC:
+  - specimenDescription
+  - habitat
+  - substrate
+  - specimenNotes
+  - otherSpecimenNumbers
+  - tasks
+  - additionalText
+checklist:
+  - 1. [VoucherVision] - Accept VoucherVision content for fields that do not require review 
+  - 2. [OCR] - Review OCR disagreements and flag questionable text, look for fields with ⚠ 
+  - 3. [Patterns] - Use N-Gram Clustering to merge near-duplicate values for collector names, geographies
+  - 4. [Patterns] - Use Catalog Pattern Review to inspect patterns, gaps, and duplicates
+  - 5. [Dates] - Use Date Violations to review suspicious or invalid dates
+  - 6. [Dates] - Use Date Formats to standardize date representations and review outliers
+  - 7. [Collectors] - Use Name Parser to standardize collector names *after n-gram merging*
+  - 8. [Taxonomy] - Use Authorship Detection to split authorship from scientificName
+  - 9. [Taxonomy] - Use WFO Backbone Assistant to review taxonomy suggestions and fill gaps
+  - 10. [Geography] - Use Elevation Discrepancy to review values against COP90, check for outliers
+  - 11. [Geography] - Use standardization tools to normalize geography and coordinate-related fields
+  - 12. [Taxonomy] - Use standardization tools to normalize taxonomy fields
+  - 13. Go to Form Mode, bounce around to confirm all remaining reviewed fields before export
+  - 14. Export project from in the Settings window
+field_default_values:
+  specificEpithet:
+    - indet
+  country:
+    - no data
+  stateProvince:
+    - no data
+  county:
+    - no data
+  geodeticDatumVerbatimCoordinates:
+    - not present
+  collectedBy:
+    - not present
+    - illegible
+    - not translated
+  collectorNumber:
+    - s.n.
+  verbatimCollectionDate:
+    - s.d.
+review_not_required:
+  - additionalText
+custom_flags:
+  -  (Kim) Flag for Kim

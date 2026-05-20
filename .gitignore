@@ -38,6 +38,7 @@ vouchervision/LLM_MistralAI_Azure_endpoints.py
 !/custom_prompts/NBC_Lepidoptera_exp4.yaml
 !/custom_prompts/NBC_Lepidoptera.yaml
 !/custom_prompts/SJRw_collection.yaml
+!/custom_prompts/NYBG_Herbarium_Global_2026-05-20.yaml
 
 # Dirs
 custom_prompts_deprecated/
