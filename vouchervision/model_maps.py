@@ -24,6 +24,7 @@ class ModelMaps:
         'GEMINI_3_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_1_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_FLASH': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_3_5_FLASH': '#1E00FF',  # gemini-3.5-flash (GA)
         'GEMINI_3_1_FLASH_LITE': '#1E00FF',  # gemini-1.5-pro
         'GEMMA_4_31B_IT': '#7B61FF',  # gemma-4
         'GEMMA_4_26B_A4B_IT': '#7B61FF',  # gemma-4
@@ -112,6 +113,7 @@ class ModelMaps:
                      'Gemma 4 26B A4B IT',
                      'Gemini 3 Pro',
                      'Gemini 3.1 Pro',
+                     'Gemini 3.5 Flash',
                      'Gemini 3 Flash',
                      'Gemini 3 Flash Lite',
                      'Gemini 2.5 Pro',
@@ -196,6 +198,7 @@ class ModelMaps:
         'Gemma 4 26B A4B IT': 'GEMMA_4_26B_A4B_IT',
         'Gemini 3.1 Pro': 'GEMINI_3_1_PRO',  # gemini-1.5-pro
         'Gemini 3 Pro': 'GEMINI_3_PRO',  # gemini-1.5-pro
+        'Gemini 3.5 Flash': 'GEMINI_3_5_FLASH',  # gemini-3.5-flash (GA)
         'Gemini 3 Flash': 'GEMINI_3_FLASH',  # gemini-1.5-pro
         'Gemini 3.1 Flash Lite': 'GEMINI_3_1_FLASH_LITE',
         'Gemini 2.5 Pro': 'GEMINI_2_5_PRO',  # gemini-1.5-pro
@@ -276,6 +279,7 @@ class ModelMaps:
             'Gemma 4 26B A4B IT':  has_key_google_application_credentials,
             'Gemini 3.1 Pro':  has_key_google_application_credentials,
             'Gemini 3 Pro':  has_key_google_application_credentials,
+            'Gemini 3.5 Flash':  has_key_google_application_credentials,
             'Gemini 3 Flash':  has_key_google_application_credentials,
             'Gemini 3 Flash Lite':  has_key_google_application_credentials,
             'Gemini 2.5 Pro':  has_key_google_application_credentials,
@@ -353,6 +357,7 @@ class ModelMaps:
             'Gemma 4 26B A4B IT':  False,
             'Gemini 3.1 Pro':  False,
             'Gemini 3 Pro':  False,
+            'Gemini 3.5 Flash':  False,
             'Gemini 3 Flash':  False,
             'Gemini 3 Flash Lite':  False,
             'Gemini 2.5 Pro':  False,
@@ -493,6 +498,8 @@ class ModelMaps:
         
         elif key == 'GEMINI_3_FLASH':
             return 'gemini-3-flash-preview' # TODO UPDATE AS NEEDED
+        elif key == 'GEMINI_3_5_FLASH':
+            return 'gemini-3.5-flash'
         elif key == 'GEMINI_3_1_FLASH_LITE':
             return 'gemini-3.1-flash-lite' # TODO UPDATE AS NEEDED
 

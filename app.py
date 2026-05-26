@@ -2332,6 +2332,7 @@ def content_ocr_method():
 
     options = [
                 "Gemini-2.0-Flash",
+                "Gemini-3.5-Flash",
                 "Gemini-3-Flash-Preview",
                 "Gemini-3.1-Pro-Preview",
                 "Gemini-2.5-Pro",
@@ -2414,6 +2415,7 @@ def content_ocr_method():
             "GPT-4o": "GPT-4o",
 
             "Gemini-2.0-Flash": "Gemini-2.0-Flash",
+            "Gemini-3.5-Flash": "Gemini-3.5-Flash",
             "Gemini-3-Flash-Preview": "Gemini-3-Flash-Preview",
             "Gemini-3.1-Pro-Preview": "Gemini-3.1-Pro-Preview",
             "Gemini-2.5-Pro": "Gemini-2.5-Pro",

@@ -45,7 +45,7 @@ def _is_fatal_api_error(exc):
 
 class OCRGeminiProVision:
     def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456,
-                user_thinking_level="high",
+                user_thinking_level=None,
                 user_media_resolution="MEDIA_RESOLUTION_HIGH",
                 do_resize_img=False, logger=None,
                 vertex_project=None, vertex_region=None):
@@ -53,6 +53,10 @@ class OCRGeminiProVision:
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
         self.logger = logger if logger is not None else logging.getLogger(__name__)
+        if user_thinking_level is None:
+            # Google's GA guidance for Gemini 3.5 defaults to "medium"; older
+            # thinking models still default to "high" for backwards compatibility.
+            user_thinking_level = "medium" if "gemini-3.5-flash" in model_name.lower() else "high"
         self.user_thinking_level = user_thinking_level
         self.user_media_resolution = user_media_resolution
 
@@ -87,6 +91,7 @@ class OCRGeminiProVision:
             'gemini-3.1-pro-preview',
             'gemini-3.1-flash-lite-preview',
             'gemini-3.1-flash-lite',
+            'gemini-3.5-flash',
             'gemma-4-31b-it',
             'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
@@ -102,6 +107,7 @@ class OCRGeminiProVision:
             'gemini-3.1-pro-preview',
             'gemini-3.1-flash-lite-preview',
             'gemini-3.1-flash-lite',
+            'gemini-3.5-flash',
             'gemma-4-31b-it',
             'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
@@ -148,8 +154,17 @@ class OCRGeminiProVision:
         self.client = genai.Client(**client_kwargs)
         self.model_name = model_name
     
+        # Gemini 3.5 (GA) — strict Google defaults: no temperature, top_p, or top_k.
+        # Must precede the generic "gemini-3" branch because "gemini-3" is a substring.
+        if "gemini-3.5-flash" in model_name.lower():
+            self.logger.info("Used gemini-3.5-flash GA config init")
+            self.generation_config = types.GenerateContentConfig(
+                max_output_tokens=max_output_tokens,
+                thinking_config=types.ThinkingConfig(thinking_level=self.user_thinking_level),
+                media_resolution=self.user_media_resolution,
+            )
         # special handling for Gemini 3 (no temperature override, MEDIA_RESOLUTION_HIGH)
-        if "gemini-3" in model_name.lower():
+        elif "gemini-3" in model_name.lower():
             # IMPORTANT: do NOT set temperature for Gemini 3 – let it default to 1.0
             self.logger.info(f"Used gemini-3 config init")
             self.generation_config = types.GenerateContentConfig(
@@ -545,7 +560,7 @@ class OCRGeminiProVision:
 
 
     def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456,
-                   user_thinking_level="high",
+                   user_thinking_level=None,
                    user_media_resolution="MEDIA_RESOLUTION_HIGH",
                    ):
         """temperature=1, top_p=0.95
@@ -555,6 +570,9 @@ class OCRGeminiProVision:
         :param prompt: Instruction for the transcription task.
         :return: Transcription result as plain text.
         """
+        if user_thinking_level is None:
+            user_thinking_level = "medium" if "gemini-3.5-flash" in self.model_name.lower() else "high"
+
         # Update generation config with provided parameters
         # IMPORTANT: For Gemini 3 we do NOT override temperature (per docs)
         if "gemini-3" not in self.model_name:
@@ -583,7 +601,17 @@ class OCRGeminiProVision:
         overall_response = ""
 
         # Build per-request generation config
-        if "gemini-3" in self.model_name.lower():
+        # Gemini 3.5 (GA) — strict defaults: no top_p, no temperature.
+        # Must precede the generic "gemini-3" branch because "gemini-3" is a substring.
+        if "gemini-3.5-flash" in self.model_name.lower():
+            self.logger.info("Used gemini-3.5-flash GA per-request config")
+            request_generation_config = types.GenerateContentConfig(
+                max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
+                safety_settings=self.safety_settings,
+                media_resolution=user_media_resolution,
+                thinking_config=types.ThinkingConfig(thinking_level=user_thinking_level),
+            )
+        elif "gemini-3" in self.model_name.lower():
             self.logger.info(f"Used gemini-3 config")
             request_generation_config = types.GenerateContentConfig(
                 top_p=top_p,
@@ -732,6 +760,8 @@ class OCRGeminiProVision:
             elif 'gemini-2.5-pro' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)
 
+            elif 'gemini-3.5-flash' in self.model_name.lower():
+                total_cost = calculate_cost('GEMINI_3_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
             elif 'gemini-3-pro' in self.model_name.lower():
                 total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
             elif 'gemini-3-flash' in self.model_name.lower():

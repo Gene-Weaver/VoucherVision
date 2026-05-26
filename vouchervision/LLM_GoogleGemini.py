@@ -292,13 +292,15 @@ class GoogleGeminiHandler:
         llm_kwargs = {
             "model": self.model_name,
             "max_output_tokens": self.config.get('max_output_tokens'),
-            "top_p": self.config.get('top_p'),
             "google_api_key": self.api_key,
         }
 
         # For Gemini 3 / Gemma 4, do NOT pass an explicit temperature (use model default)
         if "gemini-3" not in self.model_name and "gemma-4" not in self.model_name:
             llm_kwargs["temperature"] = self.config.get('temperature')
+        # Gemini 3.5 GA guidance: do not pass top_p either (let model defaults stand)
+        if "gemini-3.5-flash" not in self.model_name:
+            llm_kwargs["top_p"] = self.config.get('top_p')
 
         self.llm_model = ChatGoogleGenerativeAI(**llm_kwargs)
         # if not self.exit_early_for_JSON:
@@ -321,7 +323,7 @@ class GoogleGeminiHandler:
     
 
     # Define a function to format the input for Google Gemini call
-    def call_google_gemini(self, prompt_text, thinking_level="high"):
+    def call_google_gemini(self, prompt_text, thinking_level=None):
         """
         Dispatch between:
           - Gemini 3 (thinking_level + media_resolution_high, NO temperature changes)
@@ -330,15 +332,59 @@ class GoogleGeminiHandler:
         """
         genai, types, _, _ = _get_genai_runtime()
 
-        # Normalize thinking_level for Gemini 3
-        thinking_level = (thinking_level or "high").lower()
-        if thinking_level not in ("low", "high"):
-            thinking_level = "high"
+        # Normalize thinking_level for Gemini 3.x. Google's GA effort levels
+        # are minimal/low/medium/high; medium is the documented default for
+        # gemini-3.5-flash, while older 3.x previews keep the prior "high"
+        # default to preserve existing behavior.
+        if thinking_level is None:
+            thinking_level = "medium" if "gemini-3.5-flash" in self.model_name else "high"
+        thinking_level = thinking_level.lower()
+        if thinking_level not in ("minimal", "low", "medium", "high"):
+            thinking_level = "medium"
 
+        # -------------------------------
+        # Gemini 3.5 (GA) path — strict Google defaults: no temperature, top_p,
+        # or top_k; thinking_level defaults to "medium". Must precede the
+        # generic "gemini-3" branch since "gemini-3" is a substring.
+        # -------------------------------
+        if "gemini-3.5-flash" in self.model_name:
+            try:
+                gemini35_kwargs = self._build_client_kwargs()
+                if not self.vertex_project:
+                    gemini35_kwargs["http_options"] = {"api_version": "v1alpha"}
+                client = genai.Client(**gemini35_kwargs)
+
+                gen_config_kwargs = {
+                    "thinking_config": types.ThinkingConfig(thinking_level=thinking_level),
+                    "response_modalities": ["TEXT"],
+                    "media_resolution": "MEDIA_RESOLUTION_HIGH",
+                }
+
+                if self.tool_google:
+                    self.logger.info(
+                        f'[GEMINI] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
+                        f'--- MEDIA[HIGH] --- TOOLS[GOOGLE SEARCH]'
+                    )
+                    gen_config_kwargs["tools"] = [self.google_search_tool]
+                else:
+                    self.logger.info(
+                        f'[GEMINI] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
+                        f'--- MEDIA[HIGH] --- TOOLS[NONE]'
+                    )
+
+                response = client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt_text.text,
+                    config=types.GenerateContentConfig(**gen_config_kwargs),
+                )
+
+            except Exception as e:
+                print(f"genai.Client call failed for {self.model_name}: {e}")
+                raise
         # -------------------------------
         # New: Gemini 3 path
         # -------------------------------
-        if "gemini-3" in self.model_name:
+        elif "gemini-3" in self.model_name:
             try:
                 # v1alpha is required for gemini-3 on AI Studio (media_resolution),
                 # but Vertex AI does not expose v1alpha for project-scoped URLs —
