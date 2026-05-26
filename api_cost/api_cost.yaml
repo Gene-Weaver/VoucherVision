@@ -84,8 +84,8 @@ GEMINI_3_FLASH:
   in: 0.50
   out: 3.00
 GEMINI_3_5_FLASH:
-  in: 0.00      # TODO confirm pricing from https://ai.google.dev/pricing
-  out: 0.00     # TODO confirm pricing from https://ai.google.dev/pricing
+  in: 1.50      # TODO confirm pricing from https://ai.google.dev/pricing
+  out: 9.00     # TODO confirm pricing from https://ai.google.dev/pricing
 GEMINI_3_PRO:
   in: 2.00
   out: 12.00
