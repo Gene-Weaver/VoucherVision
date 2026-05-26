@@ -3,8 +3,11 @@
 [![VoucherVision](https://LeafMachine.org/img/VV_Logo.png "VoucherVision")](https://LeafMachine.org/)
 
 ## Hello! Please check out the [VoucherVisionGO](https://leafmachine.org/vouchervisiongo/) version of this project first!
-The regular VoucherVision Repo is more of an advanced solution that allows lots of customization. But the VoucherVisionGO API will allow you 
-to easily start transcribing your images immediately. The API is completely free for now, you just have to create an account to get access!
+This VoucherVision repo is more of an advanced solution that allows lots of customization. But the VoucherVisionGO API will allow you 
+to easily start transcribing your images immediately. The API is completely free for now, you just have to create an account to get access! 
+
+This VoucherVision repo is only partially maintained! If you want to clone it from scratch, expect to resolve some dependency issues yourself. 
+
 
 Table of Contents
 =================
