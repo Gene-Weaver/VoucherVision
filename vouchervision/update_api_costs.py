@@ -43,6 +43,14 @@ def update_api_costs(test_mode=True):
         'gemini-pro': 'GEMINI_PRO',
         'gemini-1.5-pro': 'GEMINI_1_5_PRO',
         'gemini-flash-1.5': 'GEMINI_1_5_FLASH',
+        'gemini-2.5-flash-lite': 'GEMINI_2_5_FLASH_LITE',
+        'gemini-3.1-flash-lite': 'GEMINI_3_1_FLASH_LITE',
+        'gemini-3-flash-preview': 'GEMINI_3_FLASH',
+        'gemini-3.5-flash-lite': 'GEMINI_3_5_FLASH_LITE',
+        'gemini-3.5-flash': 'GEMINI_3_5_FLASH',
+        'gemini-3.6-flash': 'GEMINI_3_6_FLASH',
+        'gemini-3.7-flash': 'GEMINI_3_7_FLASH',
+        'gemini-3.8-flash': 'GEMINI_3_8_FLASH',
         
         # OpenAI GPT-4 and GPT-3.5 Models
         'gpt-4': 'GPT_4',

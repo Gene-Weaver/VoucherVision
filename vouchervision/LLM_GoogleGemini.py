@@ -299,7 +299,7 @@ class GoogleGeminiHandler:
         if "gemini-3" not in self.model_name and "gemma-4" not in self.model_name:
             llm_kwargs["temperature"] = self.config.get('temperature')
         # Gemini 3.5 GA guidance: do not pass top_p either (let model defaults stand)
-        if "gemini-3.5-flash" not in self.model_name:
+        if self.model_name.lower() != "gemini-3.5-flash":
             llm_kwargs["top_p"] = self.config.get('top_p')
 
         self.llm_model = ChatGoogleGenerativeAI(**llm_kwargs)
@@ -337,7 +337,7 @@ class GoogleGeminiHandler:
         # gemini-3.5-flash, while older 3.x previews keep the prior "high"
         # default to preserve existing behavior.
         if thinking_level is None:
-            thinking_level = "medium" if "gemini-3.5-flash" in self.model_name else "high"
+            thinking_level = "medium" if self.model_name.lower() == "gemini-3.5-flash" else "high"
         thinking_level = thinking_level.lower()
         if thinking_level not in ("minimal", "low", "medium", "high"):
             thinking_level = "medium"
@@ -347,7 +347,7 @@ class GoogleGeminiHandler:
         # or top_k; thinking_level defaults to "medium". Must precede the
         # generic "gemini-3" branch since "gemini-3" is a substring.
         # -------------------------------
-        if "gemini-3.5-flash" in self.model_name:
+        if self.model_name.lower() == "gemini-3.5-flash":
             try:
                 gemini35_kwargs = self._build_client_kwargs()
                 if not self.vertex_project:

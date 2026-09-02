@@ -83,9 +83,21 @@ GEMINI_3_1_FLASH_LITE:
 GEMINI_3_FLASH:
   in: 0.50
   out: 3.00
+GEMINI_3_5_FLASH_LITE:
+  in: 0.30
+  out: 2.50
 GEMINI_3_5_FLASH:
-  in: 1.50      # TODO confirm pricing from https://ai.google.dev/pricing
-  out: 9.00     # TODO confirm pricing from https://ai.google.dev/pricing
+  in: 1.50
+  out: 9.00
+GEMINI_3_6_FLASH:
+  in: 1.50
+  out: 7.50
+GEMINI_3_7_FLASH:
+  in: 1.50
+  out: 7.50
+GEMINI_3_8_FLASH:
+  in: 1.50
+  out: 7.50
 GEMINI_3_PRO:
   in: 2.00
   out: 12.00
@@ -104,6 +116,9 @@ GEMINI_2_5_PRO:
 GEMINI_2_5_FLASH:
   in: 0.30
   out: 2.50
+GEMINI_2_5_FLASH_LITE:
+  in: 0.10
+  out: 0.40
 GEMINI_2_0_FLASH:
   in: 0.1
   out: 0.4

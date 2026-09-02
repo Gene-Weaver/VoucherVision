@@ -157,8 +157,12 @@ class OCREngine:
             "gemini-3-flash-preview",
             "gemini-3.1-flash-lite-preview",
             "gemini-3.1-flash-lite",
-            "Gemini-3.5-Flash",
+            "gemini-3.5-flash-lite",
             "gemini-3.5-flash",
+            "gemini-3.6-flash",
+            "gemini-3.7-flash",
+            "gemini-3.8-flash",
+            "gemini-2.5-flash-lite",
             "Gemini-2.5-Pro",
             "Gemini-2.5-Flash",
             "Gemini-2.0-Flash",
@@ -184,11 +188,18 @@ class OCREngine:
             self.GeminiProVision_3_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.1-flash-lite") # TODO update to non-preview
         if "gemini-3-flash-preview" in self.OCR_option:
             self.GeminiProVision_3_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3-flash-preview") # TODO update to non-preview
-        if "Gemini-3.5-Flash" in self.OCR_option or "gemini-3.5-flash" in self.OCR_option:
-            self.GeminiProVision_3_5_Flash = OCRGeminiProVision(
-                api_key=os.getenv('GOOGLE_API_KEY'),
-                model_name="gemini-3.5-flash",
-            )
+        if "gemini-3.5-flash" in self.OCR_option:
+            self.GeminiProVision_3_5_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.5-flash")
+        if "gemini-3.5-flash-lite" in self.OCR_option:
+            self.GeminiProVision_3_5_Flash_Lite = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.5-flash-lite")
+        if "gemini-3.6-flash" in self.OCR_option:
+            self.GeminiProVision_3_6_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.6-flash")
+        if "gemini-3.7-flash" in self.OCR_option:
+            self.GeminiProVision_3_7_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.7-flash")
+        if "gemini-3.8-flash" in self.OCR_option:
+            self.GeminiProVision_3_8_Flash = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-3.8-flash")
+        if "gemini-2.5-flash-lite" in self.OCR_option:
+            self.GeminiProVision_2_5_Flash_Lite = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-flash-lite")
         if "Gemini-2.5-Pro" in self.OCR_option:
             self.GeminiProVision_2_5_Pro = OCRGeminiProVision(api_key = os.getenv('GOOGLE_API_KEY'),model_name="gemini-2.5-pro")
         if "Gemini-2.5-Flash" in self.OCR_option:  
@@ -1013,20 +1024,27 @@ class OCREngine:
                 logger_message="gemini-3-flash-preview"
             )
 
-        if "Gemini-3.5-Flash" in self.OCR_option: # This option does not produce an OCR helper image
-            self.gemini_ocr(
-                ocr_option="Gemini-3.5-Flash",
-                ocr_helper=self.GeminiProVision_3_5_Flash,
-                json_key='OCR_Gemini_3_5_Flash',
-                logger_message="Gemini-3.5-Flash",
-            )
-        elif "gemini-3.5-flash" in self.OCR_option: # This option does not produce an OCR helper image
-            self.gemini_ocr(
-                ocr_option="gemini-3.5-flash",
+        if "gemini-3.5-flash" in self.OCR_option: # This option does not produce an OCR helper image
+            self.gemini_ocr(ocr_option="gemini-3.5-flash",
                 ocr_helper=self.GeminiProVision_3_5_Flash,
                 json_key='OCR_gemini_3_5_flash',
-                logger_message="gemini-3.5-flash",
+                logger_message="gemini-3.5-flash"
             )
+
+        for model_name, helper, json_key in (
+            ("gemini-3.5-flash-lite", "GeminiProVision_3_5_Flash_Lite", 'OCR_gemini_3_5_flash_lite'),
+            ("gemini-3.6-flash", "GeminiProVision_3_6_Flash", 'OCR_gemini_3_6_flash'),
+            ("gemini-3.7-flash", "GeminiProVision_3_7_Flash", 'OCR_gemini_3_7_flash'),
+            ("gemini-3.8-flash", "GeminiProVision_3_8_Flash", 'OCR_gemini_3_8_flash'),
+            ("gemini-2.5-flash-lite", "GeminiProVision_2_5_Flash_Lite", 'OCR_gemini_2_5_flash_lite'),
+        ):
+            if model_name in self.OCR_option:
+                self.gemini_ocr(
+                    ocr_option=model_name,
+                    ocr_helper=getattr(self, helper),
+                    json_key=json_key,
+                    logger_message=model_name,
+                )
 
         if "Gemini-2.5-Pro" in self.OCR_option: # This option does not produce an OCR helper image
             self.gemini_ocr(ocr_option="Gemini-2.5-Pro",

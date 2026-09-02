@@ -45,7 +45,7 @@ def _is_fatal_api_error(exc):
 
 class OCRGeminiProVision:
     def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456,
-                user_thinking_level=None,
+                user_thinking_level="high",
                 user_media_resolution="MEDIA_RESOLUTION_HIGH",
                 do_resize_img=False, logger=None,
                 vertex_project=None, vertex_region=None):
@@ -53,10 +53,6 @@ class OCRGeminiProVision:
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
         self.logger = logger if logger is not None else logging.getLogger(__name__)
-        if user_thinking_level is None:
-            # Google's GA guidance for Gemini 3.5 defaults to "medium"; older
-            # thinking models still default to "high" for backwards compatibility.
-            user_thinking_level = "medium" if "gemini-3.5-flash" in model_name.lower() else "high"
         self.user_thinking_level = user_thinking_level
         self.user_media_resolution = user_media_resolution
 
@@ -85,6 +81,7 @@ class OCRGeminiProVision:
 
         self.supports_thinking = [
             'gemini-2.5-flash',
+            'gemini-2.5-flash-lite',
             'gemini-2.5-pro',
             'gemini-3-pro-preview',
             'gemini-3-flash-preview',
@@ -92,6 +89,10 @@ class OCRGeminiProVision:
             'gemini-3.1-flash-lite-preview',
             'gemini-3.1-flash-lite',
             'gemini-3.5-flash',
+            'gemini-3.5-flash-lite',
+            'gemini-3.6-flash',
+            'gemini-3.7-flash',
+            'gemini-3.8-flash',
             'gemma-4-31b-it',
             'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
@@ -102,12 +103,17 @@ class OCRGeminiProVision:
         self.MODELS_REQUIRING_INLINE_IMAGE = [
             'gemini-2.5-pro',
             'gemini-2.5-flash',
+            'gemini-2.5-flash-lite',
             'gemini-3-pro-preview',
             'gemini-3-flash-preview',
             'gemini-3.1-pro-preview',
             'gemini-3.1-flash-lite-preview',
             'gemini-3.1-flash-lite',
             'gemini-3.5-flash',
+            'gemini-3.5-flash-lite',
+            'gemini-3.6-flash',
+            'gemini-3.7-flash',
+            'gemini-3.8-flash',
             'gemma-4-31b-it',
             'gemma-4-26b-a4b-it',
             # 'gemini-3-pro',
@@ -154,17 +160,8 @@ class OCRGeminiProVision:
         self.client = genai.Client(**client_kwargs)
         self.model_name = model_name
     
-        # Gemini 3.5 (GA) — strict Google defaults: no temperature, top_p, or top_k.
-        # Must precede the generic "gemini-3" branch because "gemini-3" is a substring.
-        if "gemini-3.5-flash" in model_name.lower():
-            self.logger.info("Used gemini-3.5-flash GA config init")
-            self.generation_config = types.GenerateContentConfig(
-                max_output_tokens=max_output_tokens,
-                thinking_config=types.ThinkingConfig(thinking_level=self.user_thinking_level),
-                media_resolution=self.user_media_resolution,
-            )
         # special handling for Gemini 3 (no temperature override, MEDIA_RESOLUTION_HIGH)
-        elif "gemini-3" in model_name.lower():
+        if "gemini-3" in model_name.lower():
             # IMPORTANT: do NOT set temperature for Gemini 3 – let it default to 1.0
             self.logger.info(f"Used gemini-3 config init")
             self.generation_config = types.GenerateContentConfig(
@@ -560,7 +557,7 @@ class OCRGeminiProVision:
 
 
     def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456,
-                   user_thinking_level=None,
+                   user_thinking_level="high",
                    user_media_resolution="MEDIA_RESOLUTION_HIGH",
                    ):
         """temperature=1, top_p=0.95
@@ -570,9 +567,6 @@ class OCRGeminiProVision:
         :param prompt: Instruction for the transcription task.
         :return: Transcription result as plain text.
         """
-        if user_thinking_level is None:
-            user_thinking_level = "medium" if "gemini-3.5-flash" in self.model_name.lower() else "high"
-
         # Update generation config with provided parameters
         # IMPORTANT: For Gemini 3 we do NOT override temperature (per docs)
         if "gemini-3" not in self.model_name:
@@ -601,17 +595,7 @@ class OCRGeminiProVision:
         overall_response = ""
 
         # Build per-request generation config
-        # Gemini 3.5 (GA) — strict defaults: no top_p, no temperature.
-        # Must precede the generic "gemini-3" branch because "gemini-3" is a substring.
-        if "gemini-3.5-flash" in self.model_name.lower():
-            self.logger.info("Used gemini-3.5-flash GA per-request config")
-            request_generation_config = types.GenerateContentConfig(
-                max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
-                safety_settings=self.safety_settings,
-                media_resolution=user_media_resolution,
-                thinking_config=types.ThinkingConfig(thinking_level=user_thinking_level),
-            )
-        elif "gemini-3" in self.model_name.lower():
+        if "gemini-3" in self.model_name.lower():
             self.logger.info(f"Used gemini-3 config")
             request_generation_config = types.GenerateContentConfig(
                 top_p=top_p,
@@ -747,35 +731,37 @@ class OCRGeminiProVision:
                 tokens_out = 0
 
             # ---------- cost calculation ----------
-            if 'gemini-1.5-pro' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_1_5_PRO', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-1.5-flash-8b' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_1_5_FLASH_8B', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-1.5-flash' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_1_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-2.0-flash' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_2_0_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-2.5-flash' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_2_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-2.5-pro' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_2_5_PRO', self.path_api_cost, tokens_in, tokens_out)
-
-            elif 'gemini-3.5-flash' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_3_5_FLASH', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-3-pro' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_3_PRO', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-3-flash' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_3_FLASH', self.path_api_cost, tokens_in, tokens_out)
-                
-            elif 'gemini-3.1-flash-lite' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_3_1_FLASH_LITE', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemini-3.1-pro' in self.model_name.lower():
-                total_cost = calculate_cost('GEMINI_3_1_PRO', self.path_api_cost, tokens_in, tokens_out)
-
-            elif 'gemma-4-26b-a4b-it' in self.model_name.lower():
-                total_cost = calculate_cost('GEMMA_4_26B_A4B_IT', self.path_api_cost, tokens_in, tokens_out)
-            elif 'gemma-4-31b-it' in self.model_name.lower():
-                total_cost = calculate_cost('GEMMA_4_31B_IT', self.path_api_cost, tokens_in, tokens_out)
+            # Specific Lite variants must be tested before their broader Flash
+            # family names. Unknown models fail explicitly instead of silently
+            # borrowing a cheaper model's price.
+            model_lower = self.model_name.lower()
+            cost_model_patterns = (
+                ('gemini-1.5-flash-8b', 'GEMINI_1_5_FLASH_8B'),
+                ('gemini-1.5-flash', 'GEMINI_1_5_FLASH'),
+                ('gemini-1.5-pro', 'GEMINI_1_5_PRO'),
+                ('gemini-2.0-flash', 'GEMINI_2_0_FLASH'),
+                ('gemini-2.5-flash-lite', 'GEMINI_2_5_FLASH_LITE'),
+                ('gemini-2.5-flash', 'GEMINI_2_5_FLASH'),
+                ('gemini-2.5-pro', 'GEMINI_2_5_PRO'),
+                ('gemini-3.1-flash-lite', 'GEMINI_3_1_FLASH_LITE'),
+                ('gemini-3.1-pro', 'GEMINI_3_1_PRO'),
+                ('gemini-3.5-flash-lite', 'GEMINI_3_5_FLASH_LITE'),
+                ('gemini-3.5-flash', 'GEMINI_3_5_FLASH'),
+                ('gemini-3.6-flash', 'GEMINI_3_6_FLASH'),
+                ('gemini-3.7-flash', 'GEMINI_3_7_FLASH'),
+                ('gemini-3.8-flash', 'GEMINI_3_8_FLASH'),
+                ('gemini-3-pro', 'GEMINI_3_PRO'),
+                ('gemini-3-flash', 'GEMINI_3_FLASH'),
+                ('gemma-4-26b-a4b-it', 'GEMMA_4_26B_A4B_IT'),
+                ('gemma-4-31b-it', 'GEMMA_4_31B_IT'),
+            )
+            cost_key = next(
+                (key for model_pattern, key in cost_model_patterns if model_pattern in model_lower),
+                None,
+            )
+            if cost_key is None:
+                raise ValueError(f"No API cost mapping configured for OCR model '{self.model_name}'")
+            total_cost = calculate_cost(cost_key, self.path_api_cost, tokens_in, tokens_out)
 
             cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
 

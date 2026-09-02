@@ -19,12 +19,17 @@ class ModelMaps:
         'GEMINI_1_5_FLASH': '#1E00FF',  # gemini-1.5-flash
         'GEMINI_1_5_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_2_0_FLASH': '#1E00FF',  # gemini-1.5-pro
+        'GEMINI_2_5_FLASH_LITE': '#1E00FF',
         'GEMINI_2_5_FLASH': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_2_5_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_1_PRO': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_FLASH': '#1E00FF',  # gemini-1.5-pro
         'GEMINI_3_5_FLASH': '#1E00FF',  # gemini-3.5-flash (GA)
+        'GEMINI_3_5_FLASH_LITE': '#1E00FF',
+        'GEMINI_3_6_FLASH': '#1E00FF',
+        'GEMINI_3_7_FLASH': '#1E00FF',
+        'GEMINI_3_8_FLASH': '#1E00FF',
         'GEMINI_3_1_FLASH_LITE': '#1E00FF',  # gemini-1.5-pro
         'GEMMA_4_31B_IT': '#7B61FF',  # gemma-4
         'GEMMA_4_26B_A4B_IT': '#7B61FF',  # gemma-4
@@ -113,11 +118,16 @@ class ModelMaps:
                      'Gemma 4 26B A4B IT',
                      'Gemini 3 Pro',
                      'Gemini 3.1 Pro',
+                     'Gemini 3.8 Flash',
+                     'Gemini 3.7 Flash',
+                     'Gemini 3.6 Flash',
                      'Gemini 3.5 Flash',
+                     'Gemini 3.5 Flash Lite',
                      'Gemini 3 Flash',
-                     'Gemini 3 Flash Lite',
+                     'Gemini 3.1 Flash Lite',
                      'Gemini 2.5 Pro',
                      'Gemini 2.5 Flash',
+                     'Gemini 2.5 Flash Lite',
                      'Gemini 2.0 Flash',
                      'Gemini 1.5 Pro',
                      'Gemini 1.5 Flash',
@@ -162,7 +172,7 @@ class ModelMaps:
                     'LOCAL CPU Mistral 7B Instruct v0.2 GGUF',
                     'phyloforfun/mistral-7b-instruct-v2-bnb-4bit__HLT_MICH_Angiospermae_SLTPvC_v1-0_medium_OCR-C25-L25-E50-R05']
 
-    MODELS_GUI_DEFAULT = 'Gemini 2.5 Flash' #'Gemini 1.5 Flash' #'Azure GPT 4' # 'GPT 4 Turbo 1106-preview'
+    MODELS_GUI_DEFAULT = 'Gemini 3.1 Flash Lite'
 
     MODEL_FAMILY = {
                     'OpenAI': MODELS_OPENAI,
@@ -199,10 +209,15 @@ class ModelMaps:
         'Gemini 3.1 Pro': 'GEMINI_3_1_PRO',  # gemini-1.5-pro
         'Gemini 3 Pro': 'GEMINI_3_PRO',  # gemini-1.5-pro
         'Gemini 3.5 Flash': 'GEMINI_3_5_FLASH',  # gemini-3.5-flash (GA)
+        'Gemini 3.5 Flash Lite': 'GEMINI_3_5_FLASH_LITE',
+        'Gemini 3.6 Flash': 'GEMINI_3_6_FLASH',
+        'Gemini 3.7 Flash': 'GEMINI_3_7_FLASH',
+        'Gemini 3.8 Flash': 'GEMINI_3_8_FLASH',
         'Gemini 3 Flash': 'GEMINI_3_FLASH',  # gemini-1.5-pro
         'Gemini 3.1 Flash Lite': 'GEMINI_3_1_FLASH_LITE',
         'Gemini 2.5 Pro': 'GEMINI_2_5_PRO',  # gemini-1.5-pro
         'Gemini 2.5 Flash': 'GEMINI_2_5_FLASH',  # gemini-1.5-pro
+        'Gemini 2.5 Flash Lite': 'GEMINI_2_5_FLASH_LITE',
         'Gemini 2.0 Flash': 'GEMINI_2_0_FLASH',  # gemini-1.5-pro
         'Gemini 1.5 Pro': 'GEMINI_1_5_PRO',  # gemini-1.5-pro
         'Gemini 1.5 Flash': 'GEMINI_1_5_FLASH',  # gemini-1.5-flash
@@ -280,10 +295,15 @@ class ModelMaps:
             'Gemini 3.1 Pro':  has_key_google_application_credentials,
             'Gemini 3 Pro':  has_key_google_application_credentials,
             'Gemini 3.5 Flash':  has_key_google_application_credentials,
+            'Gemini 3.5 Flash Lite':  has_key_google_application_credentials,
+            'Gemini 3.6 Flash':  has_key_google_application_credentials,
+            'Gemini 3.7 Flash':  has_key_google_application_credentials,
+            'Gemini 3.8 Flash':  has_key_google_application_credentials,
             'Gemini 3 Flash':  has_key_google_application_credentials,
-            'Gemini 3 Flash Lite':  has_key_google_application_credentials,
+            'Gemini 3.1 Flash Lite':  has_key_google_application_credentials,
             'Gemini 2.5 Pro':  has_key_google_application_credentials,
             'Gemini 2.5 Flash':  has_key_google_application_credentials,
+            'Gemini 2.5 Flash Lite':  has_key_google_application_credentials,
             'Gemini 2.0 Flash':  has_key_google_application_credentials,
             'Gemini 1.5 Pro':  has_key_google_application_credentials,
             'Gemini 1.5 Flash':  has_key_google_application_credentials,
@@ -358,10 +378,15 @@ class ModelMaps:
             'Gemini 3.1 Pro':  False,
             'Gemini 3 Pro':  False,
             'Gemini 3.5 Flash':  False,
+            'Gemini 3.5 Flash Lite':  False,
+            'Gemini 3.6 Flash':  False,
+            'Gemini 3.7 Flash':  False,
+            'Gemini 3.8 Flash':  False,
             'Gemini 3 Flash':  False,
-            'Gemini 3 Flash Lite':  False,
+            'Gemini 3.1 Flash Lite':  False,
             'Gemini 2.5 Pro':  False,
             'Gemini 2.5 Flash':  False,
+            'Gemini 2.5 Flash Lite':  False,
             'Gemini 2.0 Flash':  False,
             'Gemini 1.5 Pro':  False,
             'Gemini 1.5 Flash':  False,
@@ -488,6 +513,8 @@ class ModelMaps:
         
         elif key == 'GEMINI_2_5_FLASH':
             return 'gemini-2.5-flash' # TODO UPDATE AS NEEDED
+        elif key == 'GEMINI_2_5_FLASH_LITE':
+            return 'gemini-2.5-flash-lite'
         elif key == 'GEMINI_2_5_PRO':
             return 'gemini-2.5-pro' # TODO UPDATE AS NEEDED
         
@@ -500,6 +527,14 @@ class ModelMaps:
             return 'gemini-3-flash-preview' # TODO UPDATE AS NEEDED
         elif key == 'GEMINI_3_5_FLASH':
             return 'gemini-3.5-flash'
+        elif key == 'GEMINI_3_5_FLASH_LITE':
+            return 'gemini-3.5-flash-lite'
+        elif key == 'GEMINI_3_6_FLASH':
+            return 'gemini-3.6-flash'
+        elif key == 'GEMINI_3_7_FLASH':
+            return 'gemini-3.7-flash'
+        elif key == 'GEMINI_3_8_FLASH':
+            return 'gemini-3.8-flash'
         elif key == 'GEMINI_3_1_FLASH_LITE':
             return 'gemini-3.1-flash-lite' # TODO UPDATE AS NEEDED
 
