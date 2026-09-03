@@ -49,6 +49,24 @@ def _is_fatal_api_error(exc):
     )
 
 
+def _safe_token_count(value):
+    """Return a non-negative integer for optional SDK usage metadata."""
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
+def _response_thinking_tokens(response):
+    usage = getattr(response, "usage_metadata", None)
+    if isinstance(usage, dict):
+        details = usage.get("output_token_details") or {}
+        return _safe_token_count(
+            usage.get("thoughts_token_count", details.get("reasoning", 0))
+        )
+    return _safe_token_count(getattr(usage, "thoughts_token_count", 0))
+
+
 class GoogleGeminiHandler:
 
     RETRY_DELAY = 10  # Wait 10 seconds before retrying
@@ -105,6 +123,7 @@ class GoogleGeminiHandler:
         self.llm_model = None
         self.retry_parser = None
         self.chain = None
+        self._current_thinking_tokens = 0
         self._runtime_ready = False
         self._set_config()
 
@@ -518,6 +537,7 @@ class GoogleGeminiHandler:
                 model=self.model_name,
                 contents=prompt_text.text,
             )
+        self._current_thinking_tokens = _response_thinking_tokens(response)
         self.log_response_metrics(response)
         return response.text
     
@@ -537,6 +557,7 @@ class GoogleGeminiHandler:
         self.monitor.start_monitoring_usage()
         nt_in = 0
         nt_out = 0
+        thinking_tokens = 0
         
         ind = 0
         while ind < self.MAX_RETRIES:
@@ -544,7 +565,9 @@ class GoogleGeminiHandler:
             try:
                 # model_kwargs = {"temperature": self.adjust_temp}
                 # Invoke the chain to generate prompt text
+                self._current_thinking_tokens = 0
                 response = self.chain.invoke({"query": prompt_template})#, "model_kwargs": model_kwargs})
+                thinking_tokens = self._current_thinking_tokens
 
                 # Use retry_parser to parse the response with retry logic
                 output = self.retry_parser.parse_with_prompt(response, prompt_value=prompt_template)
@@ -565,7 +588,7 @@ class GoogleGeminiHandler:
 
                     ### This allows VVGO to just get the JSON and exit
                     if self.exit_early_for_JSON:
-                        return output, nt_in, nt_out, "", None, None
+                        return output, nt_in, nt_out, "", None, None, thinking_tokens
 
                     if output is None:
                         self.logger.error(f'[Attempt {ind}] Failed to extract JSON from:\n{response}')
@@ -602,7 +625,7 @@ class GoogleGeminiHandler:
 
                         if self.json_report:            
                             self.json_report.set_text(text_main=f'LLM call successful')
-                        return output, nt_in, nt_out, WFO_record, GEO_record, usage_report
+                        return output, nt_in, nt_out, WFO_record, GEO_record, usage_report, thinking_tokens
 
             except Exception as e:
                 self.logger.error(f'{e}')
@@ -628,6 +651,6 @@ class GoogleGeminiHandler:
 
         if self.json_report:            
             self.json_report.set_text(text_main=f'LLM call failed')
-        return None, nt_in, nt_out, None, None, usage_report
+        return None, nt_in, nt_out, None, None, usage_report, thinking_tokens
 
 

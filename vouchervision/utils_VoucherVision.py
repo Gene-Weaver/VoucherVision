@@ -85,7 +85,7 @@ def process_single_image_worker(job_args):
 
     # --- 3. Call LLM (if OCR succeeded) ---
     response_candidate = None
-    nt_in, nt_out = 0, 0
+    nt_in, nt_out, thinking_tokens = 0, 0, 0
     WFO_record, GEO_record, usage_report = None, None, None
     llm_failed = False
 
@@ -99,7 +99,7 @@ def process_single_image_worker(job_args):
             if 'PALM2' in name_parts:
                 response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GooglePalm2(prompt, None, paths)
             elif 'GEMINI' in name_parts:
-                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GoogleGemini(prompt, None, paths)
+                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report, thinking_tokens = llm_model.call_llm_api_GoogleGemini(prompt, None, paths)
             elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
                 response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_MistralAI(prompt, None, paths)
             elif 'Hyperbolic' in name_parts:
@@ -128,6 +128,7 @@ def process_single_image_worker(job_args):
         'response_candidate': response_candidate_sanitized,
         'nt_in': nt_in,
         'nt_out': nt_out,
+        'thinking_tokens': thinking_tokens,
         'WFO_record': WFO_record,
         'GEO_record': GEO_record,
         'usage_report': usage_report,

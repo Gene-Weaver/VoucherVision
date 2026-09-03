@@ -796,7 +796,7 @@ class VoucherVision():
                 response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GooglePalm2(prompt, None, paths)
             
             elif 'GEMINI' in name_parts:
-                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_GoogleGemini(prompt, None, paths)
+                response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report, _thinking_tokens = llm_model.call_llm_api_GoogleGemini(prompt, None, paths)
             
             elif 'MISTRAL' in name_parts and ('LOCAL' not in name_parts):
                 response_candidate, nt_in, nt_out, WFO_record, GEO_record, usage_report = llm_model.call_llm_api_MistralAI(prompt, None, paths)

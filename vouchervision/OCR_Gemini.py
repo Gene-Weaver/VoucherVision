@@ -43,6 +43,14 @@ def _is_fatal_api_error(exc):
     )
 
 
+def _safe_token_count(value):
+    """Return a non-negative integer for optional SDK usage metadata."""
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
 class OCRGeminiProVision:
     def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456,
                 user_thinking_level="high",
@@ -589,6 +597,8 @@ class OCRGeminiProVision:
         overall_total_cost = 0
         overall_tokens_in = 0
         overall_tokens_out = 0
+        overall_thinking_tokens = 0
+        overall_thinking_cost = 0
         rates_in = 0
         rates_out = 0
         total_cost = 0
@@ -668,6 +678,7 @@ class OCRGeminiProVision:
         # Initialize variables for cost aggregation
         overall_cost_in, overall_cost_out, overall_total_cost = 0, 0, 0
         overall_tokens_in, overall_tokens_out = 0, 0
+        overall_thinking_tokens, overall_thinking_cost = 0, 0
         rates_in, rates_out = 0, 0
         response = None
         
@@ -710,7 +721,7 @@ class OCRGeminiProVision:
             # Process response
             if not raw_response:
                 self.logger.warning("Empty raw_response from API")
-                return "", 0, 0, 0, 0, 0, 0, 0
+                return "", 0, 0, 0, 0, 0, 0, 0, 0, 0
 
             overall_response = self.extract_text(raw_response)
 
@@ -718,17 +729,19 @@ class OCRGeminiProVision:
                 self.logger.warning("Empty (or non-textual) response from API")
                 self.logger.warning(f"Raw response: {raw_response!r}")
                 # Early out; you can decide to fall back to 2.5 here if you want
-                return "", 0, 0, 0, 0, 0, 0, 0
+                return "", 0, 0, 0, 0, 0, 0, 0, 0, 0
 
             # ---------- usage / metadata (works for v1 & v1alpha) ----------
             usage = getattr(raw_response, "usage_metadata", None)
 
             if usage is not None:
-                tokens_in = getattr(usage, "prompt_token_count", 0) or 0
-                tokens_out = getattr(usage, "candidates_token_count", 0) or 0
+                tokens_in = _safe_token_count(getattr(usage, "prompt_token_count", 0))
+                tokens_out = _safe_token_count(getattr(usage, "candidates_token_count", 0))
+                thinking_tokens = _safe_token_count(getattr(usage, "thoughts_token_count", 0))
             else:
                 tokens_in = 0
                 tokens_out = 0
+                thinking_tokens = 0
 
             # ---------- cost calculation ----------
             # Specific Lite variants must be tested before their broader Flash
@@ -764,12 +777,16 @@ class OCRGeminiProVision:
             total_cost = calculate_cost(cost_key, self.path_api_cost, tokens_in, tokens_out)
 
             cost_in, cost_out, total_cost, rates_in, rates_out = total_cost
+            thinking_cost = rates_out * (thinking_tokens / 1000000)
+            total_cost += thinking_cost
 
             overall_cost_in += cost_in
             overall_cost_out += cost_out
+            overall_thinking_cost += thinking_cost
             overall_total_cost += total_cost
             overall_tokens_in += tokens_in
             overall_tokens_out += tokens_out
+            overall_thinking_tokens += thinking_tokens
 
             self.logger.info(f"OCR completed successfully. Response length: {len(overall_response)}")
 
@@ -782,14 +799,17 @@ class OCRGeminiProVision:
                 rates_out,
                 overall_tokens_in,
                 overall_tokens_out,
+                overall_thinking_tokens,
+                overall_thinking_cost,
             )
                 
         except Exception as e:
             self.logger.error(f"OCR processing failed: {e}", exc_info=True)
             overall_response = ""
 
-        return (overall_response, overall_cost_in, overall_cost_out, overall_total_cost, 
-                rates_in, rates_out, overall_tokens_in, overall_tokens_out)
+        return (overall_response, overall_cost_in, overall_cost_out, overall_total_cost,
+                rates_in, rates_out, overall_tokens_in, overall_tokens_out,
+                overall_thinking_tokens, overall_thinking_cost)
 
 
 # Example usage
@@ -809,7 +829,7 @@ if __name__ == "__main__":
 
     for i, image_path in enumerate(image_paths):
         print(f"WORKING ON [{i}]")
-        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)
+        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)
         print(response)
 
 
@@ -837,7 +857,7 @@ if __name__ == "__main__":
             for t in temps:
                 for k in ks:
                     for p in ps:
-                        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_tool.ocr_gemini(image_path, temperature=t, top_k=k, top_p=p, seed=123456)
+                        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost = ocr_tool.ocr_gemini(image_path, temperature=t, top_k=k, top_p=p, seed=123456)
                         # print("Transcription Result:\n", response)
 
                         # Define the parameter tuple for tracking

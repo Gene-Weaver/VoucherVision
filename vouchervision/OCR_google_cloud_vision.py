@@ -59,8 +59,10 @@ class OCREngine:
         self.cost = 0.0
         self.tokens_in = 0
         self.tokens_out = 0
+        self.thinking_tokens = 0
         self.cost_in = 0
         self.cost_out = 0
+        self.thinking_cost = 0
 
         self.ocr_method = set()
 
@@ -838,13 +840,15 @@ class OCREngine:
         self.logger.info(f"{logger_message} Usage Report")
 
         # Perform OCR
-        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out = ocr_helper.ocr_gemini(self.path)
+        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost = ocr_helper.ocr_gemini(self.path)
 
         self.cost += total_cost
         self.tokens_in += tokens_in
         self.tokens_out += tokens_out
+        self.thinking_tokens += thinking_tokens
         self.cost_in += cost_in
         self.cost_out += cost_out
+        self.thinking_cost += thinking_cost
 
         results_text_sanitized = sanitize_for_storage(results_text)
 
