@@ -64,11 +64,8 @@ def _normalize_thinking_level(value):
     return level
 
 
-def _effective_gemini_3_thinking_level(model_name, requested_level):
-    """Keep Gemini 3 Pro on its existing high-thinking configuration."""
-    model = str(model_name or "").strip().lower()
-    if "gemini-3" in model and "pro" in model:
-        return "high"
+def _effective_thinking_level(requested_level):
+    """Validate the requested level for Gemini 3 and Gemma 4 models."""
     return _normalize_thinking_level(requested_level)
 
 
@@ -82,9 +79,7 @@ class OCRGeminiProVision:
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
         self.logger = logger if logger is not None else logging.getLogger(__name__)
-        self.user_thinking_level = _effective_gemini_3_thinking_level(
-            model_name, user_thinking_level
-        )
+        self.user_thinking_level = _effective_thinking_level(user_thinking_level)
         self.user_media_resolution = user_media_resolution
 
         # ------------------------------------------------------------------
@@ -207,7 +202,7 @@ class OCRGeminiProVision:
             self.generation_config = types.GenerateContentConfig(
                 top_p=top_p,
                 max_output_tokens=max_output_tokens,
-                thinking_config=types.ThinkingConfig(thinking_level="high"),
+                thinking_config=types.ThinkingConfig(thinking_level=self.user_thinking_level),
             )
         elif model_name not in self.supports_thinking:
             # Legacy / non-thinking models
@@ -629,8 +624,7 @@ class OCRGeminiProVision:
 
         # Build per-request generation config
         if "gemini-3" in self.model_name.lower():
-            effective_thinking_level = _effective_gemini_3_thinking_level(
-                self.model_name,
+            effective_thinking_level = _effective_thinking_level(
                 self.user_thinking_level if user_thinking_level is None else user_thinking_level,
             )
             self.logger.info(
@@ -645,12 +639,18 @@ class OCRGeminiProVision:
                 thinking_config=types.ThinkingConfig(thinking_level=effective_thinking_level),
             )
         elif "gemma-4" in self.model_name.lower():
-            self.logger.info(f"Used gemma-4 config")
+            effective_thinking_level = _effective_thinking_level(
+                self.user_thinking_level if user_thinking_level is None else user_thinking_level
+            )
+            self.logger.info(
+                f"[OCRGemini] {self.model_name} --- "
+                f"THINK_LEVEL[{effective_thinking_level}]"
+            )
             request_generation_config = types.GenerateContentConfig(
                 top_p=top_p,
                 max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
                 safety_settings=self.safety_settings,
-                thinking_config=types.ThinkingConfig(thinking_level="high"),
+                thinking_config=types.ThinkingConfig(thinking_level=effective_thinking_level),
             )
         elif self.model_name in self.supports_thinking:
             # Gemini 2.5: use thinking_budget

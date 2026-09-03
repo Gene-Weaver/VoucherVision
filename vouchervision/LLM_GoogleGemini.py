@@ -140,10 +140,6 @@ class GoogleGeminiHandler:
         return level
 
     def _effective_thinking_level(self, requested_level=None):
-        # Preserve Gemini 3 Pro's existing configuration. The request-level
-        # OCR/LLM controls apply only to Gemini 3 Flash and Flash-Lite models.
-        if "gemini-3" in self.model_name.lower() and "pro" in self.model_name.lower():
-            return "high"
         value = self.thinking_level if requested_level is None else requested_level
         return self._normalize_thinking_level(value)
 
@@ -371,8 +367,8 @@ class GoogleGeminiHandler:
         """
         genai, types, _, _ = _get_genai_runtime()
 
-        # All Gemini 3 Flash and Flash-Lite models use the same caller-selected
-        # low/medium/high policy. Gemini 3 Pro preserves its existing setting.
+        # Gemini 3 (including Pro) and Gemma 4 use the same caller-selected
+        # low/medium/high policy. Gemini 2.5 retains its thinking-budget path.
         thinking_level = self._effective_thinking_level(thinking_level)
 
         # -------------------------------
@@ -433,18 +429,18 @@ class GoogleGeminiHandler:
                 client = genai.Client(**self._build_client_kwargs())
 
                 gen_config_kwargs = {
-                    "thinking_config": types.ThinkingConfig(thinking_level="high"),
+                    "thinking_config": types.ThinkingConfig(thinking_level=thinking_level),
                 }
 
                 if self.tool_google:
                     self.logger.info(
-                        f'[GEMMA] {self.model_name} --- THINK_LEVEL[high] '
+                        f'[GEMMA] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
                         f'--- TOOLS[GOOGLE SEARCH]'
                     )
                     gen_config_kwargs["tools"] = [self.google_search_tool]
                 else:
                     self.logger.info(
-                        f'[GEMMA] {self.model_name} --- THINK_LEVEL[high] '
+                        f'[GEMMA] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
                         f'--- TOOLS[NONE]'
                     )
 
