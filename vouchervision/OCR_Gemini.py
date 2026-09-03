@@ -51,9 +51,30 @@ def _safe_token_count(value):
         return 0
 
 
+ALLOWED_THINKING_LEVELS = frozenset({"low", "medium", "high"})
+DEFAULT_THINKING_LEVEL = "low"
+
+
+def _normalize_thinking_level(value):
+    """Validate a caller-supplied Gemini 3 thinking level."""
+    level = DEFAULT_THINKING_LEVEL if value is None else str(value).strip().lower()
+    if level not in ALLOWED_THINKING_LEVELS:
+        allowed = ", ".join(sorted(ALLOWED_THINKING_LEVELS))
+        raise ValueError(f"Invalid thinking level '{value}'. Allowed values: {allowed}.")
+    return level
+
+
+def _effective_gemini_3_thinking_level(model_name, requested_level):
+    """Keep Gemini 3 Pro on its existing high-thinking configuration."""
+    model = str(model_name or "").strip().lower()
+    if "gemini-3" in model and "pro" in model:
+        return "high"
+    return _normalize_thinking_level(requested_level)
+
+
 class OCRGeminiProVision:
     def __init__(self, api_key, model_name="gemini-2.5-flash", max_output_tokens=24576, temperature=1, top_p=0.95, top_k=None, seed=123456,
-                user_thinking_level="high",
+                user_thinking_level=DEFAULT_THINKING_LEVEL,
                 user_media_resolution="MEDIA_RESOLUTION_HIGH",
                 do_resize_img=False, logger=None,
                 vertex_project=None, vertex_region=None):
@@ -61,7 +82,9 @@ class OCRGeminiProVision:
         Initialize the OCRGeminiProVision class with the provided API key and model name.
         """
         self.logger = logger if logger is not None else logging.getLogger(__name__)
-        self.user_thinking_level = user_thinking_level
+        self.user_thinking_level = _effective_gemini_3_thinking_level(
+            model_name, user_thinking_level
+        )
         self.user_media_resolution = user_media_resolution
 
         # ------------------------------------------------------------------
@@ -565,7 +588,7 @@ class OCRGeminiProVision:
 
 
     def ocr_gemini(self, image_path, prompt=None, temperature=1, top_p=0.95, top_k=None, max_output_tokens=None, seed=123456,
-                   user_thinking_level="high",
+                   user_thinking_level=None,
                    user_media_resolution="MEDIA_RESOLUTION_HIGH",
                    ):
         """temperature=1, top_p=0.95
@@ -606,13 +629,20 @@ class OCRGeminiProVision:
 
         # Build per-request generation config
         if "gemini-3" in self.model_name.lower():
-            self.logger.info(f"Used gemini-3 config")
+            effective_thinking_level = _effective_gemini_3_thinking_level(
+                self.model_name,
+                self.user_thinking_level if user_thinking_level is None else user_thinking_level,
+            )
+            self.logger.info(
+                f"[OCRGemini] {self.model_name} --- "
+                f"THINK_LEVEL[{effective_thinking_level}]"
+            )
             request_generation_config = types.GenerateContentConfig(
                 top_p=top_p,
                 max_output_tokens=max_output_tokens or self.generation_config.max_output_tokens,
                 safety_settings=self.safety_settings,
                 media_resolution=user_media_resolution,
-                thinking_config=types.ThinkingConfig(thinking_level=user_thinking_level),
+                thinking_config=types.ThinkingConfig(thinking_level=effective_thinking_level),
             )
         elif "gemma-4" in self.model_name.lower():
             self.logger.info(f"Used gemma-4 config")

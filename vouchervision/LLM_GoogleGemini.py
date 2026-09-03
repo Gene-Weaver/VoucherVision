@@ -76,9 +76,12 @@ class GoogleGeminiHandler:
     STARTING_TEMP = 1
 
     THINK_BUDGET = -1 # dynamic thinking for the 2.5 models
+    ALLOWED_THINKING_LEVELS = frozenset({"low", "medium", "high"})
+    DEFAULT_THINKING_LEVEL = "low"
 
     def __init__(self, cfg, logger, model_name, JSON_dict_structure, config_vals_for_permutation, exit_early_for_JSON=False,
-                 api_key=None, vertex_project=None, vertex_region=None, **kwargs):
+                 api_key=None, vertex_project=None, vertex_region=None,
+                 thinking_level=DEFAULT_THINKING_LEVEL, **kwargs):
 
         # Resolve API key once, at construction time.
         # Priority: explicit argument → GOOGLE_API_KEY env → API_KEY env
@@ -89,6 +92,7 @@ class GoogleGeminiHandler:
         )
         self.vertex_project = vertex_project
         self.vertex_region = vertex_region
+        self.thinking_level = self._normalize_thinking_level(thinking_level)
         if not self.api_key and not self.vertex_project:
             raise ValueError("No Gemini API key provided and none found in environment, and no vertex_project given.")
 
@@ -126,6 +130,22 @@ class GoogleGeminiHandler:
         self._current_thinking_tokens = 0
         self._runtime_ready = False
         self._set_config()
+
+    @classmethod
+    def _normalize_thinking_level(cls, value):
+        level = cls.DEFAULT_THINKING_LEVEL if value is None else str(value).strip().lower()
+        if level not in cls.ALLOWED_THINKING_LEVELS:
+            allowed = ", ".join(sorted(cls.ALLOWED_THINKING_LEVELS))
+            raise ValueError(f"Invalid thinking level '{value}'. Allowed values: {allowed}.")
+        return level
+
+    def _effective_thinking_level(self, requested_level=None):
+        # Preserve Gemini 3 Pro's existing configuration. The request-level
+        # OCR/LLM controls apply only to Gemini 3 Flash and Flash-Lite models.
+        if "gemini-3" in self.model_name.lower() and "pro" in self.model_name.lower():
+            return "high"
+        value = self.thinking_level if requested_level is None else requested_level
+        return self._normalize_thinking_level(value)
 
     def _ensure_runtime_ready(self):
         if self._runtime_ready:
@@ -351,59 +371,14 @@ class GoogleGeminiHandler:
         """
         genai, types, _, _ = _get_genai_runtime()
 
-        # Normalize thinking_level for Gemini 3.x. Google's GA effort levels
-        # are minimal/low/medium/high; medium is the documented default for
-        # gemini-3.5-flash, while older 3.x previews keep the prior "high"
-        # default to preserve existing behavior.
-        if thinking_level is None:
-            thinking_level = "medium" if self.model_name.lower() == "gemini-3.5-flash" else "high"
-        thinking_level = thinking_level.lower()
-        if thinking_level not in ("minimal", "low", "medium", "high"):
-            thinking_level = "medium"
+        # All Gemini 3 Flash and Flash-Lite models use the same caller-selected
+        # low/medium/high policy. Gemini 3 Pro preserves its existing setting.
+        thinking_level = self._effective_thinking_level(thinking_level)
 
         # -------------------------------
-        # Gemini 3.5 (GA) path — strict Google defaults: no temperature, top_p,
-        # or top_k; thinking_level defaults to "medium". Must precede the
-        # generic "gemini-3" branch since "gemini-3" is a substring.
+        # Gemini 3 path
         # -------------------------------
-        if self.model_name.lower() == "gemini-3.5-flash":
-            try:
-                gemini35_kwargs = self._build_client_kwargs()
-                if not self.vertex_project:
-                    gemini35_kwargs["http_options"] = {"api_version": "v1alpha"}
-                client = genai.Client(**gemini35_kwargs)
-
-                gen_config_kwargs = {
-                    "thinking_config": types.ThinkingConfig(thinking_level=thinking_level),
-                    "response_modalities": ["TEXT"],
-                    "media_resolution": "MEDIA_RESOLUTION_HIGH",
-                }
-
-                if self.tool_google:
-                    self.logger.info(
-                        f'[GEMINI] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
-                        f'--- MEDIA[HIGH] --- TOOLS[GOOGLE SEARCH]'
-                    )
-                    gen_config_kwargs["tools"] = [self.google_search_tool]
-                else:
-                    self.logger.info(
-                        f'[GEMINI] {self.model_name} --- THINK_LEVEL[{thinking_level}] '
-                        f'--- MEDIA[HIGH] --- TOOLS[NONE]'
-                    )
-
-                response = client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt_text.text,
-                    config=types.GenerateContentConfig(**gen_config_kwargs),
-                )
-
-            except Exception as e:
-                print(f"genai.Client call failed for {self.model_name}: {e}")
-                raise
-        # -------------------------------
-        # New: Gemini 3 path
-        # -------------------------------
-        elif "gemini-3" in self.model_name:
+        if "gemini-3" in self.model_name:
             try:
                 # v1alpha is required for gemini-3 on AI Studio (media_resolution),
                 # but Vertex AI does not expose v1alpha for project-scoped URLs —
