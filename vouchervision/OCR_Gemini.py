@@ -621,6 +621,9 @@ class OCRGeminiProVision:
         rates_out = 0
         total_cost = 0
         overall_response = ""
+        # Budget name actually sent in the request (Gemini 3 / Gemma 4 only).
+        # Empty string when the model takes a numeric budget or no thinking config.
+        thinking_budget_requested = ""
 
         # Build per-request generation config
         if "gemini-3" in self.model_name.lower():
@@ -638,6 +641,7 @@ class OCRGeminiProVision:
                 media_resolution=user_media_resolution,
                 thinking_config=types.ThinkingConfig(thinking_level=effective_thinking_level),
             )
+            thinking_budget_requested = effective_thinking_level
         elif "gemma-4" in self.model_name.lower():
             effective_thinking_level = _effective_thinking_level(
                 self.user_thinking_level if user_thinking_level is None else user_thinking_level
@@ -652,6 +656,7 @@ class OCRGeminiProVision:
                 safety_settings=self.safety_settings,
                 thinking_config=types.ThinkingConfig(thinking_level=effective_thinking_level),
             )
+            thinking_budget_requested = effective_thinking_level
         elif self.model_name in self.supports_thinking:
             # Gemini 2.5: use thinking_budget
             request_generation_config = types.GenerateContentConfig(
@@ -751,7 +756,7 @@ class OCRGeminiProVision:
             # Process response
             if not raw_response:
                 self.logger.warning("Empty raw_response from API")
-                return "", 0, 0, 0, 0, 0, 0, 0, 0, 0
+                return "", 0, 0, 0, 0, 0, 0, 0, 0, 0, thinking_budget_requested
 
             overall_response = self.extract_text(raw_response)
 
@@ -759,7 +764,7 @@ class OCRGeminiProVision:
                 self.logger.warning("Empty (or non-textual) response from API")
                 self.logger.warning(f"Raw response: {raw_response!r}")
                 # Early out; you can decide to fall back to 2.5 here if you want
-                return "", 0, 0, 0, 0, 0, 0, 0, 0, 0
+                return "", 0, 0, 0, 0, 0, 0, 0, 0, 0, thinking_budget_requested
 
             # ---------- usage / metadata (works for v1 & v1alpha) ----------
             usage = getattr(raw_response, "usage_metadata", None)
@@ -831,6 +836,7 @@ class OCRGeminiProVision:
                 overall_tokens_out,
                 overall_thinking_tokens,
                 overall_thinking_cost,
+                thinking_budget_requested,
             )
                 
         except Exception as e:
@@ -839,7 +845,7 @@ class OCRGeminiProVision:
 
         return (overall_response, overall_cost_in, overall_cost_out, overall_total_cost,
                 rates_in, rates_out, overall_tokens_in, overall_tokens_out,
-                overall_thinking_tokens, overall_thinking_cost)
+                overall_thinking_tokens, overall_thinking_cost, thinking_budget_requested)
 
 
 # Example usage
@@ -859,7 +865,7 @@ if __name__ == "__main__":
 
     for i, image_path in enumerate(image_paths):
         print(f"WORKING ON [{i}]")
-        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)
+        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost, thinking_budget_requested = ocr_tool.ocr_gemini(image_path, temperature=1, top_k=1, top_p=0.95)
         print(response)
 
 
@@ -887,7 +893,7 @@ if __name__ == "__main__":
             for t in temps:
                 for k in ks:
                     for p in ps:
-                        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost = ocr_tool.ocr_gemini(image_path, temperature=t, top_k=k, top_p=p, seed=123456)
+                        response, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost, thinking_budget_requested = ocr_tool.ocr_gemini(image_path, temperature=t, top_k=k, top_p=p, seed=123456)
                         # print("Transcription Result:\n", response)
 
                         # Define the parameter tuple for tracking

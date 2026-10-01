@@ -128,6 +128,9 @@ class GoogleGeminiHandler:
         self.retry_parser = None
         self.chain = None
         self._current_thinking_tokens = 0
+        # Budget name actually sent in the last request (Gemini 3 / Gemma 4 only);
+        # empty string for numeric-budget (2.5) and non-thinking models.
+        self._current_thinking_budget_requested = ""
         self._runtime_ready = False
         self._set_config()
 
@@ -370,6 +373,7 @@ class GoogleGeminiHandler:
         # Gemini 3 (including Pro) and Gemma 4 use the same caller-selected
         # low/medium/high policy. Gemini 2.5 retains its thinking-budget path.
         thinking_level = self._effective_thinking_level(thinking_level)
+        self._current_thinking_budget_requested = ""
 
         # -------------------------------
         # Gemini 3 path
@@ -393,6 +397,7 @@ class GoogleGeminiHandler:
                     "response_modalities": ["TEXT"],
                     "media_resolution": "MEDIA_RESOLUTION_HIGH",
                 }
+                self._current_thinking_budget_requested = thinking_level
 
                 if self.tool_google:
                     self.logger.info(
@@ -431,6 +436,7 @@ class GoogleGeminiHandler:
                 gen_config_kwargs = {
                     "thinking_config": types.ThinkingConfig(thinking_level=thinking_level),
                 }
+                self._current_thinking_budget_requested = thinking_level
 
                 if self.tool_google:
                     self.logger.info(
@@ -529,6 +535,7 @@ class GoogleGeminiHandler:
         nt_in = 0
         nt_out = 0
         thinking_tokens = 0
+        thinking_budget_requested = ""
         
         ind = 0
         while ind < self.MAX_RETRIES:
@@ -537,8 +544,10 @@ class GoogleGeminiHandler:
                 # model_kwargs = {"temperature": self.adjust_temp}
                 # Invoke the chain to generate prompt text
                 self._current_thinking_tokens = 0
+                self._current_thinking_budget_requested = ""
                 response = self.chain.invoke({"query": prompt_template})#, "model_kwargs": model_kwargs})
                 thinking_tokens = self._current_thinking_tokens
+                thinking_budget_requested = self._current_thinking_budget_requested
 
                 # Use retry_parser to parse the response with retry logic
                 output = self.retry_parser.parse_with_prompt(response, prompt_value=prompt_template)
@@ -559,7 +568,7 @@ class GoogleGeminiHandler:
 
                     ### This allows VVGO to just get the JSON and exit
                     if self.exit_early_for_JSON:
-                        return output, nt_in, nt_out, "", None, None, thinking_tokens
+                        return output, nt_in, nt_out, "", None, None, thinking_tokens, thinking_budget_requested
 
                     if output is None:
                         self.logger.error(f'[Attempt {ind}] Failed to extract JSON from:\n{response}')
@@ -596,7 +605,7 @@ class GoogleGeminiHandler:
 
                         if self.json_report:            
                             self.json_report.set_text(text_main=f'LLM call successful')
-                        return output, nt_in, nt_out, WFO_record, GEO_record, usage_report, thinking_tokens
+                        return output, nt_in, nt_out, WFO_record, GEO_record, usage_report, thinking_tokens, thinking_budget_requested
 
             except Exception as e:
                 self.logger.error(f'{e}')
@@ -622,6 +631,6 @@ class GoogleGeminiHandler:
 
         if self.json_report:            
             self.json_report.set_text(text_main=f'LLM call failed')
-        return None, nt_in, nt_out, None, None, usage_report, thinking_tokens
+        return None, nt_in, nt_out, None, None, usage_report, thinking_tokens, thinking_budget_requested
 
 

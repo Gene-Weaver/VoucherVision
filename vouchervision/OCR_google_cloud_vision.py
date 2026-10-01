@@ -840,7 +840,7 @@ class OCREngine:
         self.logger.info(f"{logger_message} Usage Report")
 
         # Perform OCR
-        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost = ocr_helper.ocr_gemini(self.path)
+        results_text, cost_in, cost_out, total_cost, rates_in, rates_out, tokens_in, tokens_out, thinking_tokens, thinking_cost, _thinking_budget_requested = ocr_helper.ocr_gemini(self.path)
 
         self.cost += total_cost
         self.tokens_in += tokens_in
